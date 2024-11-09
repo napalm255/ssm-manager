@@ -8,7 +8,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
     - [Connection Types](#connection-types)
     - [Active Connection Management](#active-connection-management)
     - [Additional Features](#additional-features)
-  - [Prerequisites](#prerequisites)
+  - [Requirements](#Requirements)
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [Usage](#usage)
@@ -71,7 +71,7 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 - Logging system with configurable levels
 - Custom TPC port on local forwarding
 
-## Prerequisites
+## Requirements
 
 - Windows 10 - 11 operating system
 - AWS CLI installed and configured [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
