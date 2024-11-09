@@ -10,7 +10,6 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
     - [Additional Features](#additional-features)
   - [Requirements](#Requirements)
   - [Installation](#installation)
-  - [Configuration](#configuration)
   - [Usage](#usage)
   - [Development](#development)
     - [Requirements](#requirements)
@@ -91,19 +90,9 @@ SSM Manager is a Windows desktop application that provides a graphical interface
    - **Option A**: Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
    - **Option B**: Install and configure Leapp, then log in to AWS. [**Instructions here**](https://github.com/Noovolari/leapp)
 6. Launch **SSM Manager**.
+7. You must have the SSM agent installed on your EC2 to show all features on SSM Manager
+8. Verify proper IAM permissions for SSM sessions
 
-
-
-
-## Configuration
-
-1. Configure your AWS credentials in `~/.aws/credentials`
-2. Ensure your instances have the SSM agent installed
-3. Verify proper IAM permissions for SSM sessions
-
-or
-
-Install, configure and lunch Leapp [[instructions here](https://github.com/Noovolari/leapp)]
 
 ## Usage
 
