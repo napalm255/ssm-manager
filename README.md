@@ -60,8 +60,8 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 
 ## Installation
 
-1. Download the latest release from the releases page [HERE](https://github.com/mauroo82/ssm-manager/archive/refs/tags/1.0.zip)
-2. Run the installer (folder installer, setup.exe)
+1. Download the latest release from the releases page [HERE](https://github.com/mauroo82/ssm-manager/releases/tag/1.1)
+2. Run the installer setup.exe
 3. Ensure AWS CLI and SSM Plugin are installed:
    ```bash
    aws --version
