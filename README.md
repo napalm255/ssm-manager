@@ -89,8 +89,9 @@ SSM Manager is a Windows desktop application that provides a graphical interface
    ```
 4. Choose one of the following methods to configure AWS access:
   a. Configure AWS CLI and login on AWS. [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
+
   b. Configure and Install LEAPP and login on AWS. [[instructions here](https://github.com/Noovolari/leapp)]
-5. Launch SSM Manager
+6. Launch SSM Manager
 
 
 ## Configuration
