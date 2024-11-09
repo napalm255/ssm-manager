@@ -1,6 +1,27 @@
 # SSM Manager (AWS)
-
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
+
+- [SSM Manager (AWS)](#ssm-manager-aws)
+  - [Description](#description)
+  - [Features](#features)
+    - [Core Functionality](#core-functionality)
+    - [Instance Management](#instance-management)
+    - [Connection Types](#connection-types)
+    - [Active Connection Management](#active-connection-management)
+    - [Additional Features](#additional-features)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Usage](#usage)
+  - [Development](#development)
+    - [Requirements](#requirements)
+    - [Setup Development Environment](#setup-development-environment)
+    - [Building from Source](#building-from-source)
+  - [Contributing](#contributing)
+  - [Bug reports](#bug-reports)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
+  - [Support](#support)
 
 
 ## Description
