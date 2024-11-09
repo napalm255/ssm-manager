@@ -80,18 +80,19 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 
 ## Installation
 
-1. Download the latest release from the releases page [HERE](https://github.com/mauroo82/ssm-manager/releases/tag/1.1)
-2. Run the installer setup.exe
-3. AWS CLI and SSM Plugin are required:
+1. Download the latest release from the releases page [**HERE**](https://github.com/mauroo82/ssm-manager/releases/tag/1.1).
+2. Run the installer `setup.exe`.
+3. Ensure that AWS CLI and SSM Plugin are installed.
    ```bash
    aws --version
    aws ssm start-session --version
    ```
-4. Choose one of the following methods to configure AWS access:
-  a. Configure AWS CLI and login on AWS. [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
+5. Choose one of the following methods to configure AWS access:
+   - **Option A**: Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+   - **Option B**: Install and configure Leapp, then log in to AWS. [**Instructions here**](https://github.com/Noovolari/leapp)
+6. Launch **SSM Manager**.
 
-  b. Configure and Install LEAPP and login on AWS. [[instructions here](https://github.com/Noovolari/leapp)]
-6. Launch SSM Manager
+
 
 
 ## Configuration
