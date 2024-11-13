@@ -41,7 +41,7 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 - **Instance Listing**
   - Display of EC2 instances with SSM capability
   - Real-time instance status updates
-  - Instance details (Name, ID, Type, OS, State)
+  - Instance details (Name, ID, Type, OS, State, IP Address ecc..)
 
 ### Connection Types
 - **SSH Sessions**
