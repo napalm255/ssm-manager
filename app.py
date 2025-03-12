@@ -37,16 +37,17 @@ logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 
-def run_server():
+def run_server(debug=False):
     """
     Run the Flask server
+    Note: When using webview, both debug and use_reloader must be set to False
     """
     app.run(
         host='127.0.0.1',
         port=5000,
-        debug=True,  # With webview set False
-        use_reloader=True
-)
+        debug=debug,
+        use_reloader=debug
+    )
 
 
 def create_application():
@@ -72,6 +73,6 @@ def create_application():
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--apionly':
-        run_server()
+        run_server(debug=True)
         sys.exit()
     create_application()
