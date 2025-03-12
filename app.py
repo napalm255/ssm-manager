@@ -1,14 +1,21 @@
-import webview
-from flask import Flask, render_template, jsonify, request
-import threading
-from aws_manager import AWSManager
+"""
+Application entry point
+"""
+import sys
 import logging
+import threading
+import webview
+from flask import Flask
+from aws_manager import AWSManager
+
 
 # Setup Flask
 app = Flask(__name__)
-app.debug = True  # Attiva il debug di Flask
-app.config['DEBUG'] = True  
+app.debug = True
+app.config['DEBUG'] = True
 aws_manager = AWSManager()
+# pylint: disable=wrong-import-position, wildcard-import, unused-wildcard-import
+from routes import *
 
 # Store active connections
 active_connections = []
@@ -30,27 +37,29 @@ logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 
-
-# Importa le routes dopo aver creato app e aws_manager
-from routes import *
-
 def run_server():
+    """
+    Run the Flask server
+    """
     app.run(
-        host='127.0.0.1', 
-        port=5000, 
-        debug=False,  # With webview set False
-        use_reloader=False
-        
+        host='127.0.0.1',
+        port=5000,
+        debug=True,  # With webview set False
+        use_reloader=True
 )
 
+
 def create_application():
+    """
+    Create the application window
+    """
     server = threading.Thread(target=run_server)
     server.daemon = True
     server.start()
-    
+
     # Wait a bit for the server to start
     time.sleep(1)
-    
+
     webview.create_window(
         title='SSM Manager',
         url='http://127.0.0.1:5000',
@@ -60,5 +69,9 @@ def create_application():
     )
     webview.start()
 
+
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == '--apionly':
+        run_server()
+        sys.exit()
     create_application()
