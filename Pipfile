@@ -7,9 +7,10 @@ name = "pypi"
 boto3 = "*"
 flask = "*"
 psutil = "*"
-pywebview = "*"
 pythonnet = "*"
 pyinstaller = "*"
+pywebview = {version = "*", markers = "sys_platform == 'win32'"}
+'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
 
 [dev-packages]
 pylint = "*"
