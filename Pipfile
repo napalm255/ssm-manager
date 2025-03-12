@@ -9,6 +9,7 @@ flask = "*"
 psutil = "*"
 pythonnet = "*"
 pyinstaller = "*"
+colorama = "*"
 pywebview = {version = "*", markers = "sys_platform == 'win32'"}
 'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
 
