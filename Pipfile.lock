@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9ff58d0a4cd85cac23ce1873b95e1a7c06dbe1822a2b788a8a102ccddd8d7e6a"
+            "sha256": "9d449c365472ec09018c5b64fe01bb6acd8c40ce050ae5db9f80bc640e85923c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -262,6 +262,9 @@
             "markers": "python_version >= '3.8'",
             "version": "==24.2"
         },
+        "pefile": {
+            "markers": "sys_platform == 'win32'"
+        },
         "proxy-tools": {
             "hashes": [
                 "sha256:ccb3751f529c047e2d8a58440d86b205303cf0fe8146f784d1cbcd94f0a28010"
@@ -420,6 +423,9 @@
             ],
             "markers": "sys_platform == 'win32'",
             "version": "==5.4"
+        },
+        "pywin32-ctypes": {
+            "markers": "sys_platform == 'win32'"
         },
         "qtpy": {
             "hashes": [
