@@ -8,6 +8,7 @@ boto3 = "*"
 flask = "*"
 psutil = "*"
 pywebview = "*"
+pythonnet = "*"
 pyinstaller = "*"
 
 [dev-packages]
