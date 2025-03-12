@@ -17,48 +17,38 @@
     </style>
 
     <link rel="stylesheet" href="/static/css/style.css">
-
-
 </head>
 <body class="bg-light">
     <div class="container-fluid py-4">
         <!-- Header -->
         <div class="row mb-4">
-          
-                
-           
                 <div class="col">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="row g-3 align-items-center">
-                            <!--
-                            <div class="col-auto">
-                            <img src="{{ url_for('static', filename='/images/logo.png') }}" alt="SSM Manager Logo" class="h-100" style="width: auto; min-height: 90px; max-width: 90px;">
-                            </div>
-                            -->
                             <div class="col-auto">
                                 <select id="profileSelect" class="form-select">
                                     <option value="">Select Profile</option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-auto">
                                 <select id="regionSelect" class="form-select">
                                     <option value="">Select Region</option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-auto">
                                 <button id="connectBtn" class="btn btn-success">
                                     <i class="bi bi-plug fs-5"></i> Connect
                                 </button>
                             </div>
-                            
+
                             <div class="col-auto">
                                 <button id="refreshBtn" class="btn btn-outline-secondary d-flex align-items-center justify-content-between">
                                     <!-- Refresh sx -->
                                     <i class="bi bi-arrow-clockwise fs-5 me-2" data-bs-toggle="tooltip" title="Refresh"></i>
-                                    
+
                                     <!-- Switch auto-refresh dx -->
                                     <div class="form-check form-switch m-1">
                                         <input class="form-check-input" type="checkbox" id="autoRefreshSwitch">
@@ -69,26 +59,14 @@
                                     </div>
                                 </button>
                             </div>
-                            <!--
-                            <div class="col-auto">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="autoRefreshSwitch">
-                                    <label class="form-check-label" for="autoRefreshSwitch">Auto Refresh</label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-auto">
-                                <span id="refreshTimer" class="badge bg-secondary"></span>
-                            </div>
-                            -->
                             <div class="col-auto ms-auto">
-                                <button class="btn btn-outline-secondary" id="preferencesBtn">
-                                    <i class="bi bi-gear-fill fs-5" data-bs-toggle="tooltip" title="Setting"></i> Settings
+                                <button class="btn btn-outline-secondary" id="preferencesBtn" data-bs-toggle="tooltip" title="Settings">
+                                    <i class="bi bi-gear-fill fs-5"></i>
                                 </button>
                             </div>
                             <div class="col-auto">
-                                <button class="btn btn-outline-secondary" id="aboutBtn">
-                                    <i class="bi bi-info-circle-fill fs-5" data-bs-toggle="tooltip" title="About"></i> About
+                                <button class="btn btn-outline-secondary" id="aboutBtn" data-bs-toggle="tooltip" title="About">
+                                    <i class="bi bi-info-circle-fill fs-5"></i>
                                 </button>
                             </div>
                         </div>
@@ -118,7 +96,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Active Connections Section - Now 4 columns -->
             <div class="col-md-4">
                 <div class="card shadow-sm">
@@ -134,7 +112,7 @@
                 </div>
             </div>
         </div>
-    
+
     </div>
     <!-- Instance Details Modal -->
     <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel" aria-hidden="true">
@@ -154,7 +132,7 @@
             </div>
         </div>
     </div>
-   
+
 
     <!-- customPortModal -->
 <div class="modal fade" id="customPortModal" tabindex="-1">
@@ -232,19 +210,19 @@
             <div class="modal-body">
                 <div class="text-left">
                     <p>
-                        Hi there! 👋 I'm Mauro Arduini, and I built this app in my spare time with some amazing help from Claude.ai. 
+                        Hi there! 👋 I'm Mauro Arduini, and I built this app in my spare time with some amazing help from Claude.ai.
                         <br>
                         Want to help make it even better? I'd love to hear from you - catch me on GitHub or LinkedIn!
                     </p>
                     <div class="mt-4 d-flex justify-content-center gap-4">
-                        <a href="https://github.com/mauroo82/ssm-manager" 
-                           class="link-dark text-decoration-none text-center" 
+                        <a href="https://github.com/mauroo82/ssm-manager"
+                           class="link-dark text-decoration-none text-center"
                            target="_blank">
                             <i class="bi bi-github fs-4"></i><br>
                             GitHub Repository
                         </a>
-                        <a href="https://www.linkedin.com/in/mauro-arduini-0aa86621/" 
-                           class="link-dark text-decoration-none text-center" 
+                        <a href="https://www.linkedin.com/in/mauro-arduini-0aa86621/"
+                           class="link-dark text-decoration-none text-center"
                            target="_blank">
                             <i class="bi bi-linkedin fs-4"></i><br>
                             LinkedIn Profile
@@ -307,7 +285,7 @@
         <!-- Toasts will be added here -->
     </div>
 
- 
+
     <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 1060;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -318,13 +296,11 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
     <script>
-        // Selezioniamo gli elementi HTML necessari
         const modeSelect = document.getElementById('modeSelect');
         const remotePortContainer = document.getElementById('remotePortContainer');
         const otherHostContainer = document.getElementById('otherHostContainer');
         const startPortForwardingBtn = document.getElementById('startPortForwardingBtn');
-    
-        // Ascolta il cambiamento della selezione modalità
+
         modeSelect.addEventListener('change', function () {
             if (this.value === 'local') {
                 remotePortContainer.style.display = 'block';
