@@ -1,12 +1,17 @@
-import boto3
-from botocore.exceptions import ClientError, ProfileNotFound
+"""
+AWS Manager class to handle AWS connections and operations
+"""
+# pylint: disable=logging-fstring-interpolation
 import logging
-import configparser
-import os
+import boto3
+from botocore.exceptions import ProfileNotFound, BotoCoreError
 
 logger = logging.getLogger(__name__)
 
 class AWSManager:
+    """
+    AWS Manager class to handle AWS connections and operations
+    """
     def __init__(self):
         self.ssm_client = None
         self.ec2_client = None
@@ -17,34 +22,42 @@ class AWSManager:
         self.account_id = None
 
 
-    def disconnect_profile_and_region(self):
-        pass
-
-
     @staticmethod
     def get_profiles():
         """
         Static method to retrieve AWS profiles
-        Returns: List of profile names or empty list if no profiles found
+        Returns:
+            List of profile names or empty list if no profiles found
         """
         try:
             session = boto3.Session()
             profiles = session.available_profiles
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
             return profiles if profiles else []
-        except botocore.exceptions.BotoCoreError as e:
+        except BotoCoreError as e:
             logger.warning(f"Error retrieving AWS profiles: {e}")
             return []
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS profiles: {e}")
             return []
 
 
     def get_regions(self):
+        """
+        Get available AWS regions
+        Returns:
+            List of region names or empty list if no regions found
+        """
         return boto3.session.Session().get_available_regions('ec2')
 
 
-    def set_profile_and_region(self, profile, region):
+    def set_profile_and_region(self, profile: str, region: str):
+        """
+        Set the AWS profile and region
+        Args:
+            profile (str): The AWS profile name
+            region (str): The AWS region name
+        """
         try:
             session = boto3.Session(profile_name=profile, region_name=region)
             self.ssm_client = session.client('ssm')
@@ -59,17 +72,22 @@ class AWSManager:
             self.region = region
             self.is_connected = True
             logger.info(f"Successfully set profile to {profile} and region to {region}")
-        except ProfileNotFound:
+        except ProfileNotFound as exc:
             self.is_connected = False
             logger.error(f"Profile '{profile}' not found")
-            raise ValueError(f"Profile '{profile}' not found")
-        except Exception as e:
+            raise ValueError(f"Profile '{profile}' not found") from exc
+        except Exception as exc:  # pylint: disable=broad-except
             self.is_connected = False
-            logger.error(f"Error connecting to AWS: {str(e)}")
-            raise ValueError(f"Error connecting to AWS: {str(e)}")
+            logger.error(f"Error connecting to AWS: {str(exc)}")
+            raise ValueError(f"Error connecting to AWS: {str(exc)}") from exc
 
 
     def check_connection(self):
+        """
+        Check if the AWS connection is active
+        Returns:
+            True if connection is active, False otherwise
+        """
         if self.ec2_client is None:
             logger.warning("EC2 client not initialized")
             return False
@@ -77,14 +95,19 @@ class AWSManager:
             self.ec2_client.describe_instances(MaxResults=5)
             self.is_connected = True
             logger.debug("AWS connection check successful")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             self.is_connected = False
             logger.error(f"AWS connection check failed: {str(e)}")
         return self.is_connected
 
 
     def list_ssm_instances(self):
-        """List all EC2 instances with their SSM status"""
+        """
+        List all EC2 instances with SSM installed
+        Returns:
+            List of instance IDs or None if an error occurs
+        """
+        # pylint: disable=line-too-long
         if not self.is_connected:
             logger.warning("Attempted to list instances without an active connection")
             return None
@@ -127,7 +150,7 @@ class AWSManager:
             logger.info(f"Successfully listed {len(instances)} instances (with SSM: {len(ssm_instance_ids)})")
             return instances
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error listing instances: {str(e)}")
             if 'ExpiredTokenException' in str(e):
                 self.is_connected = False  # Set connection status to false
@@ -135,16 +158,15 @@ class AWSManager:
             return None
 
 
-    def get_instance_details(self, instance_id):
+    def get_instance_details(self, instance_id: str):
         """
         Get detailed information about a specific EC2 instance
-
         Args:
             instance_id (str): The ID of the EC2 instance
-
         Returns:
             dict: Detailed information about the instance or None if an error occurs
         """
+        # pylint: disable=line-too-long
         try:
             response = self.ec2_client.describe_instances(InstanceIds=[instance_id])
 
@@ -179,22 +201,6 @@ class AWSManager:
             logger.debug(f"Retrieved details for instance {instance_id}")
             return instance_details
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error getting instance details: {str(e)}")
             return None
-
-
-    def start_ssh_session(self, instance_id):
-        if not self.is_connected:
-            logger.warning("Attempted to start SSH session without an active connection")
-            return {"error": "Not connected to AWS"}
-        try:
-            response = self.ssm_client.start_session(
-                Target=instance_id,
-                DocumentName='AWS-StartSSHSession'
-            )
-            logger.info(f"Successfully started SSH session for instance {instance_id}")
-            return {"success": True, "sessionId": response['SessionId']}
-        except ClientError as e:
-            logger.error(f"Failed to start SSH session for instance {instance_id}: {str(e)}")
-            return {"error": str(e)}

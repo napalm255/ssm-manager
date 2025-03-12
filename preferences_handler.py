@@ -1,13 +1,15 @@
-# Create a new file: preferences_handler.py
-
+"""
+Application preferences handler
+"""
+# pylint: disable=logging-fstring-interpolation
 import json
-import os
 import logging
 from pathlib import Path
 
 class PreferencesHandler:
     """Handler for application preferences"""
-    
+    # pylint: disable=line-too-long
+
     DEFAULT_PREFERENCES = {
         "port_range": {
             "start": 60000,
@@ -29,44 +31,40 @@ class PreferencesHandler:
         """Load preferences from file or create default if not exists"""
         try:
             if self.config_file.exists():
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
                     loaded_prefs = json.load(f)
-                    # Merge with defaults to ensure all required fields exist
                     return {**self.DEFAULT_PREFERENCES, **loaded_prefs}
             else:
                 self.save_preferences(self.DEFAULT_PREFERENCES)
-                return self.DEFAULT_PREFERENCES
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logging.error(f"Error loading preferences: {str(e)}")
-            return self.DEFAULT_PREFERENCES
+        return self.DEFAULT_PREFERENCES
 
     def save_preferences(self, preferences):
         """Save preferences to file"""
         try:
-            with open(self.config_file, 'w') as f:
+            with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(preferences, f, indent=4)
             self.preferences = preferences
             self.apply_preferences()
             return True
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logging.error(f"Error saving preferences: {str(e)}")
-            return False
+        return False
 
     def apply_preferences(self):
         """Apply current preferences to application"""
         try:
-            # Set logging level
             log_level = self.preferences['logging']['level']
             numeric_level = getattr(logging, log_level.upper())
             logging.getLogger().setLevel(numeric_level)
-            
-            # Set logging format
+
             log_format = self.preferences['logging']['format']
             for handler in logging.getLogger().handlers:
                 handler.setFormatter(logging.Formatter(log_format))
-                
+
             logging.info("Applied preferences successfully")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logging.error(f"Error applying preferences: {str(e)}")
 
     def get_port_range(self):
@@ -77,12 +75,10 @@ class PreferencesHandler:
     def update_preferences(self, new_preferences):
         """Update preferences with new values"""
         try:
-            # Merge new preferences with existing ones
             updated_prefs = {**self.preferences, **new_preferences}
             if self.save_preferences(updated_prefs):
                 logging.info("Preferences updated successfully")
                 return True
-            return False
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logging.error(f"Error updating preferences: {str(e)}")
-            return False
+        return False
