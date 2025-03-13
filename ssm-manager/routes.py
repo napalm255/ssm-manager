@@ -167,11 +167,10 @@ def start_ssh(instance_id):
             cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
         elif get_os() == 'Windows':
             cmd_exec = 'cmd.exe'
-            cmd_run = f'start cmd /k "{cmd_run}"'
+            cmd_run = f'start cmd /k {cmd_run}'
 
-        command = f'{cmd_exec} {cmd_run}'
-        logging.info(f"Command: {command}")
-        process = subprocess.Popen(command, shell=True)
+        logging.info(f"Command: {cmd_run}")
+        process = subprocess.Popen(cmd_run, shell=True)
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_run)
