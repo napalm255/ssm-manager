@@ -42,13 +42,19 @@ class AWSManager:
             return []
 
 
-    def get_regions(self):
+    @staticmethod
+    def get_regions():
         """
-        Get available AWS regions
+        Static method to get available AWS regions
         Returns:
             List of region names or empty list if no regions found
         """
-        return boto3.session.Session().get_available_regions('ec2')
+        regions = []
+        try:
+            regions = boto3.session.Session().get_available_regions('ec2')
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Error retrieving AWS regions: {e}")
+        return regions
 
 
     def set_profile_and_region(self, profile: str, region: str):
@@ -131,7 +137,8 @@ class AWSManager:
                     for instance in reservation['Instances']:
                         instance_id = instance['InstanceId']
                         # Explicitly check if the instance ID is in the SSM set
-                        has_ssm = instance_id in ssm_instance_ids
+                        # has_ssm = instance_id in ssm_instance_ids
+                        has_ssm = True
 
                         instance_data = {
                             'id': instance_id,

@@ -2,6 +2,7 @@
 Application routes and API endpoints
 """
 # pylint: disable=logging-fstring-interpolation
+import platform
 import threading
 import logging
 import socket
@@ -19,6 +20,52 @@ preferences_handler = PreferencesHandler()
 #logger = logging.getLogger(__name__)
 
 active_connections = []
+
+def get_os():
+    """
+    Get the operating system name
+    Returns:
+        str: The operating system name
+    """
+    system = platform.system()
+    if system not in ['Linux', 'Windows']:
+        return 'Unsupported'
+    return system
+
+
+def get_command():
+    """
+    Get the command to start a new process
+    Returns:
+        str: The command to start a new process
+    """
+    cmd_exec = 'powershell.exe'
+    cmd_args = '-Command'
+    if get_os() == 'Linux':
+        cmd_exec = 'gnome-terminal'
+        cmd_args = '-- bash -c'
+    return cmd_exec, cmd_args
+
+
+def get_pid(cmd_executable, cmd_command):
+    """
+    Get the PID of a process by executable and command
+    Args:
+        cmd_executable (str): The executable name
+        cmd_command (str): The command to search for
+    Returns:
+        int: The PID of the process
+    """
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if proc.name().lower() == cmd_executable:
+                cmdline = ' '.join(proc.cmdline()).lower()
+                if cmd_command.lower() in cmdline:
+                    return proc.pid
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    return None
+
 
 @app.route('/api/profiles')
 def get_profiles():
@@ -82,13 +129,29 @@ def get_instances():
     except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
 
+def monitor_process(connection_id, pid):
+    """
+    Monitor the process and update the connection status
+    Args:
+        connection_id (str): Connection ID
+        pid (int): Process ID
+    """
+    try:
+        proc = psutil.Process(pid)
+        proc.wait()
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        pass
+    finally:
+        active_connections[:] = [c for c in active_connections
+                                 if c['connection_id'] != connection_id]
+
 @app.route('/api/ssh/<instance_id>', methods=['POST'])
 def start_ssh(instance_id):
     """
     Endpoint to start an SSH session with an EC2 instance
     Args:
         instance_id (str): ID of the EC2 instance
-    Returns: JSON response with status and connection ID
+    Returns: JSON response with status and connection details
     """
     # pylint: disable=line-too-long
     try:
@@ -98,22 +161,14 @@ def start_ssh(instance_id):
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
-        cmd_command = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
-        process = subprocess.Popen(f'start cmd /k "{cmd_command}"', shell=True)
+        cmd_run = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
+        cmd_exec, cmd_args = get_command()
 
-        def find_cmd_pid():
-            time.sleep(2)  # Wait for process to start
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-                try:
-                    if proc.name().lower() == 'cmd.exe':
-                        cmdline = ' '.join(proc.cmdline()).lower()
-                        if cmd_command.lower() in cmdline:
-                            return proc.pid
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
-            return None
+        process = subprocess.Popen(f'{cmd_exec} {cmd_args} "{cmd_run}"', shell=True)
+        time.sleep(2)  # Wait for the process to start
 
-        cmd_pid = find_cmd_pid()
+        cmd_pid = get_pid(cmd_exec, cmd_run)
+        logging.debug(f"SSH process PID: {cmd_pid}")
 
         connection = {
             'connection_id': connection_id,
@@ -124,101 +179,19 @@ def start_ssh(instance_id):
         }
         active_connections.append(connection)
 
-        def monitor_process():
-            try:
-                if cmd_pid:
-                    try:
-                        proc = psutil.Process(cmd_pid)
-                        proc.wait()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        pass
-                    finally:
-                        global active_connections
-                        active_connections[:] = [c for c in active_connections if c['connection_id'] != connection_id]
-            except Exception as e:  # pylint: disable=broad-except
-                logging.error(f"Error monitoring SSH process: {str(e)}")
-
-        thread = threading.Thread(target=monitor_process, daemon=True)
-        thread.start()
-
-        return jsonify({
-            "status": "success",
-            "connection_id": connection_id
-        })
-    except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error starting SSH: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/remote-host-port/<instance_id>', methods=['POST'])
-def start_remote_host_port(instance_id):
-    """
-    Start port forwarding to a remote host
-    Args:
-        instance_id (str): ID of the EC2 instance
-    Returns: JSON response with status and connection details
-    """
-    # pylint: disable=line-too-long
-    try:
-        data = request.json
-        profile = data.get('profile')
-        region = data.get('region')
-        remote_host = data.get('remote_host')
-        remote_port = data.get('remote_port')
-
-        connection_id = f"remote_port_{instance_id}_{int(time.time())}"
-
-        local_port = find_free_port()
-        if local_port is None:
-            logging.error("Could not find available port for port forwarding")
-            return jsonify({'error': 'No available ports'}), 503
-
-        logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Remote Port: {remote_port}")
-
-        aws_command = f'aws ssm start-session --region {region} --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="{remote_host}",portNumber="{remote_port}",localPortNumber="{local_port}" --profile {profile}'
-
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-
-        process = subprocess.Popen(
-            ["powershell", "-Command", aws_command],
-            startupinfo=startupinfo,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        ps_pid = find_powershell_pid()
-
-        connection = {
-            'connection_id': connection_id,
-            'instance_id': instance_id,
-            'type': 'Remote Host Port',
-            'local_port': local_port,
-            'remote_port': remote_port,
-            'remote_host': remote_host,
-            'process': process,
-            'pid': ps_pid
-        }
-        active_connections.append(connection)
-
-        monitor_thread = threading.Thread(
+        thread = threading.Thread(
             target=monitor_process,
-            args=(connection_id, ps_pid),
+            args=(connection_id, cmd_pid),
             daemon=True
         )
-        monitor_thread.start()
+        thread.start()
 
-        logging.info(f"Remote host port forwarding started - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
-
-        return jsonify({
-            "status": "success",
-            "connection_id": connection_id,
-            "local_port": local_port,
-            "remote_port": remote_port,
-            "remote_host": remote_host
-        })
+        logging.info(f"SSH session started - Instance: {instance_id}")
+        response ={**{"status": "success"}, **connection}
+        del response['process']
+        return jsonify(response)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error starting remote host port forwarding: {str(e)}")
+        logging.error(f"Error starting SSH: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/rdp/<instance_id>', methods=['POST'])
@@ -244,71 +217,137 @@ def start_rdp(instance_id):
 
         logging.info(f"Starting RDP - Instance: {instance_id}, Port: {local_port}")
 
-        aws_command = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile}"
+        cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile}"
+        cmd_exec, cmd_args = get_command()
+        if get_os() == 'Linux':
+            cmd_exec = 'aws'
+            cmd_args = ''
+            cmd_run = cmd_run[4:]
 
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
+        startupinfo = None
+        if get_os() == 'Windows':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        process = subprocess.Popen(
-            ["powershell", "-Command", aws_command],
+        process = subprocess.Popen([cmd_exec, cmd_args, cmd_run],
             startupinfo=startupinfo,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+        time.sleep(2)  # Wait for the process to start
 
-        def find_powershell_pid():
-            time.sleep(2)
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-                try:
-                    if proc.name().lower() == 'powershell.exe':
-                        cmdline = ' '.join(proc.cmdline()).lower()
-                        if aws_command.lower() in cmdline:
-                            return proc.pid
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
-            return None
+        cmd_pid = get_pid(cmd_exec, cmd_run)
 
-        ps_pid = find_powershell_pid()
-
-        subprocess.Popen(f'mstsc /v:localhost:{local_port}')
+        if get_os() == 'Windows':
+            subprocess.Popen(f'mstsc /v:localhost:{local_port}')
 
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
             'type': 'RDP',
-            'local_port': local_port,
+            'port': local_port,
             'process': process,
-            'pid': ps_pid
+            'pid': cmd_pid
         }
         active_connections.append(connection)
 
-        def monitor_process():
-            try:
-                if ps_pid:
-                    try:
-                        proc = psutil.Process(ps_pid)
-                        proc.wait()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        pass
-                    finally:
-                        global active_connections
-                        active_connections[:] = [c for c in active_connections if c['connection_id'] != connection_id]
-            except Exception as e:
-                logging.error(f"Error monitoring RDP process: {str(e)}")
-
-        thread = threading.Thread(target=monitor_process, daemon=True)
+        thread = threading.Thread(
+            target=monitor_process,
+            args=(connection_id, cmd_pid),
+            daemon=True
+        )
         thread.start()
 
         logging.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
 
-        return jsonify({
-            "status": "success",
-            "connection_id": connection_id,
-            "port": local_port
-        })
+        response ={**{"status": "success"}, **connection}
+        del response['process']
+        return jsonify(response)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error starting RDP: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/custom-port/<instance_id>', methods=['POST'])
+def start_custom_port(instance_id):
+    """
+    Start custom port forwarding to an EC2 instance
+    Args:
+        instance_id (str): ID of the EC2 instance
+    Returns: JSON response with status and connection details
+    """
+    # pylint: disable=line-too-long
+    try:
+        data = request.json
+        profile = data.get('profile')
+        region = data.get('region')
+        mode = data.get('mode', 'local')  # Default to local mode
+        remote_port = data.get('remote_port')
+        remote_host = data.get('remote_host')  # Will be None for local mode
+
+        connection_id = f"port_{mode}_{instance_id}_{int(time.time())}"
+
+        local_port = find_free_port()
+        if local_port is None:
+            logging.error("Could not find available port for port forwarding")
+            return jsonify({'error': 'No available ports'}), 503
+
+        if mode == 'local':
+            logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
+            cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
+        else:
+            logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
+            #aws_command = f'aws ssm start-session --region {region} --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="{remote_host}",portNumber="{remote_port}",localPortNumber="{local_port}" --profile {profile}'
+            cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
+
+        cmd_exec, cmd_args = get_command()
+        if get_os() == 'Linux':
+            cmd_exec = 'aws'
+            cmd_args = ''
+            cmd_run = cmd_run[4:]
+
+        startupinfo = None
+        if get_os() == 'Windows':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+
+        process = subprocess.Popen([cmd_exec, cmd_args, cmd_run],
+            startupinfo=startupinfo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        time.sleep(2)  # Wait for the process to start
+
+        cmd_pid = get_pid(cmd_exec, cmd_run)
+
+        # Create connection object with appropriate type and info
+        connection = {
+            'connection_id': connection_id,
+            'instance_id': instance_id,
+            'type': 'Remote Host Port' if mode != 'local' else 'Custom Port',
+            'local_port': local_port,
+            'remote_port': remote_port,
+            'remote_host': remote_host if mode != 'local' else None,
+            'process': process,
+            'pid': cmd_pid
+        }
+        active_connections.append(connection)
+
+        thread = threading.Thread(
+            target=monitor_process,
+            args=(connection_id, cmd_pid),
+            daemon=True
+        )
+        thread.start()
+
+        logging.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
+
+        response ={**{"status": "success"}, **connection}
+        del response['process']
+        return jsonify(response)
+    except Exception as e:  # pylint: disable=broad-except
+        logging.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/instance-details/<instance_id>')
@@ -351,7 +390,6 @@ def update_preferences():
         new_preferences = request.json
         if preferences_handler.update_preferences(new_preferences):
             return jsonify({'status': 'success'})
-        return jsonify({'error': 'Failed to update preferences'}), 500
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error updating preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -370,111 +408,6 @@ def refresh_data():
         })
     except Exception as e:  # pylint: disable=broad-except
         print(f"Error refreshing data: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/custom-port/<instance_id>', methods=['POST'])
-def start_custom_port(instance_id):
-    """
-    Start custom port forwarding to an EC2 instance
-    Args:
-        instance_id (str): ID of the EC2 instance
-    Returns: JSON response with status and connection details
-    """
-    # pylint: disable=line-too-long
-    try:
-        data = request.json
-        profile = data.get('profile')
-        region = data.get('region')
-        mode = data.get('mode', 'local')  # Default to local mode
-        remote_port = data.get('remote_port')
-        remote_host = data.get('remote_host')  # Will be None for local mode
-
-        connection_id = f"port_{mode}_{instance_id}_{int(time.time())}"
-
-        local_port = find_free_port()
-        if local_port is None:
-            logging.error("Could not find available port for port forwarding")
-            return jsonify({'error': 'No available ports'}), 503
-
-        if mode == 'local':
-            logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
-            aws_command = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
-        else:
-            logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
-            #aws_command = f'aws ssm start-session --region {region} --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="{remote_host}",portNumber="{remote_port}",localPortNumber="{local_port}" --profile {profile}'
-            aws_command = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-
-        process = subprocess.Popen(
-            ["powershell", "-Command", aws_command],
-            startupinfo=startupinfo,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-
-        def find_powershell_pid():
-            time.sleep(2)
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-                try:
-                    if proc.name().lower() == 'powershell.exe':
-                        cmdline = ' '.join(proc.cmdline()).lower()
-                        if aws_command.lower() in cmdline:
-                            return proc.pid
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
-            return None
-
-        # Find PowerShell process PID
-        ps_pid = find_powershell_pid()
-
-        # Create connection object with appropriate type and info
-        connection = {
-            'connection_id': connection_id,
-            'instance_id': instance_id,
-            'type': 'Remote Host Port' if mode != 'local' else 'Custom Port',
-            'local_port': local_port,
-            'remote_port': remote_port,
-            'remote_host': remote_host if mode != 'local' else None,
-            'process': process,
-            'pid': ps_pid
-        }
-        active_connections.append(connection)
-
-        def monitor_process():
-            try:
-                if ps_pid:
-                    try:
-                        proc = psutil.Process(ps_pid)
-                        proc.wait()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        pass
-                    finally:
-                        global active_connections
-                        active_connections[:] = [c for c in active_connections if c['connection_id'] != connection_id]
-            except Exception as e:
-                logging.error(f"Error monitoring port forwarding process: {str(e)}")
-
-        thread = threading.Thread(target=monitor_process, daemon=True)
-        thread.start()
-
-        response_data = {
-            "status": "success",
-            "connection_id": connection_id,
-            "local_port": local_port,
-            "remote_port": remote_port,
-        }
-
-        # Add remote_host to response only for remote mode
-        if mode != 'local':
-            response_data["remote_host"] = remote_host
-
-        logging.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
-
-        return jsonify(response_data)
-    except Exception as e:
-        logging.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/active-connections')
@@ -538,29 +471,6 @@ def get_active_connections():
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error getting active connections: {str(e)}")
         return jsonify([])
-
-def monitor_process(connection_id, pid):
-    """
-    Monitor the process and update the connection status
-    Args:
-        connection_id (str): Connection ID
-        pid (int): Process ID
-    """
-    try:
-        process = psutil.Process(pid)
-        while process.is_running():
-            try:
-                if process.name().lower() != 'cmd.exe':
-                    break
-                time.sleep(1)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                break
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
-        pass
-    finally:
-        global active_connections
-        active_connections[:] = [c for c in active_connections
-                                 if c['connection_id'] != connection_id]
 
 @app.route('/api/terminate-connection/<connection_id>', methods=['POST'])
 def terminate_connection(connection_id):

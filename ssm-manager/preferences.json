@@ -1,0 +1,10 @@
+{
+    "port_range": {
+        "start": 60000,
+        "end": 60200
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+    }
+}
