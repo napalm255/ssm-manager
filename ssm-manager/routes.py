@@ -161,12 +161,13 @@ def start_ssh(instance_id):
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
+        cmd_exec = None
         cmd_run = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
         if get_os() == 'Linux':
-            cmd_exec = 'gnome-terminal'
+            cmd_exec = 'aws'
             cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
         elif get_os() == 'Windows':
-            cmd_exec = 'cmd.exe'
+            cmd_exec = 'aws.exe'
             cmd_run = f'start cmd /k {cmd_run}'
 
         logging.info(f"Command: {cmd_run}")
