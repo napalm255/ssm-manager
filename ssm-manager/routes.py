@@ -324,7 +324,7 @@ def start_custom_port(instance_id):
         )
         time.sleep(2)  # Wait for the process to start
 
-        cmd_pid = get_pid(cmd_exec, cmd_run)
+        cmd_pid = get_pid(cmd_exec, cmd_aws)
         logging.debug(f"Port forwarding process PID: {cmd_pid}")
 
         # Create connection object with appropriate type and info
