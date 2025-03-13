@@ -63,6 +63,7 @@ def get_pid(cmd_executable, cmd_command):
                 if cmd_command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
+            logging.error(f"Error getting PID for {cmd_executable} {cmd_command}")
             continue
     return None
 
@@ -162,19 +163,19 @@ def start_ssh(instance_id):
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
         cmd_exec = None
-        cmd_run = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
+        cmd_aws = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}; sleep 2'
         if get_os() == 'Linux':
             cmd_exec = 'aws'
-            cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
+            cmd_run = f'gnome-terminal -- bash -c "{cmd_aws}"'
         elif get_os() == 'Windows':
             cmd_exec = 'aws.exe'
-            cmd_run = f'start cmd /k {cmd_run}'
+            cmd_run = f'start cmd /k {cmd_aws}'
 
         logging.info(f"Command: {cmd_run}")
         process = subprocess.Popen(cmd_run, shell=True)
         time.sleep(2)  # Wait for the process to start
 
-        cmd_pid = get_pid(cmd_exec, cmd_run)
+        cmd_pid = get_pid(cmd_exec, cmd_aws)
         logging.debug(f"SSH process PID: {cmd_pid}")
 
         connection = {
