@@ -47,8 +47,6 @@ def get_pid(executable, command):
         try:
             if proc.name().lower() == executable:
                 cmdline = ' '.join(proc.cmdline()).lower()
-                logging.info(f"Checking PID: {proc.pid} - {cmdline}")
-                logging.info(f'Command: {command}')
                 if command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -239,7 +237,7 @@ def start_rdp(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_aws)
-        logging.info(f"RDP process PID: {cmd_pid}")
+        logging.debug(f"RDP process PID: {cmd_pid}")
 
         if get_os() == 'Windows':
             subprocess.Popen(f'mstsc /v:localhost:{local_port}')
@@ -300,16 +298,17 @@ def start_custom_port(instance_id):
         cmd_run = None
         if mode == 'local':
             logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
-            cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
+            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
         else:
             logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
-            #aws_command = f'aws ssm start-session --region {region} --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="{remote_host}",portNumber="{remote_port}",localPortNumber="{local_port}" --profile {profile}'
-            cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
+            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
 
         if get_os() == 'Linux':
             cmd_exec = 'aws'
+            cmd_run = cmd_aws
         elif get_os() == 'Windows':
             cmd_exec = 'aws.exe'
+            cmd_aws = cmd_aws.replace('aws ', 'aws.exe ')
             cmd_run = f'powershell -Command "{cmd_aws}"'
 
         startupinfo = None
@@ -326,6 +325,7 @@ def start_custom_port(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_run)
+        logging.debug(f"Port forwarding process PID: {cmd_pid}")
 
         # Create connection object with appropriate type and info
         connection = {
