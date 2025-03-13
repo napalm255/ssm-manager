@@ -7,6 +7,7 @@ import threading
 import logging
 import socket
 import time
+import shlex
 import subprocess
 import random
 import psutil
@@ -33,21 +34,7 @@ def get_os():
     return system
 
 
-def get_command():
-    """
-    Get the command to start a new process
-    Returns:
-        str: The command to start a new process
-    """
-    cmd_exec = 'powershell.exe'
-    cmd_args = '-Command'
-    if get_os() == 'Linux':
-        cmd_exec = 'gnome-terminal'
-        cmd_args = '-- bash -c'
-    return cmd_exec, cmd_args
-
-
-def get_pid(cmd_executable, cmd_command):
+def get_pid(executable, command):
     """
     Get the PID of a process by executable and command
     Args:
@@ -58,12 +45,12 @@ def get_pid(cmd_executable, cmd_command):
     """
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            if proc.name().lower() == cmd_executable:
+            if proc.name().lower() == executable:
                 cmdline = ' '.join(proc.cmdline()).lower()
-                if cmd_command.lower() in cmdline:
+                if command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
-            logging.error(f"Error getting PID for {cmd_executable} {cmd_command}")
+            logging.error(f"Error getting PID for {executable} {command}")
             continue
     return None
 
@@ -163,6 +150,7 @@ def start_ssh(instance_id):
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
         cmd_exec = None
+        cmd_run = None
         cmd_aws = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
         if get_os() == 'Linux':
             cmd_exec = 'aws'
@@ -171,7 +159,6 @@ def start_ssh(instance_id):
             cmd_exec = 'aws.exe'
             cmd_run = f'start cmd /k {cmd_aws}'
 
-        logging.info(f"Command: {cmd_run}")
         process = subprocess.Popen(cmd_run, shell=True)
         time.sleep(2)  # Wait for the process to start
 
@@ -225,12 +212,14 @@ def start_rdp(instance_id):
 
         logging.info(f"Starting RDP - Instance: {instance_id}, Port: {local_port}")
 
+        cmd_exec = None
+        cmd_run = None
         cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile}"
-        cmd_exec, cmd_args = get_command()
         if get_os() == 'Linux':
             cmd_exec = 'aws'
-            cmd_args = ''
-            cmd_run = cmd_run[4:]
+        elif get_os() == 'Windows':
+            cmd_exec = 'aws.exe'
+            cmd_run = f'powershell -Command "{cmd_aws}"'
 
         startupinfo = None
         if get_os() == 'Windows':
@@ -238,7 +227,7 @@ def start_rdp(instance_id):
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        process = subprocess.Popen([cmd_exec, cmd_args, cmd_run],
+        process = subprocess.Popen(shlex.split(cmd_run),
             startupinfo=startupinfo,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
@@ -246,9 +235,12 @@ def start_rdp(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_run)
+        logging.info(f"RDP process PID: {cmd_pid}")
 
         if get_os() == 'Windows':
             subprocess.Popen(f'mstsc /v:localhost:{local_port}')
+        else:
+            logging.warning("RDP is not supported on Linux")
 
         connection = {
             'connection_id': connection_id,
@@ -300,6 +292,8 @@ def start_custom_port(instance_id):
             logging.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
 
+        cmd_exec = None
+        cmd_run = None
         if mode == 'local':
             logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
             cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
@@ -308,11 +302,11 @@ def start_custom_port(instance_id):
             #aws_command = f'aws ssm start-session --region {region} --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="{remote_host}",portNumber="{remote_port}",localPortNumber="{local_port}" --profile {profile}'
             cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile}"
 
-        cmd_exec, cmd_args = get_command()
         if get_os() == 'Linux':
             cmd_exec = 'aws'
-            cmd_args = ''
-            cmd_run = cmd_run[4:]
+        elif get_os() == 'Windows':
+            cmd_exec = 'aws.exe'
+            cmd_run = f'powershell -Command "{cmd_aws}"'
 
         startupinfo = None
         if get_os() == 'Windows':
@@ -320,7 +314,7 @@ def start_custom_port(instance_id):
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
 
-        process = subprocess.Popen([cmd_exec, cmd_args, cmd_run],
+        process = subprocess.Popen(shlex.split(cmd_run),
             startupinfo=startupinfo,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
