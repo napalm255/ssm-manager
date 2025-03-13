@@ -331,7 +331,7 @@ def start_custom_port(instance_id):
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
-            'type': 'Remote Host Port' if mode != 'local' else 'Custom Port',
+            'type': 'Custom Port',
             'local_port': local_port,
             'remote_port': remote_port,
             'remote_host': remote_host if mode != 'local' else None,
