@@ -216,12 +216,13 @@ def start_rdp(instance_id):
 
         cmd_exec = None
         cmd_run = None
-        cmd_run = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile}"
+        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile}"
         if get_os() == 'Linux':
             cmd_exec = 'aws'
+            cmd_run = cmd_aws
         elif get_os() == 'Windows':
             cmd_exec = 'aws.exe'
-            cmd_run = f'powershell -Command "{cmd_run}"'
+            cmd_run = f'powershell -Command "{cmd_aws}"'
 
         startupinfo = None
         if get_os() == 'Windows':
@@ -236,7 +237,7 @@ def start_rdp(instance_id):
         )
         time.sleep(2)  # Wait for the process to start
 
-        cmd_pid = get_pid(cmd_exec, cmd_run)
+        cmd_pid = get_pid(cmd_exec, cmd_aws)
         logging.info(f"RDP process PID: {cmd_pid}")
 
         if get_os() == 'Windows':
