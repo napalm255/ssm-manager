@@ -47,6 +47,8 @@ def get_pid(executable, command):
         try:
             if proc.name().lower() == executable:
                 cmdline = ' '.join(proc.cmdline()).lower()
+                logging.info(f"Checking PID: {proc.pid} - {cmdline}")
+                logging.info(f'Command: {command}')
                 if command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
