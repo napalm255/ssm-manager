@@ -162,9 +162,16 @@ def start_ssh(instance_id):
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
         cmd_run = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile}'
-        cmd_exec, cmd_args = get_command()
+        if get_os() == 'Linux':
+            cmd_exec = 'gnome-terminal'
+            cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
+        elif get_os() == 'Windows':
+            cmd_exec = 'cmd.exe'
+            cmd_run = f'start cmd /k "{cmd_run}"'
 
-        process = subprocess.Popen(f'{cmd_exec} {cmd_args} "{cmd_run}"', shell=True)
+        command = f'{cmd_exec} {cmd_run}'
+        logging.info(f"Command: {command}")
+        process = subprocess.Popen(command, shell=True)
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_run)
