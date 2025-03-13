@@ -250,7 +250,7 @@ def start_rdp(instance_id):
             'connection_id': connection_id,
             'instance_id': instance_id,
             'type': 'RDP',
-            'port': local_port,
+            'local_port': local_port,
             'process': process,
             'pid': cmd_pid
         }
