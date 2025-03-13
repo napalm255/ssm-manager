@@ -222,6 +222,7 @@ def start_rdp(instance_id):
             cmd_run = cmd_aws
         elif get_os() == 'Windows':
             cmd_exec = 'aws.exe'
+            cmd_aws = cmd_aws.replace('aws ', 'aws.exe ')
             cmd_run = f'powershell -Command "{cmd_aws}"'
 
         startupinfo = None
