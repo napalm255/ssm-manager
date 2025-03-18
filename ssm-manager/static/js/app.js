@@ -21,7 +21,7 @@ const app = {
         endPort: 60100,
         logLevel: 'INFO'
     },
-    // Initialize application
+
     async init() {
         console.log('Initializing application...');
         try {
@@ -29,7 +29,7 @@ const app = {
             this.initializeComponents();
             this.setupEventListeners();
             await this.loadProfilesAndRegions();
-            this.startConnectionMonitoring(); 
+            this.startConnectionMonitoring();
             console.log('Application initialized successfully');
         } catch (error) {
             console.error('Error initializing application:', error);
@@ -54,7 +54,6 @@ const app = {
             loadingOverlay: document.getElementById('loadingOverlay')
         };
     },
-
 
     initializeComponents() {
         // Initialize modals
@@ -156,37 +155,7 @@ const app = {
         this.loadPreferences();
     },
 
-    showCustomPortModal(instanceId) {
-        console.log(`Showing custom port modal for instance ${instanceId}`);
-
-        // Store the instance ID
-        this.selectedInstanceId = instanceId;
-
-        // Safely get and reset the form
-        const remotePortInput = document.getElementById('remotePort');
-        if (remotePortInput) {
-            remotePortInput.value = '80';
-        }
-
-        // Check if modal exists before showing
-        if (this.modals.customPort) {
-            this.modals.customPort.show();
-        } else {
-            console.error('Custom port modal not initialized');
-            this.showError('Failed to show modal. Please check the console for details.');
-        }
-    },
-
-    // Setup event listeners
-    setupEventListeners() {
-        console.log('Setting up event listeners...');
-        this.elements.connectBtn.onclick = () => this.toggleConnection();
-        this.elements.refreshBtn.onclick = () => this.refreshData();
-        this.elements.autoRefreshSwitch.onchange = (e) => this.toggleAutoRefresh(e);
-    },
-
     // Load profiles and regions
-
     async loadProfilesAndRegions() {
         console.log('[Profile Loading] Starting to load profiles and regions...');
         try {
@@ -229,7 +198,6 @@ const app = {
         }
     },
 
-    // Update select element with options
     updateSelect(select, options) {
         if (!select || !options) return;
         console.log(`Updating select ${select.id} with options:`, options);
@@ -315,7 +283,6 @@ const app = {
         }
     },
 
-
     // Disconnect from AWS
     disconnect() {
         this.isConnected = false;
@@ -323,13 +290,13 @@ const app = {
         this.currentRegion = '';
         this.awsAccountId = null; // Clear account ID
         this.instances = [];
-        this.connections = [];
+        // this.connections = [];
 
         this.updateAwsAccountDisplay();
         this.elements.connectBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
         this.elements.connectBtn.classList.replace('btn-danger', 'btn-success');
         this.elements.instancesList.innerHTML = '';
-        this.elements.connectionsList.innerHTML = '';
+        //this.elements.connectionsList.innerHTML = '';
         this.updateCounters();
 
         if (this.autoRefreshInterval) {
@@ -338,7 +305,6 @@ const app = {
 
         this.showSuccess('Disconnected successfully');
     },
-
 
     // Load instances
     async loadInstances() {
@@ -479,7 +445,6 @@ const app = {
         this.elements.connectionCount.textContent = `${this.connections.length} active`;
     },
 
-    // Connection Management Methods
     async startSSH(instanceId) {
         try {
             this.showLoading();
@@ -558,12 +523,11 @@ const app = {
         this.selectedInstanceId = instanceId;
 
         // Reset the form
-        document.getElementById('remotePort').value = '80';
+        document.getElementById('remotePort').value = '1433';
 
         // Show the modal
         this.modals.customPort.show();
     },
-
 
     async showInstanceDetails(instanceId) {
         console.log(`Showing instance details for ${instanceId}`);
@@ -644,9 +608,6 @@ const app = {
             this.showError('Failed to copy to clipboard');
         }
     },
-
-
-
 
     async startCustomPortForwarding() {
         const remotePort = document.getElementById('remotePort').value;
@@ -863,10 +824,6 @@ const app = {
 
     };
 
-
-
-
-
     app.refreshData = async function() {
         if (!this.isConnected) return;
 
@@ -1076,7 +1033,6 @@ const app = {
         }
     };
 
-
     // Handle switching between port forwarding modes
     app.handleModeChange = function() {
         // Get the containers for different modes
@@ -1173,7 +1129,6 @@ const app = {
         }
     };
 
-    // Modifica la funzione renderConnections per gestire meglio le informazioni di connessione
     app.renderConnections = function() {
         const container = this.elements.connectionsList;
         container.innerHTML = '';
@@ -1211,9 +1166,9 @@ const app = {
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge 
-                                ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''} 
-                                ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}" 
+                            <span class="badge
+                                ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''}
+                                ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}"
                                 style="${this.getConnectionTypeColor(conn.type) === '#800080' ? `background-color: #800080;` : ''}">
                                 ${conn.type}
                             </span>
@@ -1314,7 +1269,6 @@ const app = {
             this.elements.loadingOverlay.classList.add('d-none');
         }
     };
-
 
 
 // Initialize app when document is ready

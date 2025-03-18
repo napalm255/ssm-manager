@@ -170,6 +170,7 @@ def start_ssh(instance_id):
             'instance_id': instance_id,
             'type': 'SSH',
             'process': process,
+            'profile': profile,
             'pid': cmd_pid
         }
         active_connections.append(connection)
@@ -250,6 +251,7 @@ def start_rdp(instance_id):
             'type': 'RDP',
             'local_port': local_port,
             'process': process,
+            'profile': profile,
             'pid': cmd_pid
         }
         active_connections.append(connection)
@@ -336,6 +338,7 @@ def start_custom_port(instance_id):
             'remote_port': remote_port,
             'remote_host': remote_host if mode != 'local' else None,
             'process': process,
+            'profile': profile,
             'pid': cmd_pid
         }
         active_connections.append(connection)
@@ -538,6 +541,38 @@ def set_log_level():
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error setting log level: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/refresh-profiles', methods=['POST'])
+def refresh_profiles():
+    """
+    Refresh AWS profiles and maintain current connection if possible
+    Returns: JSON response with status and updated profile list
+    """
+    try:
+        # Store current connection info
+        current_profile = aws_manager.profile
+        current_region = aws_manager.region
+
+        # Get fresh list of profiles
+        profiles = aws_manager.get_profiles()
+
+        # Check if current profile is still valid
+        is_current_valid = current_profile in profiles if current_profile else False
+
+        response_data = {
+            'status': 'success',
+            'profiles': profiles,
+            'currentProfile': current_profile if is_current_valid else None,
+            'currentRegion': current_region if is_current_valid else None,
+            'accountId': aws_manager.account_id if is_current_valid else None
+        }
+
+        logging.info(f"Profiles refreshed successfully. Found {len(profiles)} profiles")
+        return jsonify(response_data)
+
+    except Exception as e:  # pylint: disable=broad-except
+        logging.error(f"Failed to refresh profiles: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def find_free_port():
