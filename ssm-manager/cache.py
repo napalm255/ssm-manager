@@ -5,8 +5,9 @@ from cachelib.file import FileSystemCache
 
 class Cache:
     def __init__(self):
-        self.cache = FileSystemCache(cache_dir='flask_session', threshold=500, default_timeout=3600)
-        self.cache.set('active_connections', [])
+        self.cache = FileSystemCache(cache_dir='cache', threshold=500, default_timeout=3600)
+        if self.cache.get('active_connections') is None:
+            self.cache.set('active_connections', [])
 
     def get(self, key):
         return self.cache.get(key)

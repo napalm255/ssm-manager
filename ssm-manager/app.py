@@ -146,7 +146,6 @@ def start_ssh(instance_id):
         cmd_pid = get_pid(cmd_exec, cmd_aws)
         logging.debug(f"SSH process PID: {cmd_pid}")
 
-        print(dir(process))
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
@@ -157,15 +156,14 @@ def start_ssh(instance_id):
             'timestamp': int(time.time()),
             'status': 'active'
         }
-        print('*'*100)
         cache.append('active_connections', connection)
 
-        thread = threading.Thread(
-            target=monitor_process,
-            args=(connection_id, cmd_pid),
-            daemon=True
-        )
-        thread.start()
+        # thread = threading.Thread(
+        #     target=monitor_process,
+        #     args=(connection_id, cmd_pid),
+        #     daemon=True
+        # )
+        # thread.start()
 
         logging.info(f"SSH session started - Instance: {instance_id}")
         return jsonify(connection)
@@ -242,12 +240,12 @@ def start_rdp(instance_id):
         }
         cache.append('active_connections', connection)
 
-        thread = threading.Thread(
-            target=monitor_process,
-            args=(connection_id, cmd_pid),
-            daemon=True
-        )
-        thread.start()
+        # thread = threading.Thread(
+        #     target=monitor_process,
+        #     args=(connection_id, cmd_pid),
+        #     daemon=True
+        # )
+        # thread.start()
 
         logging.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
         return jsonify(connection)
@@ -329,12 +327,12 @@ def start_custom_port(instance_id):
         }
         cache.append('active_connections', connection)
 
-        thread = threading.Thread(
-            target=monitor_process,
-            args=(connection_id, cmd_pid),
-            daemon=True
-        )
-        thread.start()
+        # thread = threading.Thread(
+        #     target=monitor_process,
+        #     args=(connection_id, cmd_pid),
+        #     daemon=True
+        # )
+        # thread.start()
 
         logging.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
         return jsonify(connection)
@@ -520,21 +518,21 @@ def home():
     return render_template('index.html')
 
 
-def monitor_process(connection_id, pid):
-    """
-    Monitor the process and update the connection status
-    Args:
-        connection_id (str): Connection ID
-        pid (int): Process ID
-    """
-    try:
-        proc = psutil.Process(pid)
-        proc.wait()
-    except (psutil.NoSuchProcess, psutil.AccessDenied):
-        pass
-    finally:
-        cache.get('active_connections')[:] = [c for c in cache.get('active_connections')
-                                 if c['connection_id'] != connection_id]
+# def monitor_process(connection_id, pid):
+#     """
+#     Monitor the process and update the connection status
+#     Args:
+#         connection_id (str): Connection ID
+#         pid (int): Process ID
+#     """
+#     try:
+#         proc = psutil.Process(pid)
+#         proc.wait()
+#     except (psutil.NoSuchProcess, psutil.AccessDenied):
+#         pass
+#     finally:
+#         cache.get('active_connections')[:] = [c for c in cache.get('active_connections')
+#                                  if c['connection_id'] != connection_id]
 
 
 def find_free_port():
