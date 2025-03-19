@@ -668,6 +668,9 @@ def run_server_thread():
     server = threading.Thread(target=run_server)
     server.daemon = True
     server.start()
+    # Wait a bit for the server to start
+    time.sleep(1)
+
 
 def create_application(start_server=True):
     """
@@ -675,14 +678,6 @@ def create_application(start_server=True):
     """
     if start_server:
         run_server_thread()
-        # Wait a bit for the server to start
-        time.sleep(1)
-    # server = threading.Thread(target=run_server)
-    # server.daemon = True
-    # server.start()
-
-    # Wait a bit for the server to start
-    # time.sleep(1)
 
     webview.create_window(
         title='SSM Manager',
@@ -717,6 +712,7 @@ def create_tray():
         """
         Open the application
         """
+        # pylint: disable=unused-argument
         logging.info(f"Opening application: {item.text}")
         create_application(start_server=False)
 
@@ -725,12 +721,7 @@ def create_tray():
         MenuItem('Exit', exit_app)
     )
 
-    server = threading.Thread(target=run_server)
-    server.daemon = True
-    server.start()
-
-    # Wait a bit for the server to start
-    time.sleep(1)
+    run_server_thread()
 
     icon = Icon('SSM Manager', image, 'SSH Manager', menu=menu)
     icon.run()
