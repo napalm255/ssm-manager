@@ -19,7 +19,7 @@ from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from preferences import PreferencesHandler
 from manager import AWSManager
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_file
 from cache import Cache
 # pylint: disable=logging-fstring-interpolation, line-too-long
 
@@ -69,6 +69,7 @@ def get_profiles():
         logging.error(f"Failed to load AWS profiles: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to load profiles'}), 500
 
+
 @app.route('/api/regions')
 def get_regions():
     """
@@ -80,6 +81,7 @@ def get_regions():
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/connect', methods=['POST'])
 def connect():
@@ -105,6 +107,7 @@ def connect():
         logging.error(f"Connection error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/instances')
 def get_instances():
     """
@@ -116,6 +119,7 @@ def get_instances():
         return jsonify(instances) if instances else jsonify([])
     except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/ssh/<instance_id>', methods=['POST'])
 def start_ssh(instance_id):
@@ -162,18 +166,12 @@ def start_ssh(instance_id):
         }
         cache.append('active_connections', connection)
 
-        # thread = threading.Thread(
-        #     target=monitor_process,
-        #     args=(connection_id, cmd_pid),
-        #     daemon=True
-        # )
-        # thread.start()
-
         logging.info(f"SSH session started - Instance: {instance_id}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error starting SSH: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/rdp/<instance_id>', methods=['POST'])
 def start_rdp(instance_id):
@@ -244,18 +242,12 @@ def start_rdp(instance_id):
         }
         cache.append('active_connections', connection)
 
-        # thread = threading.Thread(
-        #     target=monitor_process,
-        #     args=(connection_id, cmd_pid),
-        #     daemon=True
-        # )
-        # thread.start()
-
         logging.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error starting RDP: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/custom-port/<instance_id>', methods=['POST'])
 def start_custom_port(instance_id):
@@ -331,18 +323,12 @@ def start_custom_port(instance_id):
         }
         cache.append('active_connections', connection)
 
-        # thread = threading.Thread(
-        #     target=monitor_process,
-        #     args=(connection_id, cmd_pid),
-        #     daemon=True
-        # )
-        # thread.start()
-
         logging.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/instance-details/<instance_id>')
 def get_instance_details(instance_id):
@@ -362,6 +348,7 @@ def get_instance_details(instance_id):
         logging.error(f"Error getting instance details: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/preferences', methods=['GET'])
 def get_preferences():
     """
@@ -373,6 +360,7 @@ def get_preferences():
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error getting preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/preferences', methods=['POST'])
 def update_preferences():
@@ -387,6 +375,7 @@ def update_preferences():
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error updating preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/refresh', methods=['POST'])
 def refresh_data():
@@ -403,6 +392,7 @@ def refresh_data():
     except Exception as e:  # pylint: disable=broad-except
         print(f"Error refreshing data: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/active-connections')
 def get_active_connections():
@@ -454,6 +444,7 @@ def get_active_connections():
         logging.error(f"Error getting active connections: {str(e)}")
         return jsonify([])
 
+
 @app.route('/api/terminate-connection/<connection_id>', methods=['POST'])
 def terminate_connection(connection_id):
     """
@@ -493,6 +484,7 @@ def terminate_connection(connection_id):
         logging.error(f"Error terminating connection: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/set-log-level', methods=['POST'])
 def set_log_level():
     """
@@ -513,6 +505,7 @@ def set_log_level():
         logging.error(f"Error setting log level: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/')
 def home():
     """
@@ -520,6 +513,15 @@ def home():
     Returns: Rendered HTML template
     """
     return render_template('index.html')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    """
+    Favicon route
+    Returns: Favicon image
+    """
+    return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 # def monitor_process(connection_id, pid):
