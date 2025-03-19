@@ -676,7 +676,7 @@ def create_tray():
         """
         print('exiting app...')
         icon.stop()
-        import signal
+        import os, signal
         os.kill(os.getpid(), signal.SIGTERM)
 
     menu = Menu(
