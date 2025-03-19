@@ -661,16 +661,28 @@ def run_server(debug=False):
     )
 
 
-def create_application():
+def run_server_thread():
     """
-    Create the application window
+    Run the Flask server in a separate thread
     """
     server = threading.Thread(target=run_server)
     server.daemon = True
     server.start()
 
+def create_application(start_server=True):
+    """
+    Create the application window
+    """
+    if start_server:
+        run_server_thread()
+        # Wait a bit for the server to start
+        time.sleep(1)
+    # server = threading.Thread(target=run_server)
+    # server.daemon = True
+    # server.start()
+
     # Wait a bit for the server to start
-    time.sleep(1)
+    # time.sleep(1)
 
     webview.create_window(
         title='SSM Manager',
@@ -701,7 +713,15 @@ def create_tray():
         icon.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
+    def open_app(icon, item):
+        """
+        Open the application
+        """
+        logging.info(f"Opening application: {item.text}")
+        create_application(start_server=False)
+
     menu = Menu(
+        MenuItem('Open', open_app),
         MenuItem('Exit', exit_app)
     )
 
