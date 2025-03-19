@@ -630,6 +630,24 @@ def create_icon(width, height, color1, color2):
     return image
 
 
+def get_resource_path(relative_path):
+    """
+    Get absolute path to resource, works for dev and for PyInstaller
+    Args:
+        relative_path (str): Relative path to the resource
+    Returns:
+        str: Absolute path to the resource
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.dirname(os.path.realpath(__file__))
+
+    print(base_path)
+    return os.path.join(base_path, relative_path)
+
+
 def run_server(debug=False):
     """
     Run the Flask server
@@ -669,7 +687,8 @@ def create_tray():
     Create the system tray icon
     """
     try:
-        image = Image.open('static/favicon.ico')
+        icon_file = get_resource_path('static/favicon.ico')
+        image = Image.open(icon_file)
     except FileNotFoundError:
         logging.warning("Icon file not found, using fallback image")
         image = create_icon(32, 32, 'black', 'white')
