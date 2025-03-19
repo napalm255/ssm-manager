@@ -669,7 +669,7 @@ def create_tray():
     Create the system tray icon
     """
     try:
-        image = Image.open('icon.ico')
+        image = Image.open('static/favicon.ico')
     except FileNotFoundError:
         logging.warning("Icon file not found, using fallback image")
         image = create_icon(32, 32, 'black', 'white')
