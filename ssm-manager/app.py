@@ -610,6 +610,24 @@ def get_os():
     return system
 
 
+def create_icon(width, height, color1, color2):
+    """
+    Generates a simple fallback image
+    Args:
+        width (int): Image width
+        height (int): Image height
+        color1 (str): Background color
+        color2 (str): Foreground color
+    Returns:
+        Image: The generated image
+    """
+    image = Image.new('RGB', (width, height), color1)
+    dc = ImageDraw.Draw(image)
+    dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
+    dc.rectangle((0, height // 2, width // 2, height), fill=color2)
+    return image
+
+
 def run_server(debug=False):
     """
     Run the Flask server
@@ -644,24 +662,6 @@ def create_application():
     webview.start()
 
 
-def create_icon_fallback(width, height, color1, color2):
-    """
-    Generates a simple fallback image
-    Args:
-        width (int): Image width
-        height (int): Image height
-        color1 (str): Background color
-        color2 (str): Foreground color
-    Returns:
-        Image: The generated image
-    """
-    image = Image.new('RGB', (width, height), color1)
-    dc = ImageDraw.Draw(image)
-    dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
-    dc.rectangle((0, height // 2, width // 2, height), fill=color2)
-    return image
-
-
 def create_tray():
     """
     Create the system tray icon
@@ -670,7 +670,7 @@ def create_tray():
         image = Image.open('icon.ico')
     except FileNotFoundError:
         logging.warning("Icon file not found, using fallback image")
-        image = create_icon_fallback(32, 32, 'black', 'white')
+        image = create_icon(32, 32, 'black', 'white')
 
     def exit_app(icon, item):
         """
