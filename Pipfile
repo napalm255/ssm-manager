@@ -8,17 +8,16 @@ boto3 = "*"
 flask = "*"
 psutil = "*"
 pythonnet = "*"
-pyinstaller = "*"
 colorama = "*"
 pywebview = {version = "*", markers = "sys_platform == 'win32'"}
 'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
-pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
-pefile = {version = "*", markers = "sys_platform == 'win32'"}
-flask-session = "*"
 cachelib = "*"
 pystray = "*"
 
 [dev-packages]
+pyinstaller = "*"
+pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
+pefile = {version = "*", markers = "sys_platform == 'win32'"}
 pylint = "*"
 
 [requires]

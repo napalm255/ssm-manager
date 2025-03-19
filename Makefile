@@ -1,11 +1,11 @@
 build:
-	pyinstaller --onedir --noconsole \
-		--add-data "static/css:static/css" --add-data "static/js:static/js" \
-		--add-data "templates:templates" --add-data "preferences.json:." \
-		--add-data "image:image" --add-data "splash.jpg:." \
-		--add-data "icon.ico:." --icon=icon.ico \
+	cd ssm-manager && \
+	pyinstaller --onedir --noconsole --clean --noconfirm \
+		--add-data "static:static" \
+		--add-data "templates:templates" \
+		--icon="static/favicon.ico" \
 		--name="SSM-Manager" \
-		--clean app.py
+		app.py
 
 clean:
 	rm -rf app.log *.spec __pycache__ build dist

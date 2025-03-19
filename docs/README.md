@@ -25,16 +25,17 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 
 ## Description
 
-SSM Manager is a Windows desktop application that provides a graphical interface for managing AWS Systems Manager sessions. It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for SSH sessions, RDP connections, custom port forwarding, and host port forwarding.
+SSM Manager is a cross-platform desktop application that provides a graphical interface for managing AWS Systems Manager sessions. It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for SSH sessions, RDP connections, custom port forwarding, and host port forwarding.
 
 ## Features
 
 ### Core Functionality
 - **Profile and Region Management**
-  - Easy switching between AWS profiles
+  - Easy switching between AWS profiles (including sso)
   - Region selection
   - Connection status monitoring
   - Profile preferences persistence
+  - Maintain connections across multiple profiles
 
 ### Instance Management
 - **Instance Listing**
@@ -80,7 +81,7 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 
 ## Installation
 
-1. Download the latest release from the releases page [**HERE**](https://github.com/mauroo82/ssm-manager/releases/tag/1.1).
+1. Download the latest release from the releases page
 2. Run the installer `setup.exe`.
 3. Ensure that AWS CLI and SSM Plugin are installed.
    ```bash
@@ -89,10 +90,8 @@ SSM Manager is a Windows desktop application that provides a graphical interface
    ```
 5. Choose one of the following methods to configure AWS access:
    - **Option A**: Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-   - **Option B**: Install and configure Leapp, then log in to AWS. [**Instructions here**](https://github.com/Noovolari/leapp)
-6. Launch **SSM Manager**.
-7. You must have the SSM agent installed on your EC2 to show all features on SSM Manager
-8. Verify proper IAM permissions for SSM sessions
+6. Install the Session Manager plugin for AWS CLI. [**Instructions here**](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+7. Launch **SSM Manager**.
 
 
 ## Usage
@@ -112,20 +111,32 @@ SSM Manager is a Windows desktop application that provides a graphical interface
 - flask
 - boto3
 - psutil
-- webview
+- pythonnet
+- cachelib
+- pywebview
+- pystray
 - requirements.txt for more details
 
 ### Setup Development Environment
 ```bash
-git clone https://github.com/yourusername/aws-ssm-manager.git
-cd aws-ssm-manager
-pip install -r requirements.txt
+git clone https://github.com/napalm255/ssm-manager.git
+cd ssm-manager
+pipenv install -d
+pipenv shell
+
 ```
 
 ### Building from Source
-```bash
-pyinstaller --onedir --noconsole --add-data "static/css:static/css" --add-data "static/js:static/js" --add-data "templates:templates" --add-data "preferences.json:." --add-data "image:image" --add-data "splash.jpg:." --add-data "icon.ico:." --icon=icon.ico --name="SSM Manager" --clean app.py
 
+## For Linux
+```bash
+make clean build
+
+```
+
+## For windows
+```powershell
+.\make.bat
 ```
 
 ## Contributing
@@ -135,16 +146,17 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## Bug reports
 
 Create an issue on GitHub, please include the following (if one of them is not applicable to the issue then it's not needed):
-  • The steps to reproduce the bug
-  • Logs file app.log
-  • The version of software
-  • Your OS & Browser including server OS
-What you were expecting to see
+- The steps to reproduce the bug
+- Logs file app.log
+- The version of software
+- Your OS & Browser including server OS
+- What you were expecting to see
 
 ## Acknowledgments
 
-- a bit support for AI
 - All contributors who helped improve this tool
+- A bit support from AI
+- Original development by [mauroo82](https://github.com/mauroo82)
 
 ## Support
 
