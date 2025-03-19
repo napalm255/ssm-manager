@@ -12,12 +12,12 @@ colorama = "*"
 pywebview = {version = "*", markers = "sys_platform == 'win32'"}
 'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
 pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
+pyinstaller = "*"
+pefile = {version = "*", markers = "sys_platform == 'win32'"}
 cachelib = "*"
 pystray = "*"
 
 [dev-packages]
-pyinstaller = "*"
-pefile = {version = "*", markers = "sys_platform == 'win32'"}
 pylint = "*"
 
 [requires]
