@@ -1,5 +1,5 @@
 cd ssm-manager
-pyinstaller --onedir --noconsole --clean ^
+pyinstaller --onedir --noconsole --clean --noconfirm ^
   --add-data "static:static" ^
   --add-data "templates:templates" ^
   --add-data "splash.jpg:." ^
