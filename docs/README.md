@@ -134,9 +134,9 @@ make clean build
 
 ```
 
-#### For windows
+#### For Windows
 ```powershell
-.\make.bat
+.\make.ps1
 ```
 
 ## Contributing

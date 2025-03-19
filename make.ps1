@@ -1,6 +1,6 @@
 # Check if pyinstaller is installed
 if (-not (Get-Command pyinstaller -ErrorAction SilentlyContinue)) {
-    Write-Host "PyInstaller is not installed..." -ForegroundColor Red
+    Write-Host "PyInstaller is not installed." -ForegroundColor Red
     Write-Host "You may want to activate your virtual environment." -ForegroundColor Yellow
     exit 1
 }
