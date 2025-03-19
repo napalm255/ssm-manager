@@ -266,7 +266,6 @@ const app = {
         }
     },
 
-    // function to update AWS account display
     updateAwsAccountDisplay() {
         const accountContainer = document.getElementById('accountIdContainer');
         const accountId = document.getElementById('awsAccountId');
@@ -283,20 +282,17 @@ const app = {
         }
     },
 
-    // Disconnect from AWS
     disconnect() {
         this.isConnected = false;
         this.currentProfile = '';
         this.currentRegion = '';
         this.awsAccountId = null; // Clear account ID
         this.instances = [];
-        // this.connections = [];
 
         this.updateAwsAccountDisplay();
         this.elements.connectBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
         this.elements.connectBtn.classList.replace('btn-danger', 'btn-success');
         this.elements.instancesList.innerHTML = '';
-        //this.elements.connectionsList.innerHTML = '';
         this.updateCounters();
 
         if (this.autoRefreshInterval) {
@@ -306,7 +302,6 @@ const app = {
         this.showSuccess('Disconnected successfully');
     },
 
-    // Load instances
     async loadInstances() {
         if (!this.isConnected) return;
 
@@ -322,7 +317,6 @@ const app = {
         }
     },
 
-    // Render instances list
     renderInstances() {
         this.elements.instancesList.innerHTML = '';
 
@@ -332,7 +326,6 @@ const app = {
         });
     },
 
-    // Create instance card
     createInstanceCard(instance) {
         const card = document.createElement('div');
         card.className = `col-md-12 ${instance.has_ssm ? '' : 'non-ssm'}`;
@@ -368,7 +361,6 @@ const app = {
         return card;
     },
 
-    // Create action buttons for instance
     createActionButtons(instanceId) {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
@@ -390,7 +382,6 @@ const app = {
         `;
     },
 
-    // Utility functions
     showLoading() {
         if (this.elements.loadingOverlay) {
             this.elements.loadingOverlay.classList.remove('d-none');

@@ -13,9 +13,9 @@ import random
 import uuid
 import psutil
 import webview
-from preferences_handler import PreferencesHandler
-from aws_manager import AWSManager
 from cache import Cache
+from preferences import PreferencesHandler
+from manager import AWSManager
 from flask import Flask, jsonify, request, render_template
 # pylint: disable=logging-fstring-interpolation, line-too-long
 
