@@ -670,7 +670,7 @@ def create_tray():
         logging.warning("Icon file not found, using fallback image")
         image = create_icon_fallback(32, 32, 'black', 'white')
 
-    def exit_app(icon):
+    def exit_app(icon, item):
         """
         Exit the application
         """
