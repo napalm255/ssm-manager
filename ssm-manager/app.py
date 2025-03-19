@@ -21,7 +21,7 @@ from preferences import PreferencesHandler
 from manager import AWSManager
 from flask import Flask, jsonify, request, render_template, send_file
 from cache import Cache
-# pylint: disable=logging-fstring-interpolation, line-too-long
+# pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 
 # Setup cache
@@ -257,7 +257,7 @@ def start_custom_port(instance_id):
         instance_id (str): ID of the EC2 instance
     Returns: JSON response with status and connection details
     """
-    # pylint: disable=line-too-long
+    # pylint: disable=line-too-long, too-many-locals
     try:
         data = request.json
         profile = data.get('profile')
@@ -370,11 +370,11 @@ def update_preferences():
     """
     try:
         new_preferences = request.json
-        if preferences_handler.update_preferences(new_preferences):
-            return jsonify({'status': 'success'})
+        preferences_handler.update_preferences(new_preferences)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error updating preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    return jsonify({'status': 'success'})
 
 
 @app.route('/api/refresh', methods=['POST'])
@@ -400,6 +400,7 @@ def get_active_connections():
     Get active connections with port information
     Returns: JSON list of active connections
     """
+    # pylint: disable=too-many-nested-blocks, too-many-branches
     try:
         active = []
         to_remove = []
@@ -640,11 +641,10 @@ def get_resource_path(relative_path):
     """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS  # pylint: disable=protected-access
     except AttributeError:
         base_path = os.path.dirname(os.path.realpath(__file__))
 
-    print(base_path)
     return os.path.join(base_path, relative_path)
 
 
