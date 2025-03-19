@@ -683,7 +683,14 @@ def create_tray():
         MenuItem('Exit', exit_app)
     )
 
-    icon = Icon('SSM Manager', image, menu=menu)
+    server = threading.Thread(target=run_server)
+    server.daemon = True
+    server.start()
+
+    # Wait a bit for the server to start
+    time.sleep(1)
+
+    icon = Icon('SSM Manager', image, 'SSH Manager', menu=menu)
     icon.run()
 
 
