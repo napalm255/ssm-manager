@@ -674,6 +674,7 @@ def create_tray():
         """
         Exit the application
         """
+        print('exiting app...')
         icon.stop()
         sys.exit()
 
