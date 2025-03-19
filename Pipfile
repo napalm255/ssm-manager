@@ -13,7 +13,7 @@ colorama = "*"
 pywebview = {version = "*", markers = "sys_platform == 'win32'"}
 'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
 pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
-pefile = {version = "*", markers = "sys_platform == 'win32'"}
+pefile = {version = "==2024.8.26", markers = "sys_platform == 'win32'"}
 cachelib = "*"
 pystray = "*"
 

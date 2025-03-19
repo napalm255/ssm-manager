@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "44473b28e9db79f26a8e4dccddb6ce39a2ab2d0d263188b9d14b0002c53c354b"
+            "sha256": "a743772caa0b9ad882d83be37a9fdb585651515e8161bfe814a6960369ddff97"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -272,8 +272,12 @@
             "version": "==24.2"
         },
         "pefile": {
+            "hashes": [
+                "sha256:3ff6c5d8b43e8c37bb6e6dd5085658d658a7a0bdcd20b6a07b1fcfc1c4e9d632",
+                "sha256:76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f"
+            ],
             "markers": "sys_platform == 'win32'",
-            "version": "*"
+            "version": "==2024.8.26"
         },
         "pillow": {
             "hashes": [
