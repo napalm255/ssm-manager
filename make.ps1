@@ -1,3 +1,9 @@
+# Check if we are in a Pipenv shell
+if (-not (Get-Process -Name python | Where-Object {$_.CommandLine -like "*pipenv shell*"})) {
+    Write-Error "You are not in a Pipenv shell environment. Please activate it before running this script."
+    exit 1
+}
+
 # Remove cache, log, and preferences files
 Remove-Item -Path "cache" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -Path "app.log" -Force -ErrorAction SilentlyContinue
