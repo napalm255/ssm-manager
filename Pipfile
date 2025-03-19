@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+boto3 = "*"
+flask = "*"
+psutil = "*"
+pythonnet = "*"
+pyinstaller = "*"
+colorama = "*"
+pywebview = {version = "*", markers = "sys_platform == 'win32'"}
+'pywebview[qt]' = {version = "*", markers = "sys_platform == 'linux'"}
+pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
+pefile = {version = "*", markers = "sys_platform == 'win32'"}
+flask-session = "*"
+cachelib = "*"
+pystray = "*"
+
+[dev-packages]
+pylint = "*"
+
+[requires]
+python_version = "3.12"
