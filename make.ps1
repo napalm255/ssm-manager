@@ -1,7 +1,7 @@
-# Check if we are in a Pipenv shell
-if (-not (Get-Process -Name python | Where-Object {$_.CommandLine -like "*pipenv shell*"})) {
-    Write-Error "You are not in a Pipenv shell environment. Please activate it before running this script."
-    exit 1
+# Check if pyinstaller is installed
+if (-not (Get-Command pyinstaller -ErrorAction SilentlyContinue)) {
+    Write-Host "PyInstaller is not installed..." -ForegroundColor Red
+    Write-Host "You may want to activate your virtual environment." -ForegroundColor Yellow
 }
 
 # Remove cache, log, and preferences files
