@@ -1,7 +1,9 @@
 """
 SSM Manager
 """
+import os
 import sys
+import signal
 import logging
 import threading
 import platform
@@ -674,9 +676,8 @@ def create_tray():
         """
         Exit the application
         """
-        print('exiting app...')
+        logging.info(f"Exiting application: {item.text}")
         icon.stop()
-        import os, signal
         os.kill(os.getpid(), signal.SIGTERM)
 
     menu = Menu(
@@ -695,7 +696,7 @@ def create_tray():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--apionly':
+    if len(sys.argv) > 1 and sys.argv[1] == '--api':
         run_server(debug=True)
     elif len(sys.argv) > 1 and sys.argv[1] == '--tray':
         create_tray()
