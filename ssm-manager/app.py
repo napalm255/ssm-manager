@@ -13,10 +13,10 @@ import random
 import uuid
 import psutil
 import webview
-from cache import Cache
 from preferences import PreferencesHandler
 from manager import AWSManager
 from flask import Flask, jsonify, request, render_template
+from cache import Cache
 # pylint: disable=logging-fstring-interpolation, line-too-long
 
 
@@ -606,7 +606,7 @@ def get_os():
     return system
 
 
-def run_server(debug=True):
+def run_server(debug=False):
     """
     Run the Flask server
     Note: When using webview, both debug and use_reloader must be set to False
