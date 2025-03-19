@@ -20,6 +20,7 @@ class AWSManager:
         self.region = None
         self.is_connected = False
         self.account_id = None
+        self.state = {}
 
 
     @staticmethod
@@ -30,8 +31,7 @@ class AWSManager:
             List of profile names or empty list if no profiles found
         """
         try:
-            session = boto3.Session()
-            profiles = session.available_profiles
+            profiles = boto3.Session().available_profiles
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
             return profiles if profiles else []
         except BotoCoreError as e:
@@ -65,10 +65,10 @@ class AWSManager:
             region (str): The AWS region name
         """
         try:
-            session = boto3.Session(profile_name=profile, region_name=region)
-            self.ssm_client = session.client('ssm')
-            self.ec2_client = session.client('ec2')
-            self.sts_client = session.client('sts')  # Initialize STS client
+            aws_session = boto3.Session(profile_name=profile, region_name=region)
+            self.ssm_client = aws_session.client('ssm')
+            self.ec2_client = aws_session.client('ec2')
+            self.sts_client = aws_session.client('sts')  # Initialize STS client
 
             # Get AWS account ID
             account_info = self.sts_client.get_caller_identity()

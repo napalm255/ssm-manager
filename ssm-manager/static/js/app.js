@@ -461,14 +461,8 @@ const app = {
 
             const result = await response.json();
 
-            if (result.status === 'success') {
-                this.addConnection({
-                    id: result.connection_id,  // Usa il connection_id dal backend
-                    instanceId: instanceId,
-                    type: 'SSH',
-                    timestamp: new Date(),
-                    status: 'active'
-                });
+            if (result.status === 'active') {
+                this.addConnection(result);
                 this.showSuccess('SSH session started successfully');
             } else {
                 throw new Error(result.error || 'Failed to start SSH session');
@@ -496,16 +490,17 @@ const app = {
 
             const result = await response.json();
 
-            if (result.status === 'success') {
-                this.addConnection({
-                    id: result.connection_id,  // Cambiato da this.generateConnectionId()
-                    instanceId: instanceId,
-                    type: 'RDP',
-                    localPort: result.local_port,  // Rinominato da port a local_port
-                    remotePort: "3389",  // Aggiunto il remote port esplicito per RDP
-                    timestamp: new Date(),
-                    status: 'active'
-                });
+            if (result.status === 'active') {
+                this.addConnection(result);
+                //this.addConnection({
+                //    connectionId: result.connection_id,
+                //    instanceId: instanceId,
+                //    type: 'RDP',
+                //    localPort: result.local_port,
+                //    remotePort: "3389",
+                //    timestamp: new Date(),
+                //    status: 'active'
+                //});
                 this.showSuccess(`RDP session started on port ${result.local_port}`);
             } else {
                 throw new Error(result.error || 'Failed to start RDP session');
@@ -583,7 +578,6 @@ const app = {
         }
     },
 
-    // Helper method to create detail rows
     createDetailRow(label, value) {
         return `
             <tr>
@@ -598,7 +592,6 @@ const app = {
         `;
     },
 
-    // Helper method to copy to clipboard
     async copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
@@ -609,58 +602,9 @@ const app = {
         }
     },
 
-    async startCustomPortForwarding() {
-        const remotePort = document.getElementById('remotePort').value;
-        const instanceId = this.selectedInstanceId;
-
-        if (!remotePort || !instanceId) {
-            this.showError('Please specify a remote port');
-            return;
-        }
-
-        try {
-            this.showLoading();
-            const response = await fetch(`/api/custom-port/${instanceId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    profile: this.currentProfile,
-                    region: this.currentRegion,
-                    remote_port: remotePort
-                })
-            });
-
-            if (!response.ok) throw new Error('Failed to start port forwarding');
-
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                this.addConnection({
-                    id: result.connection_id,  // Usa l'ID generato dal backend
-                    instanceId: instanceId,
-                    type: 'Custom Port',
-                    localPort: result.local_port,
-                    remotePort: result.remote_port,
-                    timestamp: new Date(),
-                    status: 'active'
-                });
-                this.showSuccess(`Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`);
-                this.modals.customPort.hide();
-            } else {
-                throw new Error(result.error || 'Failed to start port forwarding');
-            }
-        } catch (error) {
-            this.showError('Port forwarding error: ' + error.message);
-        } finally {
-            this.hideLoading();
-        }
-    },
-
-    // Connection Management
     addConnection(connection) {
         this.connections.push(connection);
-        this.renderConnections();
-        this.updateCounters();
+        this.checkConnections();
     },
 
     async terminateConnection(connectionId) {
@@ -686,88 +630,6 @@ const app = {
         }
     },
 
-    renderConnections() {
-        const container = this.elements.connectionsList;
-        container.innerHTML = '';
-
-        if (this.connections.length === 0) {
-            container.innerHTML = `
-                <div class="text-center text-muted p-4">
-                    <i class="bi bi-diagram-2 fs-2"></i>
-                    <p class="mt-2">No active connections</p>
-                </div>
-            `;
-            return;
-        }
-
-        this.connections.forEach(conn => {
-            const element = document.createElement('div');
-            element.className = 'connection-item';
-
-            // Format timestamp
-            const timestamp = new Date(conn.timestamp).toLocaleTimeString();
-
-            // Create connection info based on type
-            let connectionInfo = '';
-            if (conn.type === 'RDP' || conn.type === 'Custom Port') {
-                connectionInfo = `
-                    <div class="text-muted small">
-                        Local Port: ${conn.localPort}
-                        ${conn.remotePort ? `, Remote Port: ${conn.remotePort}` : ''}
-                    </div>
-                `;
-            }
-
-            element.innerHTML = `
-                <!--
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="d-flex align-items-center gap-2">
-
-                            <span class="badge bg-${this.getConnectionTypeColor(conn.type)}">
-                                ${conn.type}
-                            </span>
-
-
-                            <div class="text-muted small"><b>ID: ${this.getInstanceName(conn.instanceId)}</b</div>
-                            ${connectionInfo}
-                            <div class="text-muted small">Started at ${timestamp}</div>
-                        </div>
-
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger"
-                            onclick="app.terminateConnection('${conn.id}')">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                -->
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge
-                                ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''}
-                                ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}"
-                                style="${this.getConnectionTypeColor(conn.type) === '#800080' ? `background-color: #800080;` : ''}">
-                                ${conn.type}
-                            </span>
-                        </div>
-                        <div class="text-muted small"><b>ID: ${this.getInstanceName(conn.instanceId)}</b></div>
-                        ${connectionInfo}
-                        <div class="text-muted small">Started at ${timestamp}</div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger"
-                            onclick="app.terminateConnection('${conn.id}')">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-
-            `;
-
-            container.appendChild(element);
-        });
-    },
-
-    // Utility methods for connections
     getConnectionTypeColor(type) {
         const colors = {
             'SSH': 'dark',
@@ -786,489 +648,450 @@ const app = {
         return 'conn_' + Math.random().toString(36).substr(2, 9);
     },
 
-    // Connection monitoring
     startConnectionMonitoring() {
         setInterval(() => this.checkConnections(), 5000);
     },
 
-    async checkConnections() {
-        if (!this.isConnected || this.connections.length === 0) return;
+};
 
-        try {
-            const response = await fetch('/api/active-connections');
-            if (!response.ok) throw new Error('Failed to check connections');
+app.refreshData = async function() {
+    if (!this.isConnected) return;
 
-            const activeConnections = await response.json();
-            const activeIds = new Set(activeConnections.map(c => c.connection_id));
-
-            // Rimuovi le connessioni che non sono più attive
-            const previousCount = this.connections.length;
-            this.connections = this.connections.filter(conn => {
-                const isActive = activeIds.has(conn.id);
-                if (!isActive) {
-                    console.log(`Connection ${conn.id} is no longer active`);
-                    this.showToast(`Connection to ${this.getInstanceName(conn.instanceId)} was terminated`, 'warning');
-                }
-                return isActive;
-            });
-
-            if (previousCount !== this.connections.length) {
-                this.renderConnections();
-                this.updateCounters();
-            }
-        } catch (error) {
-            console.error('Error checking connections:', error);
-        }
-    }
-
-
-    };
-
-    app.refreshData = async function() {
-        if (!this.isConnected) return;
-
-        try {
-            this.showLoading();
-
-            // Reload profiles and regions first
-            await this.loadProfilesAndRegions();
-
-            // Reload instances
-            const response = await fetch('/api/refresh', {
-                method: 'POST'
-            });
-
-            if (!response.ok) throw new Error('Refresh failed');
-
-            const result = await response.json();
-            if (result.status === 'success') {
-                this.instances = result.instances;
-                this.renderInstances();
-                this.updateCounters();
-                this.showSuccess('Data refreshed successfully');
-            }
-        } catch (error) {
-            this.showError('Failed to refresh data: ' + error.message);
-            this.toggleAutoRefresh(false);  // Stop auto-refresh on error
-        } finally {
-            this.hideLoading();
-        }
-    };
-
-    app.toggleAutoRefresh = function(enabled) {
-        if (enabled && enabled.target) {
-            enabled = enabled.target.checked;
-        }
-
-        console.log('Toggle auto-refresh:', enabled);
-
-        if (enabled) {
-            this.startAutoRefresh();
-        } else {
-            this.stopAutoRefresh();
-        }
-    };
-
-    app.startAutoRefresh = function() {
-        console.log('Starting auto-refresh');
-        this.refreshCountdown = 30;
-        this.updateRefreshTimer();
-
-        // Clear any existing interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-        }
-
-        // Set new interval for countdown and refresh
-        this.refreshInterval = setInterval(() => {
-            this.refreshCountdown--;
-            this.updateRefreshTimer();
-
-            if (this.refreshCountdown <= 0) {
-                this.refreshData();
-                this.refreshCountdown = 30;  // Reset countdown
-            }
-        }, 1000);
-    };
-
-    app.stopAutoRefresh = function() {
-        console.log('Stopping auto-refresh');
-        // Clear the interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-
-        // Reset countdown and clear display
-        this.refreshCountdown = 0;
-        this.elements.refreshTimer.textContent = '';
-        this.elements.autoRefreshSwitch.checked = false;
-    };
-
-    app.setupEventListeners = function() {
-        console.log('Setting up event listeners...');
-        this.elements.connectBtn.onclick = () => this.toggleConnection();
-        this.elements.refreshBtn.onclick = () => this.refreshData();
-
-        // Modifica la gestione dell'evento autoRefreshSwitch
-        this.elements.autoRefreshSwitch.onchange = (e) => {
-            this.toggleAutoRefresh(e.target.checked);
-        };
-    };
-
-    app.updateRefreshTimer = function() {
-        // Only show countdown if auto-refresh is active
-        if (this.elements.autoRefreshSwitch.checked && this.refreshCountdown > 0) {
-            this.elements.refreshTimer.textContent = `(${this.refreshCountdown}s)`;
-        } else {
-            this.elements.refreshTimer.textContent = '';
-        }
-    };
-    // Update the showPreferences method in app.js
-
-    app.showPreferences = async function() {
-        console.log('Showing preferences dialog');
-
-        try {
-            // Fetch latest preferences from server
-            const response = await fetch('/api/preferences');
-            if (!response.ok) throw new Error('Failed to load preferences');
-
-            const prefs = await response.json();
-
-            // Update the form fields with current values
-            document.getElementById('startPort').value = prefs.port_range.start;
-            document.getElementById('endPort').value = prefs.port_range.end;
-            document.getElementById('logLevel').value = prefs.logging.level;
-
-            // Show the modal
-            if (this.modals.preferences) {
-                this.modals.preferences.show();
-            } else {
-                console.error('Preferences modal not initialized');
-            }
-        } catch (error) {
-            console.error('Error loading preferences:', error);
-            this.showError('Failed to load current preferences');
-        }
-    };
-
-    // Update the savePreferences method to ensure we're using the correct structure
-    app.savePreferences = async function() {
-        console.log('Saving preferences');
-        try {
-            const startPort = parseInt(document.getElementById('startPort').value);
-            const endPort = parseInt(document.getElementById('endPort').value);
-            const logLevel = document.getElementById('logLevel').value;
-
-            // Validate values
-            if (startPort >= endPort) {
-                this.showError('Start port must be less than end port');
-                return;
-            }
-
-            if (startPort < 1024 || endPort > 65535) {
-                this.showError('Ports must be between 1024 and 65535');
-                return;
-            }
-
-            // Create new preferences object matching backend structure
-            const newPreferences = {
-                port_range: {
-                    start: startPort,
-                    end: endPort
-                },
-                logging: {
-                    level: logLevel,
-                    format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-                }
-            };
-
-            const response = await fetch('/api/preferences', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newPreferences)
-            });
-
-            if (!response.ok) throw new Error('Failed to save preferences');
-
-            // Update local preferences
-            this.preferences = newPreferences;
-
-            // Hide modal and show success message
-            if (this.modals.preferences) {
-                this.modals.preferences.hide();
-            }
-            this.showSuccess('Preferences saved successfully');
-
-        } catch (error) {
-            console.error('Error saving preferences:', error);
-            this.showError('Failed to save preferences');
-        }
-    };
-
-    // Update loadPreferences to match backend structure
-    app.loadPreferences = async function() {
-        console.log('Loading initial preferences');
-        try {
-            const response = await fetch('/api/preferences');
-            if (!response.ok) throw new Error('Failed to load preferences');
-
-            this.preferences = await response.json();
-            console.log('Loaded preferences:', this.preferences);
-
-        } catch (error) {
-            console.error('Error loading initial preferences:', error);
-            // Use default values if loading fails
-            this.preferences = {
-                port_range: {
-                    start: 60000,
-                    end: 60100
-                },
-                logging: {
-                    level: 'INFO',
-                    format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-                }
-            };
-        }
-    };
-
-    // Handle switching between port forwarding modes
-    app.handleModeChange = function() {
-        // Get the containers for different modes
-        const remotePortContainer = document.getElementById('remotePortContainer');
-        const otherHostContainer = document.getElementById('otherHostContainer');
-        const modeSelect = document.getElementById('modeSelect');
-
-        // Show/hide containers based on selected mode
-        if (modeSelect.value === 'local') {
-            remotePortContainer.style.display = 'block';
-            otherHostContainer.style.display = 'none';
-        } else {
-            remotePortContainer.style.display = 'none';
-            otherHostContainer.style.display = 'block';
-        }
-    };
-
-    // Custom port forwarding with support for both local and remote host modes
-    app.startCustomPortForwarding = async function() {
-        // Get the selected mode from the dropdown
-        const mode = document.getElementById('modeSelect').value;
-        const instanceId = this.selectedInstanceId;
-
-        // Add this validation before showing loading
-        if (mode === 'local') {
-            const remotePort = document.getElementById('remotePort').value;
-            if (!remotePort || !instanceId) {
-                this.showError('Please specify a remote port');
-                return;
-            }
-        } else {
-            const remoteHost = document.getElementById('remoteHost').value;
-            const remotePort = document.getElementById('otherRemotePort').value;
-            if (!remoteHost || !remotePort || !instanceId) {
-                this.showError('Please specify both remote host and port');
-                return;
-            }
-        }
-
-        // Show loading BEFORE preparing request data
+    try {
         this.showLoading();
 
-        try {
-            let requestData = {
-                profile: this.currentProfile,
-                region: this.currentRegion,
-                mode: mode
-            };
+        await this.loadProfilesAndRegions();
 
-            // Add appropriate parameters based on mode
-            if (mode === 'local') {
-                requestData.remote_port = document.getElementById('remotePort').value;
-            } else {
-                requestData.remote_host = document.getElementById('remoteHost').value;
-                requestData.remote_port = document.getElementById('otherRemotePort').value;
-            }
+        const response = await fetch('/api/refresh', {
+            method: 'POST'
+        });
 
-            const response = await fetch(`/api/custom-port/${instanceId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
+        if (!response.ok) throw new Error('Refresh failed');
 
-            if (!response.ok) throw new Error('Failed to start port forwarding');
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                // Create connection object based on mode
-                const connectionData = {
-                    id: result.connection_id,
-                    instanceId: instanceId,
-                    type: mode === 'local' ? 'Custom Port' : 'Remote Host Port',
-                    localPort: result.local_port,
-                    remotePort: result.remote_port,
-                    remoteHost: result.remote_host,
-                    timestamp: new Date(),
-                    status: 'active'
-                };
-
-                this.addConnection(connectionData);
-
-                // Show appropriate success message
-                const successMessage = mode === 'local'
-                    ? `Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`
-                    : `Remote host port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_host}:${result.remote_port})`;
-
-                this.showSuccess(successMessage);
-                this.modals.customPort.hide();
-            }
-        } catch (error) {
-            this.showError('Port forwarding error: ' + error.message);
-        } finally {
-            this.hideLoading();
+        const result = await response.json();
+        if (result.status === 'success') {
+            this.instances = result.instances;
+            this.renderInstances();
+            this.updateCounters();
+            this.showSuccess('Data refreshed successfully');
         }
+    } catch (error) {
+        this.showError('Failed to refresh data: ' + error.message);
+        this.toggleAutoRefresh(false);  // Stop auto-refresh on error
+    } finally {
+        this.hideLoading();
+    }
+};
+
+app.toggleAutoRefresh = function(enabled) {
+    if (enabled && enabled.target) {
+        enabled = enabled.target.checked;
+    }
+
+    console.log('Toggle auto-refresh:', enabled);
+
+    if (enabled) {
+        this.startAutoRefresh();
+    } else {
+        this.stopAutoRefresh();
+    }
+};
+
+app.startAutoRefresh = function() {
+    console.log('Starting auto-refresh');
+    this.refreshCountdown = 30;
+    this.updateRefreshTimer();
+
+    if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+    }
+
+    // Set new interval for countdown and refresh
+    this.refreshInterval = setInterval(() => {
+        this.refreshCountdown--;
+        this.updateRefreshTimer();
+
+        if (this.refreshCountdown <= 0) {
+            this.refreshData();
+            this.refreshCountdown = 30;  // Reset countdown
+        }
+    }, 1000);
+};
+
+app.stopAutoRefresh = function() {
+    console.log('Stopping auto-refresh');
+    // Clear the interval
+    if (this.refreshInterval) {
+        clearInterval(this.refreshInterval);
+        this.refreshInterval = null;
+    }
+
+    // Reset countdown and clear display
+    this.refreshCountdown = 0;
+    this.elements.refreshTimer.textContent = '';
+    this.elements.autoRefreshSwitch.checked = false;
+};
+
+app.setupEventListeners = function() {
+    console.log('Setting up event listeners...');
+    this.elements.connectBtn.onclick = () => this.toggleConnection();
+    this.elements.refreshBtn.onclick = () => this.refreshData();
+
+    // Modifica la gestione dell'evento autoRefreshSwitch
+    this.elements.autoRefreshSwitch.onchange = (e) => {
+        this.toggleAutoRefresh(e.target.checked);
     };
+};
 
-    app.renderConnections = function() {
-        const container = this.elements.connectionsList;
-        container.innerHTML = '';
+app.updateRefreshTimer = function() {
+    // Only show countdown if auto-refresh is active
+    if (this.elements.autoRefreshSwitch.checked && this.refreshCountdown > 0) {
+        this.elements.refreshTimer.textContent = `(${this.refreshCountdown}s)`;
+    } else {
+        this.elements.refreshTimer.textContent = '';
+    }
+};
 
-        if (this.connections.length === 0) {
-            container.innerHTML = `
-                <div class="text-center text-muted p-4">
-                    <i class="bi bi-diagram-2 fs-2"></i>
-                    <p class="mt-2">No active connections</p>
-                </div>
-            `;
+app.showPreferences = async function() {
+    console.log('Showing preferences dialog');
+
+    try {
+        // Fetch latest preferences from server
+        const response = await fetch('/api/preferences');
+        if (!response.ok) throw new Error('Failed to load preferences');
+
+        const prefs = await response.json();
+
+        // Update the form fields with current values
+        document.getElementById('startPort').value = prefs.port_range.start;
+        document.getElementById('endPort').value = prefs.port_range.end;
+        document.getElementById('logLevel').value = prefs.logging.level;
+
+        // Show the modal
+        if (this.modals.preferences) {
+            this.modals.preferences.show();
+        } else {
+            console.error('Preferences modal not initialized');
+        }
+    } catch (error) {
+        console.error('Error loading preferences:', error);
+        this.showError('Failed to load current preferences');
+    }
+};
+
+// Update the savePreferences method to ensure we're using the correct structure
+app.savePreferences = async function() {
+    console.log('Saving preferences');
+    try {
+        const startPort = parseInt(document.getElementById('startPort').value);
+        const endPort = parseInt(document.getElementById('endPort').value);
+        const logLevel = document.getElementById('logLevel').value;
+
+        // Validate values
+        if (startPort >= endPort) {
+            this.showError('Start port must be less than end port');
             return;
         }
 
-        this.connections.forEach(conn => {
-            const element = document.createElement('div');
-            element.className = 'connection-item';
+        if (startPort < 1024 || endPort > 65535) {
+            this.showError('Ports must be between 1024 and 65535');
+            return;
+        }
 
-            // Format timestamp
-            const timestamp = new Date(conn.timestamp).toLocaleTimeString();
-
-            // Create connection info based on type
-            let connectionInfo = '';
-            if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
-                connectionInfo = `
-                    <div class="text-muted small">
-                        Local Port: ${conn.localPort}
-                        ${conn.remotePort ? `, Remote Port: ${conn.remotePort}` : ''}
-                        ${conn.remoteHost ? `, Host: ${conn.remoteHost}` : ''}
-                    </div>
-                `;
+        // Create new preferences object matching backend structure
+        const newPreferences = {
+            port_range: {
+                start: startPort,
+                end: endPort
+            },
+            logging: {
+                level: logLevel,
+                format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
             }
+        };
 
-            element.innerHTML = `
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge
-                                ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''}
-                                ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}"
-                                style="${this.getConnectionTypeColor(conn.type) === '#800080' ? `background-color: #800080;` : ''}">
-                                ${conn.type}
-                            </span>
-                        </div>
-                        <div class="text-muted small"><b>ID: ${this.getInstanceName(conn.instanceId)}</b></div>
-                        ${connectionInfo}
-                        <div class="text-muted small">Started at ${timestamp}</div>
-                    </div>
-                    <button class="btn btn-sm btn-outline-danger" 
-                            onclick="app.terminateConnection('${conn.id}')">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+        const response = await fetch('/api/preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newPreferences)
+        });
+
+        if (!response.ok) throw new Error('Failed to save preferences');
+
+        // Update local preferences
+        this.preferences = newPreferences;
+
+        // Hide modal and show success message
+        if (this.modals.preferences) {
+            this.modals.preferences.hide();
+        }
+        this.showSuccess('Preferences saved successfully');
+
+    } catch (error) {
+        console.error('Error saving preferences:', error);
+        this.showError('Failed to save preferences');
+    }
+};
+
+// Update loadPreferences to match backend structure
+app.loadPreferences = async function() {
+    console.log('Loading initial preferences');
+    try {
+        const response = await fetch('/api/preferences');
+        if (!response.ok) throw new Error('Failed to load preferences');
+
+        this.preferences = await response.json();
+        console.log('Loaded preferences:', this.preferences);
+
+    } catch (error) {
+        console.error('Error loading initial preferences:', error);
+        // Use default values if loading fails
+        this.preferences = {
+            port_range: {
+                start: 60000,
+                end: 60100
+            },
+            logging: {
+                level: 'INFO',
+                format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+            }
+        };
+    }
+};
+
+// Handle switching between port forwarding modes
+app.handleModeChange = function() {
+    // Get the containers for different modes
+    const remotePortContainer = document.getElementById('remotePortContainer');
+    const otherHostContainer = document.getElementById('otherHostContainer');
+    const modeSelect = document.getElementById('modeSelect');
+
+    // Show/hide containers based on selected mode
+    if (modeSelect.value === 'local') {
+        remotePortContainer.style.display = 'block';
+        otherHostContainer.style.display = 'none';
+    } else {
+        remotePortContainer.style.display = 'none';
+        otherHostContainer.style.display = 'block';
+    }
+};
+
+// Custom port forwarding with support for both local and remote host modes
+app.startCustomPortForwarding = async function() {
+    // Get the selected mode from the dropdown
+    const mode = document.getElementById('modeSelect').value;
+    const instanceId = this.selectedInstanceId;
+
+    // Add this validation before showing loading
+    if (mode === 'local') {
+        const remotePort = document.getElementById('remotePort').value;
+        if (!remotePort || !instanceId) {
+            this.showError('Please specify a remote port');
+            return;
+        }
+    } else {
+        const remoteHost = document.getElementById('remoteHost').value;
+        const remotePort = document.getElementById('otherRemotePort').value;
+        if (!remoteHost || !remotePort || !instanceId) {
+            this.showError('Please specify both remote host and port');
+            return;
+        }
+    }
+
+    // Show loading BEFORE preparing request data
+    this.showLoading();
+
+    try {
+        let requestData = {
+            profile: this.currentProfile,
+            region: this.currentRegion,
+            mode: mode
+        };
+
+        // Add appropriate parameters based on mode
+        if (mode === 'local') {
+            requestData.remote_port = document.getElementById('remotePort').value;
+        } else {
+            requestData.remote_host = document.getElementById('remoteHost').value;
+            requestData.remote_port = document.getElementById('otherRemotePort').value;
+        }
+
+        const response = await fetch(`/api/custom-port/${instanceId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) throw new Error('Failed to start port forwarding');
+        const result = await response.json();
+
+        if (result.status === 'active') {
+            // Create connection object based on mode
+            // const connectionData = {
+            //     connectionId: result.connection_id,
+            //     instanceId: instanceId,
+            //     type: mode === 'local' ? 'Custom Port' : 'Remote Host Port',
+            //     localPort: result.local_port,
+            //     remotePort: result.remote_port,
+            //     remoteHost: result.remote_host,
+            //     timestamp: new Date(),
+            //     status: 'active'
+            // };
+
+            this.addConnection(result);
+
+            // Show appropriate success message
+            const successMessage = mode === 'local'
+                ? `Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`
+                : `Remote host port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_host}:${result.remote_port})`;
+
+            this.showSuccess(successMessage);
+            this.modals.customPort.hide();
+        }
+    } catch (error) {
+        this.showError('Port forwarding error: ' + error.message);
+    } finally {
+        this.hideLoading();
+    }
+};
+
+app.renderConnections = function() {
+    const container = this.elements.connectionsList;
+    container.innerHTML = '';
+
+    if (this.connections.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted p-4">
+                <i class="bi bi-diagram-2 fs-2"></i>
+                <p class="mt-2">No active connections</p>
+            </div>
+        `;
+        return;
+    }
+
+    this.connections.forEach(conn => {
+        const element = document.createElement('div');
+        element.className = 'connection-item';
+
+        // Format timestamp
+        const timestamp = new Date(conn.timestamp).toLocaleTimeString();
+
+        // Create connection info based on type
+        let connectionInfo = '';
+        if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
+            connectionInfo = `
+                <div class="text-muted small">
+                    Local Port: ${conn.local_port}
+                    ${conn.remote_port ? `, Remote Port: ${conn.remote_port}` : ''}
+                    ${conn.remote_host ? `, Host: ${conn.remote_host}` : ''}
                 </div>
             `;
-
-            container.appendChild(element);
-        });
-    };
-
-    // Aggiorna la funzione getConnectionTypeColor per gestire il nuovo tipo
-    app.getConnectionTypeColor = function(type) {
-        const colors = {
-            'SSH': 'dark',
-            'RDP': 'primary',
-            'Custom Port': '#800080',
-            'Remote Host Port': '#800080'  // Stesso colore del Custom Port
-        };
-        return colors[type] || 'secondary';
-    };
-
-    app.startConnectionMonitoring = function() {
-        console.log('Starting connection monitoring');
-        // Esegui il check ogni 2 secondi
-        if (this.monitoringInterval) {
-            clearInterval(this.monitoringInterval);
         }
-        this.monitoringInterval = setInterval(() => this.checkConnections(), 2000);
-    },
 
-    app.checkConnections = async function() {
-        if (!this.isConnected || this.connections.length === 0) return;
+        element.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge
+                            ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''}
+                            ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}"
+                            style="${this.getConnectionTypeColor(conn.type) === '#800080' ? `background-color: #800080;` : ''}">
+                            ${conn.type}
+                        </span>
+                    </div>
+                    <div class="text-muted small"><b>ID: ${this.getInstanceName(conn.instance_id)}</b></div>
+                    ${connectionInfo}
+                    <div class="text-muted small">Started at ${timestamp}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="app.terminateConnection('${conn.connection_id}')">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        `;
 
-        try {
-            const response = await fetch('/api/active-connections');
-            if (!response.ok) throw new Error('Failed to check connections');
+        container.appendChild(element);
+    });
+};
 
-            const activeConnections = await response.json();
-            const activeIds = new Set(activeConnections.map(c => c.connection_id));
+app.getConnectionTypeColor = function(type) {
+    const colors = {
+        'SSH': 'dark',
+        'RDP': 'primary',
+        'Custom Port': '#800080',
+        'Remote Host Port': '#800080'
+    };
+    return colors[type] || 'secondary';
+};
 
-            // Rimuovi le connessioni che non sono più attive
-            const previousCount = this.connections.length;
-            this.connections = this.connections.filter(conn => {
-                const isActive = activeIds.has(conn.id);
-                if (!isActive) {
-                    console.log(`Connection ${conn.id} is no longer active`);
-                    this.showToast(`Connection to ${this.getInstanceName(conn.instanceId)} was terminated`, 'warning');
-                }
-                return isActive;
-            });
+app.startConnectionMonitoring = function() {
+    console.log('Starting connection monitoring');
+    if (this.monitoringInterval) {
+        clearInterval(this.monitoringInterval);
+    }
+    this.monitoringInterval = setInterval(() => this.checkConnections(), 2000);
+};
 
-            // Se il numero di connessioni è cambiato, aggiorna l'UI
-            if (previousCount !== this.connections.length) {
-                this.renderConnections();
-                this.updateCounters();
+app.checkConnections = async function() {
+    try {
+        const response = await fetch('/api/active-connections');
+        if (!response.ok) throw new Error('Failed to check connections');
+        const activeConnections = await response.json();
+
+        if (this.connections.length === 0) {
+            this.connections = activeConnections;
+            this.renderConnections();
+            this.updateCounters();
+            return;
+        }
+
+        const activeIds = new Set(activeConnections.map(c => c.connection_id));
+
+        this.connections.forEach(conn => {
+            if (!activeIds.has(conn.connection_id)) {
+                this.showToast(`Connection to ${this.getInstanceName(conn.instance_id)} was terminated`, 'warning');
             }
-        } catch (error) {
-            console.error('Error checking connections:', error);
-        }
-    },
+        });
 
-    app.showAbout = function() {
-        if (this.modals.about) {
-            this.modals.about.show();
-        } else {
-            console.error('About modal not initialized');
-        }
-    };
-    app.showLoading = function() {
-        if (this.elements.loadingOverlay) {
-            // Se c'è un modal aperto, aggiungi la classe modal-loading
-            const openModals = document.querySelectorAll('.modal.show');
-            openModals.forEach(modal => {
-                modal.classList.add('modal-loading');
-            });
+        this.connections = activeConnections;
+        this.renderConnections();
+        this.updateCounters();
+    } catch (error) {
+        console.error('Error checking connections:', error);
+    }
+};
 
-            this.elements.loadingOverlay.classList.remove('d-none');
-        }
-    };
+app.showAbout = function() {
+    if (this.modals.about) {
+        this.modals.about.show();
+    } else {
+        console.error('About modal not initialized');
+    }
+};
 
-    app.hideLoading = function() {
-        if (this.elements.loadingOverlay) {
-            // Rimuovi la classe modal-loading da tutti i modal
-            const openModals = document.querySelectorAll('.modal.show');
-            openModals.forEach(modal => {
-                modal.classList.remove('modal-loading');
-            });
+app.showLoading = function() {
+    if (this.elements.loadingOverlay) {
+        // Se c'è un modal aperto, aggiungi la classe modal-loading
+        const openModals = document.querySelectorAll('.modal.show');
+        openModals.forEach(modal => {
+            modal.classList.add('modal-loading');
+        });
 
-            this.elements.loadingOverlay.classList.add('d-none');
-        }
-    };
+        this.elements.loadingOverlay.classList.remove('d-none');
+    }
+};
+
+app.hideLoading = function() {
+    if (this.elements.loadingOverlay) {
+        // Rimuovi la classe modal-loading da tutti i modal
+        const openModals = document.querySelectorAll('.modal.show');
+        openModals.forEach(modal => {
+            modal.classList.remove('modal-loading');
+        });
+
+        this.elements.loadingOverlay.classList.add('d-none');
+    }
+};
 
 
 // Initialize app when document is ready
