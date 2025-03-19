@@ -13,6 +13,8 @@ import random
 import uuid
 import psutil
 import webview
+from pystray import Icon, Menu, MenuItem
+from PIL import Image, ImageDraw
 from preferences import PreferencesHandler
 from manager import AWSManager
 from flask import Flask, jsonify, request, render_template
@@ -640,8 +642,53 @@ def create_application():
     webview.start()
 
 
+def create_icon_fallback(width, height, color1, color2):
+    """
+    Generates a simple fallback image
+    Args:
+        width (int): Image width
+        height (int): Image height
+        color1 (str): Background color
+        color2 (str): Foreground color
+    Returns:
+        Image: The generated image
+    """
+    image = Image.new('RGB', (width, height), color1)
+    dc = ImageDraw.Draw(image)
+    dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
+    dc.rectangle((0, height // 2, width // 2, height), fill=color2)
+    return image
+
+
+def create_tray():
+    """
+    Create the system tray icon
+    """
+    try:
+        image = Image.open('icon.ico')
+    except FileNotFoundError:
+        logging.warning("Icon file not found, using fallback image")
+        image = create_icon_fallback(32, 32, 'black', 'white')
+
+    def exit_app(icon):
+        """
+        Exit the application
+        """
+        icon.stop()
+        sys.exit()
+
+    menu = Menu(
+        MenuItem('Exit', exit_app)
+    )
+
+    icon = Icon('SSM Manager', image, menu=menu)
+    icon.run()
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--apionly':
         run_server(debug=True)
+    elif len(sys.argv) > 1 and sys.argv[1] == '--tray':
+        create_tray()
     else:
         create_application()

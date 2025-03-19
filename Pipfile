@@ -16,6 +16,7 @@ pywin32-ctypes = {version = "*", markers = "sys_platform == 'win32'"}
 pefile = {version = "*", markers = "sys_platform == 'win32'"}
 flask-session = "*"
 cachelib = "*"
+pystray = "*"
 
 [dev-packages]
 pylint = "*"
