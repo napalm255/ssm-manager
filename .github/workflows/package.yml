@@ -29,7 +29,7 @@ jobs:
 
       - name: Build package
         run: |
-          pipenv run .\make.ps1
+          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
 
       - name: Upload package
         uses: actions/upload-artifact@v4
