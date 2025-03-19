@@ -4,7 +4,7 @@ build:
 		--add-data "static:static" \
 		--add-data "templates:templates" \
 		--icon="static/favicon.ico" \
-		--name="SSM-Manager" \
+		--name="ssm-manager" \
 		app.py
 
 clean:
