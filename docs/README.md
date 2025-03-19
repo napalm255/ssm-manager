@@ -128,13 +128,13 @@ pipenv shell
 
 ### Building from Source
 
-## For Linux
+#### For Linux
 ```bash
 make clean build
 
 ```
 
-## For windows
+#### For windows
 ```powershell
 .\make.bat
 ```
