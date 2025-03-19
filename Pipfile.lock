@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a743772caa0b9ad882d83be37a9fdb585651515e8161bfe814a6960369ddff97"
+            "sha256": "9e8a66035b5a44b8a2d6200f3df9714a2e9ddb8fa0a104330dfacedbf18fc9b0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -53,7 +53,6 @@
                 "sha256:27569ab8d1332fbba3e400b3baab2227ab4efb4882ff147af05a7c00ed73409c",
                 "sha256:e53803b9d298c7d343d00ba7d27b0059415f04b9f6f40b8d58b5bf914ba9d348"
             ],
-            "markers": "sys_platform == 'win32'",
             "version": "==0.13.2"
         },
         "cachelib": {
@@ -520,12 +519,20 @@
             "version": "==3.0.5"
         },
         "pywebview": {
+            "hashes": [
+                "sha256:0559c47db543556498dd38604a2a0479896c320f86c9b23499b8e580b58b699d",
+                "sha256:b5e2c6c7502aaf72a9ae6034daf83785f5fad874fac7fa82bf4fcf854f1f083a"
+            ],
             "markers": "sys_platform == 'win32'",
-            "version": "*"
+            "version": "==5.4"
         },
         "pywin32-ctypes": {
+            "hashes": [
+                "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8",
+                "sha256:d162dc04946d704503b2edc4d55f3dba5c1d539ead017afa00142c38b9885755"
+            ],
             "markers": "sys_platform == 'win32'",
-            "version": "*"
+            "version": "==0.2.3"
         },
         "qtpy": {
             "hashes": [
