@@ -28,11 +28,11 @@ pyinstaller --onedir --noconsole --clean --noconfirm `
     app.py
 
 # Create a zip file of the contents of dist/SSM-Manager
-if (Test-Path -Path "dist\ssm-manager") {
-    Compress-Archive -Path "dist\ssm-manager\*" -DestinationPath "dist\ssm-manager.zip" -Force
-} else {
-    Write-Warning "Directory 'dist\ssm-manager' not found. Skipping zip creation."
-}
+# if (Test-Path -Path "dist\ssm-manager") {
+#     Compress-Archive -Path "dist\ssm-manager\*" -DestinationPath "dist\ssm-manager.zip" -Force
+# } else {
+#     Write-Warning "Directory 'dist\ssm-manager' not found. Skipping zip creation."
+# }
 
 # Navigate back to the parent directory (optional)
 cd ..
