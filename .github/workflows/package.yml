@@ -37,4 +37,4 @@ jobs:
           name: ssm-manager
           path: dist/ssm-manager/
           if-no-files-found: error
-
+          overwrite: true
