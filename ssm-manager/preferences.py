@@ -13,7 +13,7 @@ class PreferencesHandler:
     DEFAULT_PREFERENCES = {
         "port_range": {
             "start": 60000,
-            "end": 60100
+            "end": 60255
         },
         "logging": {
             "level": "INFO",

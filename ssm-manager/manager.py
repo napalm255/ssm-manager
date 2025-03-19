@@ -22,7 +22,6 @@ class AWSManager:
         self.account_id = None
         self.state = {}
 
-
     @staticmethod
     def get_profiles():
         """
@@ -41,7 +40,6 @@ class AWSManager:
             logger.error(f"Error retrieving AWS profiles: {e}")
             return []
 
-
     @staticmethod
     def get_regions():
         """
@@ -55,7 +53,6 @@ class AWSManager:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS regions: {e}")
         return regions
-
 
     def set_profile_and_region(self, profile: str, region: str):
         """
@@ -87,7 +84,6 @@ class AWSManager:
             logger.error(f"Error connecting to AWS: {str(exc)}")
             raise ValueError(f"Error connecting to AWS: {str(exc)}") from exc
 
-
     def check_connection(self):
         """
         Check if the AWS connection is active
@@ -105,7 +101,6 @@ class AWSManager:
             self.is_connected = False
             logger.error(f"AWS connection check failed: {str(e)}")
         return self.is_connected
-
 
     def list_ssm_instances(self):
         """
@@ -163,7 +158,6 @@ class AWSManager:
                 self.is_connected = False  # Set connection status to false
                 return {'error': 'Authentication token expired. Please reconnect.'}
             return None
-
 
     def get_instance_details(self, instance_id: str):
         """
