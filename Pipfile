@@ -10,9 +10,7 @@ psutil = "*"
 pythonnet = "*"
 pyinstaller = "*"
 colorama = "*"
-# pywebview = {version = "*", sys_platform = "== 'win32'"}
-# 'pywebview[qt]' = {version = "*", sys_platform = "== 'linux'"}
-'pywebview[qt]' = "*"
+pywebview = {version = "*", extras = ["qt"]}
 pywin32-ctypes = {version = "*", sys_platform = "== 'win32'"}
 pefile = {version = "*", sys_platform = "== 'win32'"}
 cachelib = "*"
