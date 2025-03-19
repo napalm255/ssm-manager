@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "af8e773586f8a92a0e050f5475211dfc403ac7e09196375df88d29db8f5cf7fc"
+            "sha256": "eefea8da01e0f4efce7ce7d71e6d106789575bfb7fcd9e943bda252ae6f0e42b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -481,6 +481,10 @@
             "markers": "sys_platform == 'win32'",
             "version": "*"
         },
+        "pywin32-ctypes": {
+            "markers": "sys_platform == 'win32'",
+            "version": "*"
+        },
         "qtpy": {
             "hashes": [
                 "sha256:72095afe13673e017946cc258b8d5da43314197b741ed2890e563cf384b51aa1",
@@ -624,10 +628,6 @@
             "index": "pypi",
             "markers": "python_full_version >= '3.9.0'",
             "version": "==3.3.5"
-        },
-        "pywin32-ctypes": {
-            "markers": "sys_platform == 'win32'",
-            "version": "*"
         },
         "setuptools": {
             "hashes": [
