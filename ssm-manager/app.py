@@ -676,7 +676,9 @@ def create_tray():
         """
         print('exiting app...')
         icon.stop()
+        print('exiting app...')
         sys.exit()
+        print('exiting app...')
 
     menu = Menu(
         MenuItem('Exit', exit_app)
