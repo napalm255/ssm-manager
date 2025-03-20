@@ -59,8 +59,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: ${{ github.ref_name }}
-          files: |
-            ${{ steps.package.outputs.download-path }}
+          files: ssm-manager.zip
           make_latest: false
           body: |
             **** Development Release ****
