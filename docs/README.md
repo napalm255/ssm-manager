@@ -115,7 +115,7 @@ SSM Manager is a cross-platform desktop application that provides a graphical in
 - cachelib
 - pywebview
 - pystray
-- requirements.txt for more details
+- Pipfile for more details
 
 ### Setup Development Environment
 ```bash
@@ -123,20 +123,18 @@ git clone https://github.com/napalm255/ssm-manager.git
 cd ssm-manager
 pipenv install -d
 pipenv shell
+python ssm-manager/app.py [--api|--tray]
 
 ```
 
 ### Building from Source
 
-#### For Linux
+_Assuming you have already cloned the repository and are in the root directory of the project._
+
 ```bash
-make clean build
+cd ssm-manager
+pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
 
-```
-
-#### For Windows
-```powershell
-.\make.ps1
 ```
 
 ## Contributing

@@ -25,14 +25,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install pipenv
-          pipenv install --dev
 
       - name: Build package
         run: |
           cd ssm-manager
-          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
+          $env:PIPENV_VENV_IN_PROJECT = 1
+          pipenv install --dev
+          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static\favicon.ico" --name="ssm-manager" app.py
           mkdir release
-          Compress-Archive -Path "dist/*" -DestinationPath "release/ssm-manager.zip" -Force
+          Compress-Archive -Path "dist\*" -DestinationPath "release\ssm-manager.zip" -Force
 
       - name: Upload package
         uses: actions/upload-artifact@v4
@@ -64,7 +65,8 @@ jobs:
           make_latest: false
           body: |
             **** Development Release ****
-            Release ${{ github.ref_name }}
+
+            This build is for development purposes only.
 
       - name: Create tagged release
         uses: softprops/action-gh-release@v2
