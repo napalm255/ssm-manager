@@ -66,6 +66,9 @@ jobs:
             Release ${{ github.ref_name }}
             Built at ${{ github.run_at }}
 
+      - name: Look at the directory
+        run: ls -la
+
       - name: Create tagged release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
