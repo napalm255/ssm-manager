@@ -51,7 +51,7 @@ jobs:
         id: package
         uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: ssm-manager
 
       - name: Look at the directory
         run: ls -Rla
@@ -61,7 +61,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: ${{ github.ref_name }}
-          files: dist/ssm-manager.zip
+          files: ssm-manager/ssm-manager.zip
           make_latest: false
           body: |
             **** Development Release ****
