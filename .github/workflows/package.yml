@@ -36,6 +36,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ssm-manager
-          path: dist/ssm-manager/*
+          path: ssm-manager/dist/*
           if-no-files-found: error
           overwrite: true
