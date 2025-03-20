@@ -29,12 +29,13 @@ jobs:
 
       - name: Build package
         run: |
+          cd ssm-manager
           pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: ssm-manager
-          path: dist/ssm-manager/
+          path: dist/ssm-manager/*
           if-no-files-found: error
           overwrite: true
