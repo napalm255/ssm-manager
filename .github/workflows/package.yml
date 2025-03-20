@@ -51,23 +51,22 @@ jobs:
         id: package
         uses: actions/download-artifact@v4
         with:
-          name: ssm-manager
-          path: ssm-manager.zip
+          name: dist
+
+      - name: Look at the directory
+        run: ls -Rla
 
       - name: Create develop release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: ${{ github.ref_name }}
-          files: ssm-manager.zip
+          files: dist/ssm-manager.zip
           make_latest: false
           body: |
             **** Development Release ****
             Release ${{ github.ref_name }}
             Built at ${{ github.run_at }}
-
-      - name: Look at the directory
-        run: ls -la
 
       - name: Create tagged release
         uses: softprops/action-gh-release@v2
