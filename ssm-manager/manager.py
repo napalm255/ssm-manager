@@ -132,16 +132,17 @@ class AWSManager:
                     for instance in reservation['Instances']:
                         instance_id = instance['InstanceId']
                         # Explicitly check if the instance ID is in the SSM set
-                        # has_ssm = instance_id in ssm_instance_ids
-                        has_ssm = True
+                        has_ssm = instance_id in ssm_instance_ids
 
                         instance_data = {
                             'id': instance_id,
                             'name': next((tag['Value'] for tag in instance.get('Tags', []) if tag['Key'] == 'Name'), 'N/A'),
+                            'profile': self.profile,
+                            'region': self.region,
                             'type': instance['InstanceType'],
                             'os': instance.get('PlatformDetails', 'N/A'),
                             'state': instance['State']['Name'],
-                            'has_ssm': has_ssm  # Boolean value indicating if instance has SSM
+                            'has_ssm': has_ssm
                         }
                         logger.debug(f"Instance {instance_id} has_ssm: {has_ssm}")
                         instances.append(instance_data)

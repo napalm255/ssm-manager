@@ -444,7 +444,8 @@ const app = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     profile: this.currentProfile,
-                    region: this.currentRegion
+                    region: this.currentRegion,
+                    name: this.getInstanceName(instanceId)
                 })
             });
 
@@ -473,7 +474,8 @@ const app = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     profile: this.currentProfile,
-                    region: this.currentRegion
+                    region: this.currentRegion,
+                    name: this.getInstanceName(instanceId)
                 })
             });
 
@@ -483,15 +485,6 @@ const app = {
 
             if (result.status === 'active') {
                 this.addConnection(result);
-                //this.addConnection({
-                //    connectionId: result.connection_id,
-                //    instanceId: instanceId,
-                //    type: 'RDP',
-                //    localPort: result.local_port,
-                //    remotePort: "3389",
-                //    timestamp: new Date(),
-                //    status: 'active'
-                //});
                 this.showSuccess(`RDP session started on port ${result.local_port}`);
             } else {
                 throw new Error(result.error || 'Failed to start RDP session');
@@ -896,10 +889,10 @@ app.startCustomPortForwarding = async function() {
         let requestData = {
             profile: this.currentProfile,
             region: this.currentRegion,
+            name: this.getInstanceName(instanceId),
             mode: mode
         };
 
-        // Add appropriate parameters based on mode
         if (mode === 'local') {
             requestData.remote_port = document.getElementById('remotePort').value;
         } else {
@@ -917,21 +910,8 @@ app.startCustomPortForwarding = async function() {
         const result = await response.json();
 
         if (result.status === 'active') {
-            // Create connection object based on mode
-            // const connectionData = {
-            //     connectionId: result.connection_id,
-            //     instanceId: instanceId,
-            //     type: mode === 'local' ? 'Custom Port' : 'Remote Host Port',
-            //     localPort: result.local_port,
-            //     remotePort: result.remote_port,
-            //     remoteHost: result.remote_host,
-            //     timestamp: new Date(),
-            //     status: 'active'
-            // };
-
             this.addConnection(result);
 
-            // Show appropriate success message
             const successMessage = mode === 'local'
                 ? `Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`
                 : `Remote host port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_host}:${result.remote_port})`;

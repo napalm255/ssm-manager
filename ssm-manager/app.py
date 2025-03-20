@@ -12,7 +12,6 @@ import time
 import shlex
 import subprocess
 import random
-import uuid
 import psutil
 import webview
 from pystray import Icon, Menu, MenuItem
@@ -134,13 +133,13 @@ def start_ssh(instance_id):
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
+        name = data.get('name')
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
         cmd_exec = None
         cmd_run = None
-        cmd_uuid = uuid.uuid4()
-        cmd_aws = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile} --reason {cmd_uuid}'
+        cmd_aws = f'aws ssm start-session --target {instance_id} --region {region} --profile {profile} --reason {connection_id}'
         if get_os() == 'Linux':
             cmd_exec = 'aws'
             cmd_run = f'gnome-terminal -- bash -c "{cmd_aws}"'
@@ -157,9 +156,11 @@ def start_ssh(instance_id):
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
+            'name': name,
             'type': 'SSH',
             'process': process.pid,
             'profile': profile,
+            'region': region,
             'pid': cmd_pid,
             'timestamp': int(time.time()),
             'status': 'active'
@@ -186,6 +187,7 @@ def start_rdp(instance_id):
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
+        name = data.get('name')
 
         connection_id = f"rdp_{instance_id}_{int(time.time())}"
 
@@ -198,8 +200,7 @@ def start_rdp(instance_id):
 
         cmd_exec = None
         cmd_run = None
-        cmd_uuid = uuid.uuid4()
-        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile} --reason {cmd_uuid}"
+        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
         if get_os() == 'Linux':
             cmd_exec = 'aws'
             cmd_run = cmd_aws
@@ -232,10 +233,12 @@ def start_rdp(instance_id):
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
+            'name': name,
             'type': 'RDP',
             'local_port': local_port,
             'process': process.pid,
             'profile': profile,
+            'region': region,
             'pid': cmd_pid,
             'timestamp': int(time.time()),
             'status': 'active'
@@ -262,6 +265,7 @@ def start_custom_port(instance_id):
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
+        name = data.get('name')
         mode = data.get('mode', 'local')  # Default to local mode
         remote_port = data.get('remote_port')
         remote_host = data.get('remote_host')  # Will be None for local mode
@@ -275,13 +279,12 @@ def start_custom_port(instance_id):
 
         cmd_exec = None
         cmd_run = None
-        cmd_uuid = uuid.uuid4()
         if mode == 'local':
             logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
-            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {cmd_uuid}"
+            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
         else:
             logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
-            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {cmd_uuid}"
+            cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
 
         if get_os() == 'Linux':
             cmd_exec = 'aws'
@@ -311,12 +314,14 @@ def start_custom_port(instance_id):
         connection = {
             'connection_id': connection_id,
             'instance_id': instance_id,
+            'name': name,
             'type': 'Custom Port' if mode == 'local' else 'Remote Host Port',
             'local_port': local_port,
             'remote_port': remote_port,
             'remote_host': remote_host if mode != 'local' else None,
             'process': process.pid,
             'profile': profile,
+            'region': region,
             'pid': cmd_pid,
             'timestamp': int(time.time()),
             'status': 'active'
@@ -523,23 +528,6 @@ def favicon():
     Returns: Favicon image
     """
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-
-# def monitor_process(connection_id, pid):
-#     """
-#     Monitor the process and update the connection status
-#     Args:
-#         connection_id (str): Connection ID
-#         pid (int): Process ID
-#     """
-#     try:
-#         proc = psutil.Process(pid)
-#         proc.wait()
-#     except (psutil.NoSuchProcess, psutil.AccessDenied):
-#         pass
-#     finally:
-#         cache.get('active_connections')[:] = [c for c in cache.get('active_connections')
-#                                  if c['connection_id'] != connection_id]
 
 
 def find_free_port():
