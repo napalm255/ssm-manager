@@ -31,6 +31,7 @@ jobs:
         run: |
           cd ssm-manager
           pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
+          mkdir release
           Compress-Archive -Path "dist/*" -DestinationPath "release/ssm-manager.zip" -Force
 
       - name: Upload package
