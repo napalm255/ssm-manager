@@ -52,7 +52,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ssm-manager
-          path: dist/
+          path: ssm-manager.zip
 
       - name: Create develop release
         uses: softprops/action-gh-release@v2
@@ -60,7 +60,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            ${{ steps.package.outputs.download-path }}/*
+            ${{ steps.package.outputs.download-path }}
           make_latest: false
           body: |
             **** Development Release ****
