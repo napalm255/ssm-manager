@@ -55,29 +55,23 @@ jobs:
         with:
           name: ssm-manager
 
-      - name: Look at the directory
-        run: ls -Rla
-
       - name: Create develop release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: ${{ github.ref_name }}
-          files: ssm-manager/*
+          files: ssm-manager.zip
           make_latest: false
           body: |
             **** Development Release ****
             Release ${{ github.ref_name }}
-            Built at ${{ github.run_at }}
 
       - name: Create tagged release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           tag_name: ${{ github.ref_name }}
-          files: |
-            ${{ steps.package.outputs.download-path }}
+          files: ssm-manager.zip
           make_latest: true
           body: |
             Release ${{ github.ref_name }}
-            Built at ${{ github.run_at }}
