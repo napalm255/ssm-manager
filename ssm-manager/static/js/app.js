@@ -135,14 +135,6 @@ const app = {
             startPortForwardingBtn.onclick = () => this.startCustomPortForwarding();
         }
 
-        // Setup preferences menu items
-        const preferencesMenuItem = document.getElementById('preferencesMenuItem');
-        if (preferencesMenuItem) {
-            preferencesMenuItem.onclick = () => this.showPreferences();
-        } else {
-            console.warn('Preferences menu item not found');
-        }
-
         // Setup preferences save button
         const savePreferencesBtn = document.getElementById('savePreferencesBtn');
         if (savePreferencesBtn) {
@@ -970,7 +962,7 @@ app.renderConnections = function() {
                             ${conn.type}
                         </span>
                     </div>
-                    <div class="text-muted small"><b>ID: ${this.getInstanceName(conn.instance_id)}</b></div>
+                    <div class="text-muted small"><b>ID: ${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
                     ${connectionInfo}
                     <div class="text-muted small">Started at ${timestamp}</div>
                 </div>
