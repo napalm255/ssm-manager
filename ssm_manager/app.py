@@ -693,5 +693,5 @@ def create_tray():
 
     run_server_thread()
 
-    icon = Icon('SSM Manager', image, 'SSH Manager', menu=menu)
+    icon = Icon('SSM Manager', image, 'SSM Manager', menu=menu)
     icon.run()
