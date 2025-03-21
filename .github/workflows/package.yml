@@ -44,7 +44,7 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: ssm_manager
+          name: ssm_manager_zip
           path: release/ssm_manager.zip
           if-no-files-found: error
           overwrite: true
@@ -65,17 +65,23 @@ jobs:
 
     steps:
       - name: Download package
-        id: package
         uses: actions/download-artifact@v4
         with:
-          name: ssm_manager
+          name: ssm_manager_zip
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: ssm_manager_exe
 
       - name: Create develop release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: dev
-          files: ssm_manager.zip
+          files: |
+            ssm_manager.zip
+            ssm_manager.exe
           make_latest: false
           body: |
             **** Development Release ****
