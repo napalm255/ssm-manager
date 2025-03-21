@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
@@ -31,7 +31,7 @@ jobs:
           $env:PIPENV_VENV_IN_PROJECT = 1
           pipenv install --dev
           pipenv run python -m pip list
-          pipenv run pyinstaller --onedir --clean --noconfirm --add-data "ssm_manager\static:ssm_manager\static" --add-data "ssm_manager\templates:ssm_manager\templates" --icon="ssm_manager\static\favicon.ico" --name="ssm_manager" entry.py
+          pipenv run pyinstaller --onedir --clean --noconfirm --add-data "ssm_manager\static:ssm_manager\static" --add-data "ssm_manager\templates:ssm_manager\templates" --icon="ssm_manager\static\favicon.ico" --name="ssm_manager" main.py
           mkdir release
           Compress-Archive -Path "dist\*" -DestinationPath "release\ssm_manager.zip" -Force
 
