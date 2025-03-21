@@ -38,8 +38,8 @@ jobs:
             --name="ssm_manager" `
             main.py
           mkdir release
-          Compress-Archive -Path "dist\*" -DestinationPath "release\ssm_manager.zip" -Force
-          7z a -sfx "release\ssm_manager.exe" dist\*
+          Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
+          7z a -sfx "release\ssm_manager.exe" dist\ssm_manager\*
 
       - name: Upload package
         uses: actions/upload-artifact@v4
