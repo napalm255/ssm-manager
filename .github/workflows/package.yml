@@ -39,7 +39,7 @@ jobs:
             main.py
           mkdir release
           Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
-          7z a -sfx "release\ssm_manager.exe" dist\ssm_manager\*
+          7z a -sfx "release\ssm_manager.exe" "release\ssm_manager.zip"
 
       - name: Upload ssm_manager.zip
         uses: actions/upload-artifact@v4
