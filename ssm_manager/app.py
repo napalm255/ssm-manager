@@ -30,7 +30,7 @@ cache = Cache()
 preferences_handler = PreferencesHandler()
 
 # Setup Flask
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
 app.secret = b'_5#y2L"F4Q8z\n\xec]/'
 app.debug = True
 app.config['DEBUG'] = True
@@ -687,7 +687,7 @@ def create_tray():
         webbrowser.open('http://localhost:5000')
 
     menu = Menu(
-        MenuItem('Open', open_app),
+        MenuItem('Open', open_app, default=True),
         MenuItem('Exit', exit_app)
     )
 
