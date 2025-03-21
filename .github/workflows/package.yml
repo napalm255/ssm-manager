@@ -39,7 +39,7 @@ jobs:
             main.py
           mkdir release
           Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
-          cd dist\ssm_manager
+          cd dist
           7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
           cd -
 
