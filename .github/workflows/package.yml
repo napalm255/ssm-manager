@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
@@ -25,20 +25,37 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install pipenv
-          pipenv install --dev
 
       - name: Build package
         run: |
-          cd ssm-manager
-          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
+          $env:PIPENV_VENV_IN_PROJECT = 1
+          pipenv install --dev
+          pipenv run python -m pip list
+          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm `
+            --add-data "ssm_manager\static:ssm_manager\static" `
+            --add-data "ssm_manager\templates:ssm_manager\templates" `
+            --icon="ssm_manager\static\favicon.ico" `
+            --name="ssm_manager" `
+            main.py
           mkdir release
-          Compress-Archive -Path "dist/*" -DestinationPath "release/ssm-manager.zip" -Force
+          Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
+          cd dist
+          7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
+          cd -
 
-      - name: Upload package
+      - name: Upload ssm_manager.zip
         uses: actions/upload-artifact@v4
         with:
-          name: ssm-manager
-          path: ssm-manager/release/ssm-manager.zip
+          name: ssm_manager_zip
+          path: release/ssm_manager.zip
+          if-no-files-found: error
+          overwrite: true
+
+      - name: Upload ssm_manager.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm_manager_exe
+          path: release/ssm_manager.exe
           if-no-files-found: error
           overwrite: true
 
@@ -49,29 +66,38 @@ jobs:
       contents: write
 
     steps:
-      - name: Download package
-        id: package
+      - name: Download ssm_manager.zip
         uses: actions/download-artifact@v4
         with:
-          name: ssm-manager
+          name: ssm_manager_zip
+
+      - name: Download ssm_manager.exe
+        uses: actions/download-artifact@v4
+        with:
+          name: ssm_manager_exe
 
       - name: Create develop release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
-          tag_name: ${{ github.ref_name }}
-          files: ssm-manager.zip
+          tag_name: dev
+          files: |
+            ssm_manager.zip
+            ssm_manager.exe
           make_latest: false
           body: |
             **** Development Release ****
-            Release ${{ github.ref_name }}
+
+            This build is for development purposes only.
 
       - name: Create tagged release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           tag_name: ${{ github.ref_name }}
-          files: ssm-manager.zip
+          files: |
+            ssm_manager.zip
+            ssm_manager.exe
           make_latest: true
           body: |
             Release ${{ github.ref_name }}
