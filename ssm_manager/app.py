@@ -629,7 +629,7 @@ def get_resource_path(relative_path):
     """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS  # pylint: disable=protected-access
+        base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
     except AttributeError:
         base_path = os.path.dirname(os.path.realpath(__file__))
 
