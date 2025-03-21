@@ -31,7 +31,7 @@ jobs:
           $env:PIPENV_VENV_IN_PROJECT = 1
           pipenv install --dev
           pipenv run python -m pip list
-          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static\favicon.ico" --name="ssm-manager" entry.py
+          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "ssm_manager\static:static" --add-data "ssm_manager\templates:templates" --icon="ssm_manager\static\favicon.ico" --name="ssm_manager" entry.py
           mkdir release
           Compress-Archive -Path "dist\*" -DestinationPath "release\ssm-manager.zip" -Force
 
