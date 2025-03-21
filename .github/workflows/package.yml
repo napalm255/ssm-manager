@@ -33,13 +33,13 @@ jobs:
           pipenv run python -m pip list
           pipenv run pyinstaller --onedir --noconsole --clean --noconfirm --add-data "ssm_manager\static:static" --add-data "ssm_manager\templates:templates" --icon="ssm_manager\static\favicon.ico" --name="ssm_manager" entry.py
           mkdir release
-          Compress-Archive -Path "dist\*" -DestinationPath "release\ssm-manager.zip" -Force
+          Compress-Archive -Path "dist\*" -DestinationPath "release\ssm_manager.zip" -Force
 
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: ssm-manager
-          path: release/ssm-manager.zip
+          name: ssm_manager
+          path: release/ssm_manager.zip
           if-no-files-found: error
           overwrite: true
 
@@ -54,14 +54,14 @@ jobs:
         id: package
         uses: actions/download-artifact@v4
         with:
-          name: ssm-manager
+          name: ssm_manager
 
       - name: Create develop release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/develop')
         with:
           tag_name: dev
-          files: ssm-manager.zip
+          files: ssm_manager.zip
           make_latest: false
           body: |
             **** Development Release ****
@@ -73,7 +73,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           tag_name: ${{ github.ref_name }}
-          files: ssm-manager.zip
+          files: ssm_manager.zip
           make_latest: true
           body: |
             Release ${{ github.ref_name }}
