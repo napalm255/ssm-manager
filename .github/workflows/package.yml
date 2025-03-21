@@ -40,7 +40,7 @@ jobs:
           mkdir release
           Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
           cd dist\ssm_manager
-          7z a -sfx "{{ github.workspace }}\release\ssm_manager.exe" *
+          7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
           cd -
 
       - name: Upload ssm_manager.zip
