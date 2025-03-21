@@ -5,6 +5,7 @@ import os
 import sys
 import signal
 import logging
+import webbrowser
 import threading
 import platform
 import socket
@@ -13,13 +14,12 @@ import shlex
 import subprocess
 import random
 import psutil
-import webview
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
-from preferences import PreferencesHandler
-from manager import AWSManager
 from flask import Flask, jsonify, request, render_template, send_file
-from cache import Cache
+from ssm_manager.preferences import PreferencesHandler
+from ssm_manager.manager import AWSManager
+from ssm_manager.cache import Cache
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 
@@ -639,7 +639,6 @@ def get_resource_path(relative_path):
 def run_server(debug=False):
     """
     Run the Flask server
-    Note: When using webview, both debug and use_reloader must be set to False
     """
     app.run(
         host='127.0.0.1',
@@ -658,23 +657,6 @@ def run_server_thread():
     server.start()
     # Wait a bit for the server to start
     time.sleep(1)
-
-
-def create_application(start_server=True):
-    """
-    Create the application window
-    """
-    if start_server:
-        run_server_thread()
-
-    webview.create_window(
-        title='SSM Manager',
-        url='http://127.0.0.1:5000',
-        width=1200,
-        height=800,
-        resizable=True
-    )
-    webview.start()
 
 
 def create_tray():
@@ -702,7 +684,7 @@ def create_tray():
         """
         # pylint: disable=unused-argument
         logging.info(f"Opening application: {item.text}")
-        create_application(start_server=False)
+        webbrowser.open('http://localhost:5000')
 
     menu = Menu(
         MenuItem('Open', open_app),
@@ -713,12 +695,3 @@ def create_tray():
 
     icon = Icon('SSM Manager', image, 'SSH Manager', menu=menu)
     icon.run()
-
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == '--api':
-        run_server(debug=True)
-    elif len(sys.argv) > 1 and sys.argv[1] == '--tray':
-        create_tray()
-    else:
-        create_application()
