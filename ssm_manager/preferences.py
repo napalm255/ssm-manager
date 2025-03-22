@@ -18,7 +18,8 @@ class PreferencesHandler:
         "logging": {
             "level": "INFO",
             "format": "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-        }
+        },
+        "regions": []
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -39,6 +40,11 @@ class PreferencesHandler:
         except Exception as e:  # pylint: disable=broad-except
             logging.error(f"Error loading preferences: {str(e)}")
         return self.DEFAULT_PREFERENCES
+
+    def reload_preferences(self):
+        """Reload preferences from file"""
+        self.preferences = self.load_preferences()
+        self.apply_preferences()
 
     def save_preferences(self, preferences):
         """Save preferences to file"""
@@ -71,6 +77,11 @@ class PreferencesHandler:
         """Get port range for free port finder"""
         port_range = self.preferences.get('port_range', self.DEFAULT_PREFERENCES['port_range'])
         return port_range['start'], port_range['end']
+
+    def get_regions(self):
+        """Get regions for AWS services"""
+        regions = self.preferences.get('regions', self.DEFAULT_PREFERENCES['regions'])
+        return regions
 
     def update_preferences(self, new_preferences):
         """Update preferences with new values"""

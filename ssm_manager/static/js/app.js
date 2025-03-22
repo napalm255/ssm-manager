@@ -179,7 +179,7 @@ const app = {
             }
 
             if (Array.isArray(regions)) {
-                this.updateSelect(this.elements.regionSelect, regions);
+                this.updateSelect(this.elements.regionSelect, regions, defaultOption = '');
             } else {
                 console.error('[Profile Loading] Invalid regions data:', regions);
             }
@@ -190,7 +190,7 @@ const app = {
         }
     },
 
-    updateSelect(select, options) {
+    updateSelect(select, options, defaultOption = '') {
         if (!select || !options) return;
         console.log(`Updating select ${select.id} with options:`, options);
 
@@ -199,6 +199,7 @@ const app = {
             const opt = document.createElement('option');
             opt.value = option;
             opt.textContent = option;
+            opt.selected = option === defaultOption;
             select.appendChild(opt);
         });
     },
@@ -944,9 +945,9 @@ app.renderConnections = function() {
         if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
             connectionInfo = `
                 <div class="text-muted small">
-                    Local Port: ${conn.local_port}
-                    ${conn.remote_port ? `, Remote Port: ${conn.remote_port}` : ''}
-                    ${conn.remote_host ? `, Host: ${conn.remote_host}` : ''}
+                    <p class="m-0 p-0">Local Port: ${conn.local_port}</p>
+                    ${conn.remote_port ? `<p class="m-0 p-0">Remote Port: ${conn.remote_port}` : ''}
+                    ${conn.remote_host ? `, Host: ${conn.remote_host}</p>` : '</p>'}
                 </div>
             `;
         }
@@ -962,12 +963,15 @@ app.renderConnections = function() {
                             ${conn.type}
                         </span>
                     </div>
-                    <div class="text-muted small"><b>ID: ${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
+                    <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
                     ${connectionInfo}
-                    <div class="text-muted small">Started at ${timestamp}</div>
+                    <p class="text-muted small mt-2 mb-1">Started at ${timestamp}</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background-color: #e35d6a;">${conn.profile}</span>
+                        <span class="badge" style="background-color: #fd9843;">${conn.region}</span>
+                    </div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger"
-                        onclick="app.terminateConnection('${conn.connection_id}')">
+                <button class="btn btn-sm btn-outline-danger" onclick="app.terminateConnection('${conn.connection_id}')">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>

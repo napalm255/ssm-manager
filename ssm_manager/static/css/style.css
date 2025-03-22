@@ -37,25 +37,25 @@
 .btn-purple {
     background-color: #800080;
     border-color: #800080;
-    color: #fff; 
+    color: #fff;
 }
 .btn-purple:hover {
-    background-color: #660066; 
+    background-color: #660066;
     border-color: #660066;
 }
 .btn-ottanio {
     background-color: #267896FF;
     border-color: #267896FF;
-    color: #fff; 
+    color: #fff;
 }
 .btn-ottanio:hover {
-    background-color: #1f617a; 
+    background-color: #1f617a;
     border-color: #1f617a;
 }
 
 .badge-fucsia {
     background-color: #FF00CCFF;
-    color: #fff; 
+    color: #fff;
 }
 
 /* Connection Item */

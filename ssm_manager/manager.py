@@ -47,7 +47,6 @@ class AWSManager:
         Returns:
             List of region names or empty list if no regions found
         """
-        regions = []
         try:
             regions = boto3.session.Session().get_available_regions('ec2')
         except Exception as e:  # pylint: disable=broad-except
