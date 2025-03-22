@@ -18,8 +18,9 @@ const app = {
 
     preferences: {
         startPort: 60000,
-        endPort: 60100,
-        logLevel: 'INFO'
+        endPort: 60255,
+        logLevel: 'INFO',
+        regions: []
     },
 
     async init() {
@@ -236,8 +237,8 @@ const app = {
                 this.isConnected = true;
                 this.currentProfile = profile;
                 this.currentRegion = region;
-                this.awsAccountId = result.account_id;  // Store account ID
-                // Update UI with account ID and console link
+                this.awsAccountId = result.account_id;
+
                 this.updateAwsAccountDisplay();
 
                 this.elements.connectBtn.innerHTML = '<i class="bi bi-plug fs-5"></i> Disconnect';
@@ -264,12 +265,9 @@ const app = {
         const accountId = document.getElementById('awsAccountId');
 
         if (this.isConnected && this.awsAccountId) {
-            // Show account ID
             accountId.textContent = this.awsAccountId;
-            // Show the container
             accountContainer.style.display = 'block';
         } else {
-            // Hide when disconnected
             accountContainer.style.display = 'none';
             accountId.textContent = '';
         }
@@ -279,7 +277,7 @@ const app = {
         this.isConnected = false;
         this.currentProfile = '';
         this.currentRegion = '';
-        this.awsAccountId = null; // Clear account ID
+        this.awsAccountId = null;
         this.instances = [];
 
         this.updateAwsAccountDisplay();
@@ -426,7 +424,21 @@ const app = {
 
     updateCounters() {
         this.elements.instanceCount.textContent = `${this.instances.length} instances`;
+        if (this.instances.length === 0) {
+            this.elements.instanceCount.classList.add('bg-secondary');
+            this.elements.instanceCount.classList.remove('bg-success');
+        } else {
+            this.elements.instanceCount.classList.add('bg-success');
+            this.elements.instanceCount.classList.remove('bg-secondary');
+        }
         this.elements.connectionCount.textContent = `${this.connections.length} active`;
+        if (this.connections.length === 0) {
+            this.elements.connectionCount.classList.add('bg-secondary');
+            this.elements.connectionCount.classList.remove('bg-success');
+        } else {
+            this.elements.connectionCount.classList.add('bg-success');
+            this.elements.connectionCount.classList.remove('bg-secondary');
+        }
     },
 
     async startSSH(instanceId) {
@@ -539,12 +551,10 @@ const app = {
                 </div>
             `;
 
-            // Add click handlers for copying
             contentDiv.querySelectorAll('.copy-value').forEach(element => {
                 element.addEventListener('click', () => this.copyToClipboard(element.dataset.value));
             });
 
-            // Show the modal
             this.modals.instanceDetails.show();
 
         } catch (error) {
@@ -826,12 +836,13 @@ app.loadPreferences = async function() {
         this.preferences = {
             port_range: {
                 start: 60000,
-                end: 60100
+                end: 60255
             },
             logging: {
                 level: 'INFO',
                 format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-            }
+            },
+            regions: []
         };
     }
 };

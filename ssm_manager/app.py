@@ -100,7 +100,6 @@ def connect():
         aws_manager.set_profile_and_region(profile, region)
         aws_manager.list_ssm_instances()
 
-        # Include account ID in the response
         return jsonify({
             'status': 'success',
             'account_id': aws_manager.account_id
@@ -139,6 +138,8 @@ def start_ssh(instance_id):
         name = data.get('name')
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
+
+        logging.info(f"Starting SSH - Instance: {instance_id}")
 
         cmd_exec = None
         cmd_run = None
@@ -347,7 +348,6 @@ def get_instance_details(instance_id):
     Returns: JSON response with instance details
     """
     try:
-        logging.info(f"Get instance details: {instance_id}")
         details = aws_manager.get_instance_details(instance_id)
         if details is None:
             return jsonify({'error': 'Instance details not found'}), 404
@@ -677,16 +677,16 @@ def create_tray():
         """
         Exit the application
         """
-        logging.info(f"Exiting application: {item.text}")
+        logging.info(f"Exiting application...")
         icon.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
     def open_app(icon, item):
         """
-        Open the application
+        Open the application in the default browser
         """
         # pylint: disable=unused-argument
-        logging.info(f"Opening application: {item.text}")
+        logging.info(f"Opening application...")
         webbrowser.open('http://localhost:5000')
 
     menu = Menu(
