@@ -25,22 +25,23 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 
 ## Description
 
-SSM Manager is a cross-platform desktop application that provides a graphical interface for managing AWS Systems Manager sessions. It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for SSH sessions, RDP connections, custom port forwarding, and host port forwarding.
+SSM Manager is a cross-platform desktop application that provides a web interface for managing AWS Systems Manager sessions.
+It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for SSH sessions, RDP connections, custom port forwarding, and host port forwarding.
 
 ## Features
 
 ### Core Functionality
 - **Profile and Region Management**
+  - Runs as a system tray icon and uses your default browser to display the UI
   - Easy switching between AWS profiles (including sso)
   - Region selection
   - Connection status monitoring
-  - Profile preferences persistence
   - Maintain connections across multiple profiles
 
 ### Instance Management
 - **Instance Listing**
   - Display of EC2 instances with SSM capability
-  - Real-time instance status updates
+  - Instance status updates
   - Instance details (Name, ID, Type, OS, State, IP Address ecc..)
 
 ### Connection Types
@@ -60,7 +61,7 @@ SSM Manager is a cross-platform desktop application that provides a graphical in
   - Connection monitoring
   - Remote host connection through instances
   - Custom remote host and port configuration
-  - Automatic local port management
+  - Dynamic local port allocation
   
 
 ### Active Connection Management
@@ -70,29 +71,29 @@ SSM Manager is a cross-platform desktop application that provides a graphical in
 
 ### Additional Features
 - Logging system with configurable levels
-- Custom TPC port on local forwarding
+- Light and dark mode themes for the UI
 
 ## Requirements
 
-- Windows 10 - 11 operating system
+- Windows or Linux OS (Tested on Windows 11 and Fedora 40)
 - AWS CLI installed and configured [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
 - AWS SSM Plugin for AWS CLI installed [instructions here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
-- Valid AWS credentials configured or alternative install and configure Leapp [[instructions here](https://github.com/Noovolari/leapp)]
+- Valid AWS credentials configured (`aws configure [sso]`)
 
 ## Installation
 
+A pre-built version is currently only available for Windows and comes in either a self extracting zip or a zip file.
+
 1. Download the latest release from the releases page
-2. Run the installer `setup.exe`.
+2. Run the self extracting zip, `ssm_manager.exe`.
 3. Ensure that AWS CLI and SSM Plugin are installed.
-   ```bash
+   ```powershell
    aws --version
    aws ssm start-session --version
    ```
-5. Choose one of the following methods to configure AWS access:
-   - **Option A**: Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+5. Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 6. Install the Session Manager plugin for AWS CLI. [**Instructions here**](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 7. Launch **SSM Manager**.
-
 
 ## Usage
 
@@ -113,28 +114,29 @@ SSM Manager is a cross-platform desktop application that provides a graphical in
 - psutil
 - pythonnet
 - cachelib
-- pywebview
 - pystray
-- Pipfile for more details
+- colorama
 
 ### Setup Development Environment
-```bash
+```powershell
 git clone https://github.com/napalm255/ssm-manager.git
 cd ssm-manager
 pipenv install -d
 pipenv shell
-python ssm-manager/app.py [--api|--tray]
-
+python main.py
 ```
 
 ### Building from Source
 
-_Assuming you have already cloned the repository and are in the root directory of the project._
+_This assumes you have already cloned the repository and are in the root directory of the project with an active virtual environment._
 
-```bash
-cd ssm-manager
-pyinstaller --onedir --noconsole --clean --noconfirm --add-data "static:static" --add-data "templates:templates" --icon="static/favicon.ico" --name="ssm-manager" app.py
-
+```powershell
+pyinstaller --onedir --noconsole --clean --noconfirm `
+  --add-data "ssm_manager\static:ssm_manager\static" `
+  --add-data "ssm_manager\templates:ssm_manager\templates" `
+  --icon="ssm_manager\static\favicon.ico" `
+  --name="ssm_manager" `
+  main.py
 ```
 
 ## Contributing
