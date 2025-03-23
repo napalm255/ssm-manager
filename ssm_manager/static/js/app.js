@@ -12,6 +12,11 @@ const app = {
     awsAccountId: null,
     elements: {},
 
+    // Local storage keys
+    localTheme: 'lastTheme',
+    localProfile: 'lastProfile',
+    localRegion: 'lastRegion',
+
     // Bootstrap components
     modals: {},
     toasts: {},
@@ -29,7 +34,9 @@ const app = {
             this.cacheElements();
             this.initializeComponents();
             this.setupEventListeners();
+            this.loadTheme();
             await this.loadProfilesAndRegions();
+            await this.loadLastUsedProfileAndRegion();
             this.startConnectionMonitoring();
             console.log('Application initialized successfully');
         } catch (error) {
@@ -98,6 +105,13 @@ const app = {
             console.warn('Preferences button not found');
         }
 
+        const themeToggleBtn = document.getElementById('themeToggle');
+        if (themeToggleBtn) {
+            themeToggleBtn.onclick = () => this.themeToggle();
+        } else {
+            console.warn('Theme toggle button not found');
+        }
+
         const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         tooltips.forEach(tooltip => {
             try {
@@ -159,6 +173,20 @@ const app = {
             console.error('[Profile Loading] Error loading profiles and regions:', error);
             // Show error to user
             this.showError('Failed to load profiles and regions: ' + error.message);
+        }
+    },
+
+    async loadLastUsedProfileAndRegion() {
+        const lastProfile = localStorage.getItem(this.localProfile);
+        if (lastProfile) {
+            this.currentProfile = lastProfile;
+            this.elements.profileSelect.value = lastProfile;
+        }
+
+        const lastRegion = localStorage.getItem(this.localRegion);
+        if (lastRegion) {
+            this.currentRegion = lastRegion;
+            this.elements.regionSelect.value = lastRegion;
         }
     },
 
@@ -340,55 +368,6 @@ const app = {
                 </button>
             </div>
         `;
-    },
-
-    showLoading() {
-        if (this.elements.loadingOverlay) {
-            this.elements.loadingOverlay.classList.remove('d-none');
-        }
-    },
-
-    hideLoading() {
-        if (this.elements.loadingOverlay) {
-            this.elements.loadingOverlay.classList.add('d-none');
-        }
-    },
-
-    showError(message) {
-        this.showToast(message, 'danger');
-    },
-
-    showSuccess(message) {
-        this.showToast(message, 'success');
-    },
-
-    showToast(message, type = 'info') {
-        const toastContainer = document.querySelector('.toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center border-0 bg-${type} text-white`;
-        toast.setAttribute('role', 'alert');
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">${message}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        toastContainer.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        toast.addEventListener('hidden.bs.toast', () => toast.remove());
-    },
-
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
     },
 
     updateCounters() {
@@ -580,15 +559,6 @@ const app = {
         const instance = this.instances.find(i => i.id === instanceId);
         return instance ? instance.name : instanceId;
     },
-
-    generateConnectionId() {
-        return 'conn_' + Math.random().toString(36).substr(2, 9);
-    },
-
-    startConnectionMonitoring() {
-        setInterval(() => this.checkConnections(), 5000);
-    },
-
 };
 
 app.refreshData = async function() {
@@ -731,8 +701,7 @@ app.savePreferences = async function() {
                 end: endPort
             },
             logging: {
-                level: logLevel,
-                format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+                level: logLevel
             }
         };
 
@@ -765,21 +734,8 @@ app.loadPreferences = async function() {
 
         this.preferences = await response.json();
         console.log('Loaded preferences:', this.preferences);
-
     } catch (error) {
         console.error('Error loading initial preferences:', error);
-        // Use default values if loading fails
-        this.preferences = {
-            port_range: {
-                start: 60000,
-                end: 60255
-            },
-            logging: {
-                level: 'INFO',
-                format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-            },
-            regions: []
-        };
     }
 };
 
@@ -963,6 +919,31 @@ app.checkConnections = async function() {
     }
 };
 
+app.showToast = function(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center border-0 bg-${type} text-white`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+};
+
+app.showSuccess = function(message) {
+    this.showToast(message, 'success');
+};
+
+app.showError = function(message) {
+    this.showToast(message, 'danger');
+};
+
 app.showLoading = function() {
     if (this.elements.loadingOverlay) {
         const openModals = document.querySelectorAll('.modal.show');
@@ -982,6 +963,27 @@ app.hideLoading = function() {
         });
 
         this.elements.loadingOverlay.classList.add('d-none');
+    }
+};
+
+app.themeToggle = function() {
+    const newTheme = app.currentTheme() === 'light' ? 'dark' : 'light';
+    app.setTheme(newTheme);
+};
+
+app.setTheme = function(theme) {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem(this.localTheme, theme);
+};
+
+app.currentTheme = function() {
+    return document.documentElement.getAttribute('data-bs-theme');
+};
+
+app.loadTheme = function() {
+    const theme = localStorage.getItem(this.localTheme);
+    if (theme) {
+        this.setTheme(theme);
     }
 };
 

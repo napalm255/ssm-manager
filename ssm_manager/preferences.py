@@ -2,9 +2,11 @@
 Application preferences handler
 """
 # pylint: disable=logging-fstring-interpolation
-import json
 import logging
+import json
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 class PreferencesHandler:
     """Handler for application preferences"""
@@ -16,8 +18,7 @@ class PreferencesHandler:
             "end": 60255
         },
         "logging": {
-            "level": "INFO",
-            "format": "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+            "level": "INFO"
         },
         "regions": []
     }
@@ -38,13 +39,24 @@ class PreferencesHandler:
             else:
                 self.save_preferences(self.DEFAULT_PREFERENCES)
         except Exception as e:  # pylint: disable=broad-except
-            logging.error(f"Error loading preferences: {str(e)}")
+            logger.error(f"Error loading preferences: {str(e)}")
         return self.DEFAULT_PREFERENCES
 
     def reload_preferences(self):
         """Reload preferences from file"""
         self.preferences = self.load_preferences()
         self.apply_preferences()
+
+    def update_preferences(self, new_preferences):
+        """Update preferences with new values"""
+        try:
+            updated_prefs = {**self.preferences, **new_preferences}
+            if self.save_preferences(updated_prefs):
+                logger.info("Preferences updated successfully")
+                return True
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Error updating preferences: {str(e)}")
+        return False
 
     def save_preferences(self, preferences):
         """Save preferences to file"""
@@ -55,7 +67,7 @@ class PreferencesHandler:
             self.apply_preferences()
             return True
         except Exception as e:  # pylint: disable=broad-except
-            logging.error(f"Error saving preferences: {str(e)}")
+            logger.error(f"Error saving preferences: {str(e)}")
         return False
 
     def apply_preferences(self):
@@ -63,15 +75,19 @@ class PreferencesHandler:
         try:
             log_level = self.preferences['logging']['level']
             numeric_level = getattr(logging, log_level.upper())
-            logging.getLogger().setLevel(numeric_level)
 
-            log_format = self.preferences['logging']['format']
-            for handler in logging.getLogger().handlers:
-                handler.setFormatter(logging.Formatter(log_format))
+            # Set specific log levels for different components
+            logging.getLogger('boto3').setLevel(logging.WARNING)
+            logging.getLogger('botocore').setLevel(logging.WARNING)
+            logging.getLogger('urllib3').setLevel(logging.WARNING)
+            logging.getLogger('werkzeug').setLevel(numeric_level)
+            logging.getLogger('ssm_manager').setLevel(numeric_level)
+            logging.getLogger('ssm_manager.preferences').setLevel(numeric_level)
+            logging.getLogger('ssm_manager.manager').setLevel(numeric_level)
 
-            logging.info("Applied preferences successfully")
+            logger.info("Applied preferences successfully")
         except Exception as e:  # pylint: disable=broad-except
-            logging.error(f"Error applying preferences: {str(e)}")
+            logger.error(f"Error applying preferences: {str(e)}")
 
     def get_port_range(self):
         """Get port range for free port finder"""
@@ -82,14 +98,3 @@ class PreferencesHandler:
         """Get regions for AWS services"""
         regions = self.preferences.get('regions', self.DEFAULT_PREFERENCES['regions'])
         return regions
-
-    def update_preferences(self, new_preferences):
-        """Update preferences with new values"""
-        try:
-            updated_prefs = {**self.preferences, **new_preferences}
-            if self.save_preferences(updated_prefs):
-                logging.info("Preferences updated successfully")
-                return True
-        except Exception as e:  # pylint: disable=broad-except
-            logging.error(f"Error updating preferences: {str(e)}")
-        return False

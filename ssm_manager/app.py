@@ -23,36 +23,29 @@ from ssm_manager.cache import Cache
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 
-# Setup cache
-cache = Cache()
-
-# Setup preferences
-preferences = PreferencesHandler()
-
-# Setup Flask
-app = Flask(__name__)
-app.secret = b'_5#y2L"F4Q8z\n\xec]/'
-app.debug = True
-app.config['DEBUG'] = True
-
-aws_manager = AWSManager()
-
 # Configure detailed logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s:%(name)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
+        logging.FileHandler('ssm_manager.log', mode='w'),
         logging.StreamHandler()
     ]
 )
 
-# Set specific log levels for different components
-logging.getLogger('werkzeug').setLevel(logging.INFO)
-logging.getLogger('boto3').setLevel(logging.WARNING)
-logging.getLogger('botocore').setLevel(logging.WARNING)
-logging.getLogger('urllib3').setLevel(logging.WARNING)
+# Configure logger
+logger = logging.getLogger('ssm_manager')
 
+# Setup preferences
+preferences = PreferencesHandler()
+
+# Setup cache
+cache = Cache()
+
+# Setup Flask
+app = Flask(__name__)
+
+aws_manager = AWSManager()
 
 @app.route('/api/profiles')
 def get_profiles():
@@ -61,11 +54,11 @@ def get_profiles():
     Returns: JSON list of profile names
     """
     try:
-        logging.info("Attempting to load AWS profiles")
+        logger.debug(f"Loading AWS profiles...")
         profiles = aws_manager.get_profiles()
         return jsonify(profiles)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Failed to load AWS profiles: {str(e)}", exc_info=True)
+        logger.error(f"Failed to load AWS profiles: {str(e)}")
         return jsonify({'error': 'Failed to load profiles'}), 500
 
 
@@ -76,12 +69,14 @@ def get_regions():
     Returns: JSON list of region names
     """
     try:
+        logger.debug(f"Loading AWS regions...")
         preferences.reload_preferences()
         regions = preferences.get_regions()
         if not regions:
             regions = aws_manager.get_regions()
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to load AWS regions: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -92,6 +87,7 @@ def connect():
     Returns: JSON response with status and account ID
     """
     try:
+        logger.debug("Connecting to AWS...")
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
@@ -100,12 +96,13 @@ def connect():
         aws_manager.set_profile_and_region(profile, region)
         aws_manager.list_ssm_instances()
 
+        logger.info(f"Connected to AWS - Profile: {profile}, Region: {region}")
         return jsonify({
             'status': 'success',
             'account_id': aws_manager.account_id
         })
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Connection error: {str(e)}")
+        logger.error(f"Connection error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -116,7 +113,9 @@ def get_instances():
     Returns: JSON list of instances
     """
     try:
+        logger.debug("Loading EC2 instances...")
         instances = aws_manager.list_ssm_instances()
+        logger.info(f"Successfully loaded {len(instances)} EC2 instances")
         return jsonify(instances) if instances else jsonify([])
     except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
@@ -132,6 +131,7 @@ def start_ssh(instance_id):
     """
     # pylint: disable=line-too-long
     try:
+        logger.debug(f"Starting SSH - Instance: {instance_id}")
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
@@ -139,7 +139,7 @@ def start_ssh(instance_id):
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
 
-        logging.info(f"Starting SSH - Instance: {instance_id}")
+        logger.info(f"Starting SSH - Instance: {instance_id}")
 
         cmd_exec = None
         cmd_run = None
@@ -155,7 +155,7 @@ def start_ssh(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_aws)
-        logging.debug(f"SSH process PID: {cmd_pid}")
+        logger.debug(f"SSH process PID: {cmd_pid}")
 
         connection = {
             'connection_id': connection_id,
@@ -171,10 +171,10 @@ def start_ssh(instance_id):
         }
         cache.append('active_connections', connection)
 
-        logging.info(f"SSH session started - Instance: {instance_id}")
+        logger.info(f"SSH session started - Instance: {instance_id}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error starting SSH: {str(e)}")
+        logger.error(f"Error starting SSH: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -188,6 +188,7 @@ def start_rdp(instance_id):
     """
     # pylint: disable=line-too-long
     try:
+        logger.debug(f"Starting RDP - Instance: {instance_id}")
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
@@ -197,10 +198,10 @@ def start_rdp(instance_id):
 
         local_port = find_free_port()
         if local_port is None:
-            logging.error("Could not find available port for RDP connection")
+            logger.error("Could not find available port for RDP connection")
             return jsonify({'error': 'No available ports for RDP connection'}), 503
 
-        logging.info(f"Starting RDP - Instance: {instance_id}, Port: {local_port}")
+        logger.info(f"Starting RDP - Instance: {instance_id}, Port: {local_port}")
 
         cmd_exec = None
         cmd_run = None
@@ -227,12 +228,13 @@ def start_rdp(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_aws)
-        logging.debug(f"RDP process PID: {cmd_pid}")
+        logger.debug(f"RDP process PID: {cmd_pid}")
 
         if get_os() == 'Windows':
+            logger.debug("Starting RDP client...")
             subprocess.Popen(f'mstsc /v:localhost:{local_port}')
         else:
-            logging.warning("RDP is not supported on Linux")
+            logger.warning("RDP is not supported on Linux")
 
         connection = {
             'connection_id': connection_id,
@@ -249,10 +251,10 @@ def start_rdp(instance_id):
         }
         cache.append('active_connections', connection)
 
-        logging.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
+        logger.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error starting RDP: {str(e)}")
+        logger.error(f"Error starting RDP: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -266,6 +268,7 @@ def start_custom_port(instance_id):
     """
     # pylint: disable=line-too-long, too-many-locals
     try:
+        logger.debug(f"Starting port forwarding - Instance: {instance_id}")
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
@@ -278,16 +281,16 @@ def start_custom_port(instance_id):
 
         local_port = find_free_port()
         if local_port is None:
-            logging.error("Could not find available port for port forwarding")
+            logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
 
         cmd_exec = None
         cmd_run = None
         if mode == 'local':
-            logging.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
+            logger.info(f"Starting local port forwarding - Instance: {instance_id}, Local: {local_port}, Remote: {remote_port}")
             cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
         else:
-            logging.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
+            logger.info(f"Starting remote host port forwarding - Instance: {instance_id}, Host: {remote_host}, Port: {remote_port}")
             cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host={remote_host},portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
 
         if get_os() == 'Linux':
@@ -312,7 +315,7 @@ def start_custom_port(instance_id):
         time.sleep(2)  # Wait for the process to start
 
         cmd_pid = get_pid(cmd_exec, cmd_aws)
-        logging.debug(f"Port forwarding process PID: {cmd_pid}")
+        logger.debug(f"Port forwarding process PID: {cmd_pid}")
 
         # Create connection object with appropriate type and info
         connection = {
@@ -332,10 +335,10 @@ def start_custom_port(instance_id):
         }
         cache.append('active_connections', connection)
 
-        logging.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
+        logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
         return jsonify(connection)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error starting port forwarding: {str(e)}")
+        logger.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -348,12 +351,13 @@ def get_instance_details(instance_id):
     Returns: JSON response with instance details
     """
     try:
+        logger.debug(f"Getting instance details - Instance: {instance_id}")
         details = aws_manager.get_instance_details(instance_id)
         if details is None:
             return jsonify({'error': 'Instance details not found'}), 404
         return jsonify(details)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error getting instance details: {str(e)}")
+        logger.error(f"Error getting instance details: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -364,9 +368,10 @@ def get_preferences():
     Returns: JSON response with preferences
     """
     try:
+        logger.debug("Getting preferences...")
         return jsonify(preferences.preferences)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error getting preferences: {str(e)}")
+        logger.error(f"Error getting preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -377,10 +382,11 @@ def update_preferences():
     Returns: JSON response with status
     """
     try:
+        logger.debug("Updating preferences...")
         new_preferences = request.json
         preferences.update_preferences(new_preferences)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error updating preferences: {str(e)}")
+        logger.error(f"Error updating preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
     return jsonify({'status': 'success'})
 
@@ -392,6 +398,7 @@ def refresh_data():
     Returns: JSON response with status and updated instance data
     """
     try:
+        logger.debug("Refreshing data...")
         instances = aws_manager.list_ssm_instances()
         return jsonify({
             "status": "success",
@@ -410,6 +417,7 @@ def get_active_connections():
     """
     # pylint: disable=too-many-nested-blocks, too-many-branches
     try:
+        logger.debug("Getting active connections...")
         active = []
         to_remove = []
 
@@ -439,7 +447,7 @@ def get_active_connections():
                 else:
                     to_remove.append(conn)
             except Exception as e:  # pylint: disable=broad-except
-                logging.error(f"Error checking connection: {str(e)}")
+                logger.error(f"Error checking connection: {str(e)}")
                 to_remove.append(conn)
 
         for conn in to_remove:
@@ -450,7 +458,7 @@ def get_active_connections():
 
         return jsonify(active)
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error getting active connections: {str(e)}")
+        logger.error(f"Error getting active connections: {str(e)}")
         return jsonify([])
 
 
@@ -463,6 +471,7 @@ def terminate_connection(connection_id):
     Returns: JSON response with status
     """
     try:
+        logger.debug(f"Terminating connection - ID: {connection_id}")
         connection = next((c for c in cache.get('active_connections')
                            if c.get('connection_id') == connection_id), None)
 
@@ -488,31 +497,9 @@ def terminate_connection(connection_id):
                                  if c.get('connection_id') != connection_id]
 
         return jsonify({"status": "success"})
-
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error terminating connection: {str(e)}")
+        logger.error(f"Error terminating connection: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/set-log-level', methods=['POST'])
-def set_log_level():
-    """
-    Set the log level for the application
-    Returns: JSON response with status
-    """
-    try:
-        data = request.get_json()
-        log_level = data.get('logLevel', 'INFO')
-
-        numeric_level = getattr(logging, log_level.upper())
-
-        logging.getLogger().setLevel(numeric_level)
-
-        logging.getLogger('werkzeug').setLevel(numeric_level)
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logging.error(f"Error setting log level: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/')
@@ -539,11 +526,10 @@ def find_free_port():
     Returns: A free port number or None if no port is found
     """
     start_port, end_port = preferences.get_port_range()
-    logging.debug(f"Finding free port between {start_port} and {end_port}")
+    logger.debug(f"Finding free port between {start_port} and {end_port}")
     start = start_port
     end = end_port
     max_attempts = 20
-    logging.debug(f"Searching for free port between {start} and {end}")
 
     used_ports = set()
     for _ in range(max_attempts):
@@ -560,14 +546,14 @@ def find_free_port():
             sock.close()
 
             if result != 0:  # Port is available
-                logging.info(f"Found free port: {port}")
+                logger.info(f"Found free port: {port}")
                 return port
-            logging.debug(f"Port {port} is in use")
+            logger.debug(f"Port {port} is in use")
         except Exception as e:  # pylint: disable=broad-except
-            logging.debug(f"Error checking port {port}: {str(e)}")
+            logger.error(f"Error checking port {port}: {str(e)}")
         finally:
             sock.close()
-    logging.error(f"No free port found after {max_attempts} attempts")
+    logger.error(f"No free port found after {max_attempts} attempts")
     return None
 
 
@@ -587,7 +573,7 @@ def get_pid(executable, command):
                 if command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
-            logging.error(f"Error getting PID for {executable} {command}")
+            logger.error(f"Error getting PID for {executable} {command}")
             continue
     return None
 
@@ -670,15 +656,16 @@ def create_tray():
         icon_file = get_resource_path('static/favicon.ico')
         image = Image.open(icon_file)
     except FileNotFoundError:
-        logging.warning("Icon file not found, using fallback image")
+        logger.warning("Icon file not found, using fallback image")
         image = create_icon(32, 32, 'black', 'white')
 
     def exit_app(icon, item):
         """
         Exit the application
         """
-        logging.info(f"Exiting application...")
+        logger.info(f"Exiting application...")
         icon.stop()
+        server.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
     def open_app(icon, item):
@@ -686,7 +673,7 @@ def create_tray():
         Open the application in the default browser
         """
         # pylint: disable=unused-argument
-        logging.info(f"Opening application...")
+        logger.info(f"Opening application...")
         webbrowser.open('http://localhost:5000')
 
     menu = Menu(
@@ -694,7 +681,7 @@ def create_tray():
         MenuItem('Exit', exit_app)
     )
 
-    run_server_thread()
+    server = run_server_thread()
 
     icon = Icon('SSM Manager', image, 'SSM Manager', menu=menu)
     icon.run()
