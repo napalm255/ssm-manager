@@ -24,7 +24,7 @@ const app = {
     preferences: {
         startPort: 60000,
         endPort: 60255,
-        logLevel: 'INFO',
+        logLevel: 'WARNING',
         regions: []
     },
 
@@ -568,6 +568,7 @@ app.refreshData = async function() {
         this.showLoading();
 
         await this.loadProfilesAndRegions();
+        await this.loadLastUsedProfileAndRegion();
 
         const response = await fetch('/api/refresh', {
             method: 'POST'
