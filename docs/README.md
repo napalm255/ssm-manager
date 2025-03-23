@@ -78,7 +78,7 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 
 - Windows or Linux OS (Tested on Windows 11 and Fedora 40)
 - AWS CLI installed and configured [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
-- AWS SSM Plugin for AWS CLI installed [instructions here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+- AWS SSM Plugin for AWS CLI installed [[instructions here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)]
 - Valid AWS credentials configured (`aws configure [sso]`)
 
 ## Installation
