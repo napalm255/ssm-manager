@@ -284,33 +284,6 @@
                 startPortForwardingBtn.id = 'startPortForwardingBtnOther';
             }
         });
-
-        const themeToggleBtn = document.getElementById('themeToggle');
-        const htmlElement = document.documentElement;
-        const THEME_KEY = 'website-theme'; // Key to store the theme in local storage
-
-        // Function to set the theme and update the button text
-        function setTheme(theme) {
-            htmlElement.setAttribute('data-bs-theme', theme);
-            localStorage.setItem(THEME_KEY, theme);
-        }
-
-        // Check local storage for a previously saved theme
-        const storedTheme = localStorage.getItem(THEME_KEY);
-        if (storedTheme) {
-            setTheme(storedTheme);
-        } else {
-            // If no stored theme, set the initial theme (from the HTML tag)
-            setTheme(htmlElement.getAttribute('data-bs-theme'));
-        }
-
-        // Event listener for the toggle button
-        themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            setTheme(newTheme);
-        });
     </script>
-
 </body>
 </html>
