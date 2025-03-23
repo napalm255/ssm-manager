@@ -32,7 +32,6 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 ## Features
 
 ### Core Functionality
-- **Profile and Region Management**
   - Runs as a system tray icon and uses your default browser to display the UI
   - Easy switching between AWS profiles (including sso)
   - Region selection
