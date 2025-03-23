@@ -27,7 +27,7 @@ from ssm_manager.cache import Cache
 cache = Cache()
 
 # Setup preferences
-preferences_handler = PreferencesHandler()
+preferences = PreferencesHandler()
 
 # Setup Flask
 app = Flask(__name__)
@@ -76,7 +76,10 @@ def get_regions():
     Returns: JSON list of region names
     """
     try:
-        regions = aws_manager.get_regions()
+        preferences.reload_preferences()
+        regions = preferences.get_regions()
+        if not regions:
+            regions = aws_manager.get_regions()
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
         return jsonify({"error": str(e)}), 500
@@ -97,7 +100,6 @@ def connect():
         aws_manager.set_profile_and_region(profile, region)
         aws_manager.list_ssm_instances()
 
-        # Include account ID in the response
         return jsonify({
             'status': 'success',
             'account_id': aws_manager.account_id
@@ -136,6 +138,8 @@ def start_ssh(instance_id):
         name = data.get('name')
 
         connection_id = f"ssh_{instance_id}_{int(time.time())}"
+
+        logging.info(f"Starting SSH - Instance: {instance_id}")
 
         cmd_exec = None
         cmd_run = None
@@ -344,7 +348,6 @@ def get_instance_details(instance_id):
     Returns: JSON response with instance details
     """
     try:
-        logging.info(f"Get instance details: {instance_id}")
         details = aws_manager.get_instance_details(instance_id)
         if details is None:
             return jsonify({'error': 'Instance details not found'}), 404
@@ -361,7 +364,7 @@ def get_preferences():
     Returns: JSON response with preferences
     """
     try:
-        return jsonify(preferences_handler.preferences)
+        return jsonify(preferences.preferences)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error getting preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -375,7 +378,7 @@ def update_preferences():
     """
     try:
         new_preferences = request.json
-        preferences_handler.update_preferences(new_preferences)
+        preferences.update_preferences(new_preferences)
     except Exception as e:  # pylint: disable=broad-except
         logging.error(f"Error updating preferences: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -535,7 +538,7 @@ def find_free_port():
     Find a free port in the given range for AWS SSM port forwarding
     Returns: A free port number or None if no port is found
     """
-    start_port, end_port = preferences_handler.get_port_range()
+    start_port, end_port = preferences.get_port_range()
     logging.debug(f"Finding free port between {start_port} and {end_port}")
     start = start_port
     end = end_port
@@ -674,16 +677,16 @@ def create_tray():
         """
         Exit the application
         """
-        logging.info(f"Exiting application: {item.text}")
+        logging.info(f"Exiting application...")
         icon.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
     def open_app(icon, item):
         """
-        Open the application
+        Open the application in the default browser
         """
         # pylint: disable=unused-argument
-        logging.info(f"Opening application: {item.text}")
+        logging.info(f"Opening application...")
         webbrowser.open('http://localhost:5000')
 
     menu = Menu(

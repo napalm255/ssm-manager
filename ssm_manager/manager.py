@@ -29,16 +29,15 @@ class AWSManager:
         Returns:
             List of profile names or empty list if no profiles found
         """
+        profiles = []
         try:
             profiles = boto3.Session().available_profiles
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
-            return profiles if profiles else []
         except BotoCoreError as e:
             logger.warning(f"Error retrieving AWS profiles: {e}")
-            return []
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS profiles: {e}")
-            return []
+        return profiles
 
     @staticmethod
     def get_regions():
@@ -49,7 +48,10 @@ class AWSManager:
         """
         regions = []
         try:
-            regions = boto3.session.Session().get_available_regions('ec2')
+            regions = boto3.Session().get_available_regions('ec2')
+            logger.info(f"Successfully loaded {len(regions)} AWS regions")
+        except BotoCoreError as e:
+            logger.warning(f"Error retrieving AWS regions: {e}")
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS regions: {e}")
         return regions
@@ -65,9 +67,8 @@ class AWSManager:
             aws_session = boto3.Session(profile_name=profile, region_name=region)
             self.ssm_client = aws_session.client('ssm')
             self.ec2_client = aws_session.client('ec2')
-            self.sts_client = aws_session.client('sts')  # Initialize STS client
+            self.sts_client = aws_session.client('sts')
 
-            # Get AWS account ID
             account_info = self.sts_client.get_caller_identity()
             self.account_id = account_info['Account']
 
@@ -121,8 +122,6 @@ class AWSManager:
                 for instance in page.get('InstanceInformationList', []):
                     ssm_instance_ids.add(instance['InstanceId'])
 
-            logger.debug(f"Found {len(ssm_instance_ids)} instances with SSM: {ssm_instance_ids}")
-
             # Get all EC2 instances
             instances = []
             paginator = self.ec2_client.get_paginator('describe_instances')
@@ -156,7 +155,7 @@ class AWSManager:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error listing instances: {str(e)}")
             if 'ExpiredTokenException' in str(e):
-                self.is_connected = False  # Set connection status to false
+                self.is_connected = False
                 return {'error': 'Authentication token expired. Please reconnect.'}
             return None
 
@@ -178,12 +177,10 @@ class AWSManager:
 
             instance = response['Reservations'][0]['Instances'][0]
 
-            # Get instance IAM role if it exists
             iam_role = ''
             if instance.get('IamInstanceProfile'):
                 iam_role = instance['IamInstanceProfile'].get('Arn', '').split('/')[-1]
 
-            # Get security group names
             security_groups = [sg['GroupName'] for sg in instance.get('SecurityGroups', [])]
 
             instance_details = {
@@ -200,7 +197,7 @@ class AWSManager:
                 'security_groups': ', '.join(security_groups) if security_groups else 'N/A'
             }
 
-            logger.debug(f"Retrieved details for instance {instance_id}")
+            logger.debug(f"Successfully retrieved details for instance {instance_id}")
             return instance_details
 
         except Exception as e:  # pylint: disable=broad-except

@@ -1,3 +1,6 @@
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
 /* Card Styles */
 .instance-card {
     transition: all 0.3s ease;
@@ -37,38 +40,39 @@
 .btn-purple {
     background-color: #800080;
     border-color: #800080;
-    color: #fff; 
+    color: #fff;
 }
 .btn-purple:hover {
-    background-color: #660066; 
+    background-color: #660066;
     border-color: #660066;
 }
 .btn-ottanio {
     background-color: #267896FF;
     border-color: #267896FF;
-    color: #fff; 
+    color: #fff;
 }
 .btn-ottanio:hover {
-    background-color: #1f617a; 
+    background-color: #1f617a;
     border-color: #1f617a;
 }
 
 .badge-fucsia {
     background-color: #FF00CCFF;
-    color: #fff; 
+    color: #fff;
 }
 
 /* Connection Item */
 .connection-item {
+    transition: all 0.3s ease;
     padding: 1rem;
     border-radius: 0.5rem;
-    background: #f8f9fa;
     margin-bottom: 0.5rem;
-    border: 1px solid #dee2e6;
+    cursor: pointer;
 }
 
 .connection-item:hover {
-    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
 }
 
 /* Custom Scrollbar */
@@ -103,32 +107,11 @@
     opacity: 0.95;
 }
 
-/* Modal Customization */
-.modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.modal-footer {
-    background-color: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-}
-
-
-.modal.show {
-    transition: opacity 0.2s ease-in-out;
-    opacity: 1 !important; /* Forza l'opacità a 1 quando il modal è mostrato */
-}
-
 #loadingOverlay {
     transition: opacity 0.2s ease-in-out;
     z-index: 1060;
 }
 
-/* classe per i modal durante il loading */
-.modal-loading {
-    opacity: 0.5 !important;
-}
 
 
 /* Enable text selection */
@@ -138,4 +121,3 @@
     -ms-user-select: text;     /* Internet Explorer/Edge */
     user-select: text;         /* Standard */
 }
-

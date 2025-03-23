@@ -18,8 +18,9 @@ const app = {
 
     preferences: {
         startPort: 60000,
-        endPort: 60100,
-        logLevel: 'INFO'
+        endPort: 60255,
+        logLevel: 'INFO',
+        regions: []
     },
 
     async init() {
@@ -56,31 +57,27 @@ const app = {
     },
 
     initializeComponents() {
-        // Initialize modals
         console.log('Initializing Bootstrap components...');
         if (typeof bootstrap === 'undefined') {
             throw new Error('Bootstrap is not loaded. Please check your dependencies.');
         }
 
-        // Check for required modal elements
         const instanceDetailsModal = document.getElementById('instanceDetailsModal');
         const customPortModal = document.getElementById('customPortModal');
         const preferencesModal = document.getElementById('preferencesModal');
 
-        // Initialize instance details modal
         if (instanceDetailsModal) {
             this.modals.instanceDetails = new bootstrap.Modal(instanceDetailsModal);
         } else {
             console.warn('Instance details modal element not found');
         }
 
-        // Initialize custom port modal
         if (customPortModal) {
             this.modals.customPort = new bootstrap.Modal(customPortModal);
         } else {
             console.warn('Custom port modal element not found');
         }
-        // Add this in the initializeComponents function after the startPortForwardingBtn setup
+
         const modeSelect = document.getElementById('modeSelect');
         if (modeSelect) {
             modeSelect.onchange = () => this.handleModeChange();
@@ -88,14 +85,12 @@ const app = {
             console.warn('Mode select element not found');
         }
 
-        // Initialize preferences modal
         if (preferencesModal) {
             this.modals.preferences = new bootstrap.Modal(preferencesModal);
         } else {
             console.warn('Preferences modal element not found');
         }
 
-        // Setup preferences button
         const preferencesBtn = document.getElementById('preferencesBtn');
         if (preferencesBtn) {
             preferencesBtn.onclick = () => this.showPreferences();
@@ -103,23 +98,6 @@ const app = {
             console.warn('Preferences button not found');
         }
 
-        const aboutModal = document.getElementById('aboutModal');
-        if (aboutModal) {
-            this.modals.about = new bootstrap.Modal(aboutModal);
-        } else {
-            console.warn('About modal element not found');
-        }
-
-        // Setup about button
-        const aboutBtn = document.getElementById('aboutBtn');
-        if (aboutBtn) {
-            aboutBtn.onclick = () => this.showAbout();
-        } else {
-            console.warn('About button not found');
-        }
-
-
-        // Initialize tooltips
         const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         tooltips.forEach(tooltip => {
             try {
@@ -129,13 +107,11 @@ const app = {
             }
         });
 
-        // Setup port forwarding button
         const startPortForwardingBtn = document.getElementById('startPortForwardingBtn');
         if (startPortForwardingBtn) {
             startPortForwardingBtn.onclick = () => this.startCustomPortForwarding();
         }
 
-        // Setup preferences save button
         const savePreferencesBtn = document.getElementById('savePreferencesBtn');
         if (savePreferencesBtn) {
             savePreferencesBtn.onclick = () => this.savePreferences();
@@ -143,15 +119,12 @@ const app = {
             console.warn('Save preferences button not found');
         }
 
-        // Load saved preferences
         this.loadPreferences();
     },
 
-    // Load profiles and regions
     async loadProfilesAndRegions() {
         console.log('[Profile Loading] Starting to load profiles and regions...');
         try {
-            // First attempt to load profiles
             const profilesRes = await fetch('/api/profiles');
             console.log('[Profile Loading] Profile response:', profilesRes);
 
@@ -171,7 +144,6 @@ const app = {
             const regions = await regionsRes.json();
             console.log('[Profile Loading] Loaded regions:', regions);
 
-            // Update dropdowns only if we have valid data
             if (Array.isArray(profiles)) {
                 this.updateSelect(this.elements.profileSelect, profiles);
             } else {
@@ -179,7 +151,7 @@ const app = {
             }
 
             if (Array.isArray(regions)) {
-                this.updateSelect(this.elements.regionSelect, regions);
+                this.updateSelect(this.elements.regionSelect, regions, defaultOption = '');
             } else {
                 console.error('[Profile Loading] Invalid regions data:', regions);
             }
@@ -190,7 +162,7 @@ const app = {
         }
     },
 
-    updateSelect(select, options) {
+    updateSelect(select, options, defaultOption = '') {
         if (!select || !options) return;
         console.log(`Updating select ${select.id} with options:`, options);
 
@@ -199,11 +171,11 @@ const app = {
             const opt = document.createElement('option');
             opt.value = option;
             opt.textContent = option;
+            opt.selected = option === defaultOption;
             select.appendChild(opt);
         });
     },
 
-    // Toggle connection state
     async toggleConnection() {
         if (this.isConnected) {
             if (!confirm('Are you sure you want to disconnect?')) return;
@@ -229,14 +201,13 @@ const app = {
 
             if (!response.ok) throw new Error('Connection failed');
 
-            // Get the response data
             const result = await response.json();
             if (result.status === 'success') {
                 this.isConnected = true;
                 this.currentProfile = profile;
                 this.currentRegion = region;
-                this.awsAccountId = result.account_id;  // Store account ID
-                // Update UI with account ID and console link
+                this.awsAccountId = result.account_id;
+
                 this.updateAwsAccountDisplay();
 
                 this.elements.connectBtn.innerHTML = '<i class="bi bi-plug fs-5"></i> Disconnect';
@@ -263,12 +234,9 @@ const app = {
         const accountId = document.getElementById('awsAccountId');
 
         if (this.isConnected && this.awsAccountId) {
-            // Show account ID
             accountId.textContent = this.awsAccountId;
-            // Show the container
             accountContainer.style.display = 'block';
         } else {
-            // Hide when disconnected
             accountContainer.style.display = 'none';
             accountId.textContent = '';
         }
@@ -278,7 +246,7 @@ const app = {
         this.isConnected = false;
         this.currentProfile = '';
         this.currentRegion = '';
-        this.awsAccountId = null; // Clear account ID
+        this.awsAccountId = null;
         this.instances = [];
 
         this.updateAwsAccountDisplay();
@@ -357,7 +325,7 @@ const app = {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
-                    <button class="btn btn-sm btn-dark" onclick="app.startSSH('${instanceId}')">
+                    <button class="btn btn-sm btn-warning" onclick="app.startSSH('${instanceId}')">
                         <i class="bi bi-terminal"></i> SSH
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="app.startRDP('${instanceId}')">
@@ -425,7 +393,21 @@ const app = {
 
     updateCounters() {
         this.elements.instanceCount.textContent = `${this.instances.length} instances`;
+        if (this.instances.length === 0) {
+            this.elements.instanceCount.classList.add('bg-secondary');
+            this.elements.instanceCount.classList.remove('bg-success');
+        } else {
+            this.elements.instanceCount.classList.add('bg-success');
+            this.elements.instanceCount.classList.remove('bg-secondary');
+        }
         this.elements.connectionCount.textContent = `${this.connections.length} active`;
+        if (this.connections.length === 0) {
+            this.elements.connectionCount.classList.add('bg-secondary');
+            this.elements.connectionCount.classList.remove('bg-success');
+        } else {
+            this.elements.connectionCount.classList.add('bg-success');
+            this.elements.connectionCount.classList.remove('bg-secondary');
+        }
     },
 
     async startSSH(instanceId) {
@@ -490,13 +472,10 @@ const app = {
 
     showCustomPortModal(instanceId) {
         console.log(`Showing custom port modal for instance ${instanceId}`);
-        // Store the instance ID for use when starting the connection
         this.selectedInstanceId = instanceId;
 
-        // Reset the form
         document.getElementById('remotePort').value = '1433';
 
-        // Show the modal
         this.modals.customPort.show();
     },
 
@@ -504,16 +483,12 @@ const app = {
         console.log(`Showing instance details for ${instanceId}`);
 
         try {
-            this.showLoading();
-
-            // Fetch instance details from backend
             const response = await fetch(`/api/instance-details/${instanceId}`);
             if (!response.ok) throw new Error('Failed to fetch instance details');
 
             const details = await response.json();
             if (!details) throw new Error('No instance details found');
 
-            // Update modal content
             const contentDiv = document.getElementById('instanceDetailsContent');
             contentDiv.innerHTML = `
                 <div class="table-responsive">
@@ -538,19 +513,14 @@ const app = {
                 </div>
             `;
 
-            // Add click handlers for copying
             contentDiv.querySelectorAll('.copy-value').forEach(element => {
                 element.addEventListener('click', () => this.copyToClipboard(element.dataset.value));
             });
 
-            // Show the modal
             this.modals.instanceDetails.show();
-
         } catch (error) {
             console.error('Error showing instance details:', error);
             this.showError('Failed to load instance details');
-        } finally {
-            this.hideLoading();
         }
     },
 
@@ -606,15 +576,6 @@ const app = {
         }
     },
 
-    getConnectionTypeColor(type) {
-        const colors = {
-            'SSH': 'dark',
-            'RDP': 'primary',
-            'Custom Port': '#800080'
-        };
-        return colors[type] || 'secondary';
-    },
-
     getInstanceName(instanceId) {
         const instance = this.instances.find(i => i.id === instanceId);
         return instance ? instance.name : instanceId;
@@ -653,7 +614,7 @@ app.refreshData = async function() {
         }
     } catch (error) {
         this.showError('Failed to refresh data: ' + error.message);
-        this.toggleAutoRefresh(false);  // Stop auto-refresh on error
+        this.toggleAutoRefresh(false);
     } finally {
         this.hideLoading();
     }
@@ -682,27 +643,24 @@ app.startAutoRefresh = function() {
         clearInterval(this.refreshInterval);
     }
 
-    // Set new interval for countdown and refresh
     this.refreshInterval = setInterval(() => {
         this.refreshCountdown--;
         this.updateRefreshTimer();
 
         if (this.refreshCountdown <= 0) {
             this.refreshData();
-            this.refreshCountdown = 30;  // Reset countdown
+            this.refreshCountdown = 30;
         }
     }, 1000);
 };
 
 app.stopAutoRefresh = function() {
     console.log('Stopping auto-refresh');
-    // Clear the interval
     if (this.refreshInterval) {
         clearInterval(this.refreshInterval);
         this.refreshInterval = null;
     }
 
-    // Reset countdown and clear display
     this.refreshCountdown = 0;
     this.elements.refreshTimer.textContent = '';
     this.elements.autoRefreshSwitch.checked = false;
@@ -713,14 +671,12 @@ app.setupEventListeners = function() {
     this.elements.connectBtn.onclick = () => this.toggleConnection();
     this.elements.refreshBtn.onclick = () => this.refreshData();
 
-    // Modifica la gestione dell'evento autoRefreshSwitch
     this.elements.autoRefreshSwitch.onchange = (e) => {
         this.toggleAutoRefresh(e.target.checked);
     };
 };
 
 app.updateRefreshTimer = function() {
-    // Only show countdown if auto-refresh is active
     if (this.elements.autoRefreshSwitch.checked && this.refreshCountdown > 0) {
         this.elements.refreshTimer.textContent = `(${this.refreshCountdown}s)`;
     } else {
@@ -732,18 +688,15 @@ app.showPreferences = async function() {
     console.log('Showing preferences dialog');
 
     try {
-        // Fetch latest preferences from server
         const response = await fetch('/api/preferences');
         if (!response.ok) throw new Error('Failed to load preferences');
 
         const prefs = await response.json();
 
-        // Update the form fields with current values
         document.getElementById('startPort').value = prefs.port_range.start;
         document.getElementById('endPort').value = prefs.port_range.end;
         document.getElementById('logLevel').value = prefs.logging.level;
 
-        // Show the modal
         if (this.modals.preferences) {
             this.modals.preferences.show();
         } else {
@@ -755,7 +708,6 @@ app.showPreferences = async function() {
     }
 };
 
-// Update the savePreferences method to ensure we're using the correct structure
 app.savePreferences = async function() {
     console.log('Saving preferences');
     try {
@@ -763,7 +715,6 @@ app.savePreferences = async function() {
         const endPort = parseInt(document.getElementById('endPort').value);
         const logLevel = document.getElementById('logLevel').value;
 
-        // Validate values
         if (startPort >= endPort) {
             this.showError('Start port must be less than end port');
             return;
@@ -774,7 +725,6 @@ app.savePreferences = async function() {
             return;
         }
 
-        // Create new preferences object matching backend structure
         const newPreferences = {
             port_range: {
                 start: startPort,
@@ -794,10 +744,8 @@ app.savePreferences = async function() {
 
         if (!response.ok) throw new Error('Failed to save preferences');
 
-        // Update local preferences
         this.preferences = newPreferences;
 
-        // Hide modal and show success message
         if (this.modals.preferences) {
             this.modals.preferences.hide();
         }
@@ -809,7 +757,6 @@ app.savePreferences = async function() {
     }
 };
 
-// Update loadPreferences to match backend structure
 app.loadPreferences = async function() {
     console.log('Loading initial preferences');
     try {
@@ -825,24 +772,22 @@ app.loadPreferences = async function() {
         this.preferences = {
             port_range: {
                 start: 60000,
-                end: 60100
+                end: 60255
             },
             logging: {
                 level: 'INFO',
                 format: "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-            }
+            },
+            regions: []
         };
     }
 };
 
-// Handle switching between port forwarding modes
 app.handleModeChange = function() {
-    // Get the containers for different modes
     const remotePortContainer = document.getElementById('remotePortContainer');
     const otherHostContainer = document.getElementById('otherHostContainer');
     const modeSelect = document.getElementById('modeSelect');
 
-    // Show/hide containers based on selected mode
     if (modeSelect.value === 'local') {
         remotePortContainer.style.display = 'block';
         otherHostContainer.style.display = 'none';
@@ -852,13 +797,10 @@ app.handleModeChange = function() {
     }
 };
 
-// Custom port forwarding with support for both local and remote host modes
 app.startCustomPortForwarding = async function() {
-    // Get the selected mode from the dropdown
     const mode = document.getElementById('modeSelect').value;
     const instanceId = this.selectedInstanceId;
 
-    // Add this validation before showing loading
     if (mode === 'local') {
         const remotePort = document.getElementById('remotePort').value;
         if (!remotePort || !instanceId) {
@@ -874,7 +816,6 @@ app.startCustomPortForwarding = async function() {
         }
     }
 
-    // Show loading BEFORE preparing request data
     this.showLoading();
 
     try {
@@ -934,19 +875,17 @@ app.renderConnections = function() {
 
     this.connections.forEach(conn => {
         const element = document.createElement('div');
-        element.className = 'connection-item';
+        element.className = 'connection-item border border-secondary';
 
-        // Format timestamp
         const timestamp = new Date(conn.timestamp).toLocaleTimeString();
 
-        // Create connection info based on type
         let connectionInfo = '';
         if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
             connectionInfo = `
                 <div class="text-muted small">
-                    Local Port: ${conn.local_port}
-                    ${conn.remote_port ? `, Remote Port: ${conn.remote_port}` : ''}
-                    ${conn.remote_host ? `, Host: ${conn.remote_host}` : ''}
+                    <p class="m-0 p-0">Local Port: ${conn.local_port}</p>
+                    ${conn.remote_port ? `<p class="m-0 p-0">Remote Port: ${conn.remote_port}` : ''}
+                    ${conn.remote_host ? `, Host: ${conn.remote_host}</p>` : '</p>'}
                 </div>
             `;
         }
@@ -955,19 +894,19 @@ app.renderConnections = function() {
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge
-                            ${this.getConnectionTypeColor(conn.type) === 'dark' ? 'bg-dark' : ''}
-                            ${this.getConnectionTypeColor(conn.type) === 'primary' ? 'bg-primary' : ''}"
-                            style="${this.getConnectionTypeColor(conn.type) === '#800080' ? `background-color: #800080;` : ''}">
+                        <span class="badge ${this.getConnectionTypeColor(conn.type)}">
                             ${conn.type}
                         </span>
                     </div>
-                    <div class="text-muted small"><b>ID: ${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
+                    <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
                     ${connectionInfo}
-                    <div class="text-muted small">Started at ${timestamp}</div>
+                    <p class="text-muted small mt-2 mb-1">Started at ${timestamp}</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background-color: #fd9843;">${conn.region}</span>
+                        <span class="badge" style="background-color: #e35d6a;">${conn.profile}</span>
+                    </div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger"
-                        onclick="app.terminateConnection('${conn.connection_id}')">
+                <button class="btn btn-sm btn-outline-danger" onclick="app.terminateConnection('${conn.connection_id}')">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
@@ -979,12 +918,12 @@ app.renderConnections = function() {
 
 app.getConnectionTypeColor = function(type) {
     const colors = {
-        'SSH': 'dark',
-        'RDP': 'primary',
-        'Custom Port': '#800080',
-        'Remote Host Port': '#800080'
+        'SSH': 'text-bg-warning',
+        'RDP': 'text-bg-primary',
+        'Custom Port': 'btn-purple',
+        'Remote Host Port': 'btn-purple'
     };
-    return colors[type] || 'secondary';
+    return colors[type] || 'text-bg-secondary';
 };
 
 app.startConnectionMonitoring = function() {
@@ -1024,17 +963,8 @@ app.checkConnections = async function() {
     }
 };
 
-app.showAbout = function() {
-    if (this.modals.about) {
-        this.modals.about.show();
-    } else {
-        console.error('About modal not initialized');
-    }
-};
-
 app.showLoading = function() {
     if (this.elements.loadingOverlay) {
-        // Se c'è un modal aperto, aggiungi la classe modal-loading
         const openModals = document.querySelectorAll('.modal.show');
         openModals.forEach(modal => {
             modal.classList.add('modal-loading');
@@ -1046,7 +976,6 @@ app.showLoading = function() {
 
 app.hideLoading = function() {
     if (this.elements.loadingOverlay) {
-        // Rimuovi la classe modal-loading da tutti i modal
         const openModals = document.querySelectorAll('.modal.show');
         openModals.forEach(modal => {
             modal.classList.remove('modal-loading');
