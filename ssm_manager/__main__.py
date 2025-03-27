@@ -2,7 +2,7 @@
 Main entry point for the application
 """
 import sys
-from ssm_manager.app import create_tray, run_server
+from ssm_manager.app import TrayIcon, ServerThread
 
 
 def main():
@@ -10,6 +10,9 @@ def main():
     Main entry point
     """
     if len(sys.argv) > 1 and sys.argv[1] == '--api':
-        run_server(debug=True)
+        server = ServerThread()
+        server.run()
     else:
-        create_tray()
+        tray = TrayIcon('static/favicon.ico')
+        tray.run()
+    sys.exit(0)

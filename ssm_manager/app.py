@@ -54,7 +54,7 @@ def get_profiles():
     Returns: JSON list of profile names
     """
     try:
-        logger.debug(f"Loading AWS profiles...")
+        logger.debug("Loading AWS profiles...")
         profiles = aws_manager.get_profiles()
         return jsonify(profiles)
     except Exception as e:  # pylint: disable=broad-except
@@ -69,7 +69,7 @@ def get_regions():
     Returns: JSON list of region names
     """
     try:
-        logger.debug(f"Loading AWS regions...")
+        logger.debug("Loading AWS regions...")
         preferences.reload_preferences()
         regions = preferences.get_regions()
         if not regions:
@@ -590,98 +590,132 @@ def get_os():
     return system
 
 
-def create_icon(width, height, color1, color2):
+class ServerThread(threading.Thread):
     """
-    Generates a simple fallback image
-    Args:
-        width (int): Image width
-        height (int): Image height
-        color1 (str): Background color
-        color2 (str): Foreground color
-    Returns:
-        Image: The generated image
+    Thread class for running the Flask server
     """
-    image = Image.new('RGB', (width, height), color1)
-    dc = ImageDraw.Draw(image)
-    dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
-    dc.rectangle((0, height // 2, width // 2, height), fill=color2)
-    return image
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+        self.daemon = True
+        self.target = self.run
+
+    def stop(self):
+        """
+        Stop the server
+        """
+        self._stop_event.set()
+
+    def stopped(self):
+        """
+        Check if the server is stopped
+        """
+        return self._stop_event.is_set()
+
+    def run(self):
+        """
+        Run the server
+        """
+        while not self.stopped():
+            logging.info("Starting server...")
+            app.run(
+                host='127.0.0.1',
+                port=5000,
+                debug=False,
+                use_reloader=False
+            )
+            self.stop()
+        logging.info("Server stopped")
 
 
-def get_resource_path(relative_path):
+class TrayIcon():
     """
-    Get absolute path to resource, works for dev and for PyInstaller
-    Args:
-        relative_path (str): Relative path to the resource
-    Returns:
-        str: Absolute path to the resource
+    System tray icon class
     """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
-    except AttributeError:
-        base_path = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, icon_file):
+        self.server = ServerThread()
+        self.server.daemon = True
+        self.icon = None
+        self.icon_file = self.get_resource_path(icon_file)
 
-    return os.path.join(base_path, relative_path)
+    @property
+    def image(self):
+        """
+        Load the icon image
+        """
+        try:
+            image = Image.open(self.icon_file)
+        except FileNotFoundError:
+            logger.warning("Icon file not found, generating fallback image")
+            image = self.create_icon(32, 32, 'black', 'white')
+        return image
 
+    @property
+    def menu(self):
+        """
+        Create the system tray menu
+        """
+        return Menu(
+            MenuItem('Open', self.open_app, default=True),
+            MenuItem('Exit', self.exit_app)
+        )
 
-def run_server(debug=False):
-    """
-    Run the Flask server
-    """
-    app.run(
-        host='127.0.0.1',
-        port=5000,
-        debug=debug,
-        use_reloader=debug
-    )
+    def get_resource_path(self, relative_path):
+        """
+        Get absolute path to resource, works for dev and for PyInstaller
+        Args:
+            relative_path (str): Relative path to the resource
+        Returns:
+            str: Absolute path to the resource
+        """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
+        except AttributeError:
+            base_path = os.path.dirname(os.path.realpath(__file__))
 
+        return os.path.join(base_path, relative_path)
 
-def run_server_thread():
-    """
-    Run the Flask server in a separate thread
-    """
-    server = threading.Thread(target=run_server)
-    server.daemon = True
-    server.start()
-    # Wait a bit for the server to start
-    time.sleep(1)
+    def create_icon(self, width, height, color1, color2):
+        """
+        Generates a simple fallback image
+        Args:
+            width (int): Image width
+            height (int): Image height
+            color1 (str): Background color
+            color2 (str): Foreground color
+        Returns:
+            Image: The generated image
+        """
+        image = Image.new('RGB', (width, height), color1)
+        dc = ImageDraw.Draw(image)
+        dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
+        dc.rectangle((0, height // 2, width // 2, height), fill=color2)
+        return image
 
-
-def create_tray():
-    """
-    Create the system tray icon
-    """
-    try:
-        icon_file = get_resource_path('static/favicon.ico')
-        image = Image.open(icon_file)
-    except FileNotFoundError:
-        logger.warning("Icon file not found, using fallback image")
-        image = create_icon(32, 32, 'black', 'white')
-
-    def exit_app(icon, item):
+    def exit_app(self, icon, item):
         """
         Exit the application
         """
-        logger.info(f"Exiting application...")
+        # pylint: disable=unused-argument
+        logger.info("Exiting application...")
+        self.server.stop()
         icon.stop()
-        server.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
-    def open_app(icon, item):
+    def open_app(self, icon, item):
         """
         Open the application in the default browser
         """
         # pylint: disable=unused-argument
-        logger.info(f"Opening application...")
+        logger.info("Opening application...")
         webbrowser.open('http://localhost:5000')
 
-    menu = Menu(
-        MenuItem('Open', open_app, default=True),
-        MenuItem('Exit', exit_app)
-    )
-
-    server = run_server_thread()
-
-    icon = Icon('SSM Manager', image, 'SSM Manager', menu=menu)
-    icon.run()
+    def run(self):
+        """
+        Run the system tray icon
+        """
+        self.server.start()
+        time.sleep(1)
+        self.icon = Icon('SSM Manager', self.image, 'SSM Manager', menu=self.menu)
+        self.icon.run()
