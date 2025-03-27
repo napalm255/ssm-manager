@@ -599,6 +599,7 @@ class ServerThread(threading.Thread):
         self._stop_event = threading.Event()
         self.daemon = True
         self.target = self.run
+        self.debug = False
 
     def stop(self):
         """
@@ -621,8 +622,8 @@ class ServerThread(threading.Thread):
             app.run(
                 host='127.0.0.1',
                 port=5000,
-                debug=False,
-                use_reloader=False
+                debug=self.debug,
+                use_reloader=self.debug
             )
             self.stop()
         logging.info("Server stopped")
