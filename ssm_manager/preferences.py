@@ -90,23 +90,24 @@ class PreferencesHandler:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 
-    def get_instance_properties(self, name, remote_port):
+    def get_instance_properties(self, name, remote_port: int, remote_host=None):
         """Get properties for specific instance"""
         for instance in self.preferences.get('instances', []):
-            if instance['name'] != name:
+            if instance.get('name') != name:
                 continue
-            if 'services' not in instance:
+            if int(instance.get('remote_port')) != remote_port:
                 continue
-            for service in instance['services']:
-                if service['remote_port'] == remote_port:
-                    return service.get('local_port', None)
+            if instance.get('remote_host') != remote_host:
+                continue
+            return int(instance.get('local_port'))
         return None
 
-    def get_port_range(self, name, remote_port):
+    def get_port_range(self, name, remote_port: int, remote_host=None):
         """Get port range for free port finder"""
-        local_port = self.get_instance_properties(name, remote_port)
+        local_port = self.get_instance_properties(name, remote_port, remote_host)
         if local_port:
-            logging.info(f"Using preferred local port {local_port} for {name}")
+            message = f"{remote_host} proxying via {name}" if remote_host else f'{name}'
+            logging.info(f'Using preferred local port {str(local_port)} for {message}')
             return local_port, local_port
         port_range = self.preferences.get('port_range', self.DEFAULT_PREFERENCES['port_range'])
         return port_range['start'], port_range['end']

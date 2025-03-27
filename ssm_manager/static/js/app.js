@@ -25,7 +25,8 @@ const app = {
         startPort: 60000,
         endPort: 60255,
         logLevel: 'WARNING',
-        regions: []
+        regions: [],
+        instances: []
     },
 
     async init() {
@@ -70,6 +71,7 @@ const app = {
         }
 
         const instanceDetailsModal = document.getElementById('instanceDetailsModal');
+        const instancePreferencesModal = document.getElementById('instancePreferencesModal');
         const customPortModal = document.getElementById('customPortModal');
         const preferencesModal = document.getElementById('preferencesModal');
 
@@ -77,6 +79,12 @@ const app = {
             this.modals.instanceDetails = new bootstrap.Modal(instanceDetailsModal);
         } else {
             console.warn('Instance details modal element not found');
+        }
+
+        if (instancePreferencesModal) {
+            this.modals.instancePreferences = new bootstrap.Modal(instancePreferencesModal);
+        } else {
+            console.warn('Instance preferences modal element not found');
         }
 
         if (customPortModal) {
@@ -340,7 +348,7 @@ const app = {
                             </div>
                         </div>
                         <div>
-                            ${this.createActionButtons(instance.id)}
+                            ${this.createActionButtons(instance.id, instance.name)}
                         </div>
                     </div>
                 </div>
@@ -349,7 +357,7 @@ const app = {
         return card;
     },
 
-    createActionButtons(instanceId) {
+    createActionButtons(instanceId, instanceName) {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
@@ -364,7 +372,10 @@ const app = {
                     </button>
                 ` : ''}
                 <button class="btn btn-sm btn-ottanio text-white" onclick="app.showInstanceDetails('${instanceId}')">
-                    <i class="bi bi-info-circle"></i> Info
+                    <i class="bi bi-info-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-darkseagreen text-white" onclick="app.showInstancePreferences('${instanceId}', '${instanceName}')">
+                    <i class="bi bi-sliders2"></i>
                 </button>
             </div>
         `;
@@ -503,10 +514,57 @@ const app = {
         }
     },
 
+    async showInstancePreferences(instanceId, instanceName) {
+        console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
+
+        try {
+            const details = [];
+            this.preferences.instances.forEach(i => {
+                if (i.name === instanceName) {
+                    details.push(i);
+                }
+            });
+
+            const detailsHtml = details.map(d => {
+                remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
+                return this.createDetailRow(d.local_port, remote);
+            }).join('');
+
+            const contentDiv = document.getElementById('instancePreferencesContent');
+            contentDiv.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Local Port</th>
+                            <th>Remote [Host:]Port</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                          ${detailsHtml}
+                        </tbody>
+                    </table>
+                    <div class="text-muted small text-center mt-2">
+                        Click on any value to copy to clipboard
+                    </div>
+                </div>
+            `;
+
+            contentDiv.querySelectorAll('.copy-value').forEach(element => {
+                element.addEventListener('click', () => this.copyToClipboard(element.dataset.value));
+            });
+
+            this.modals.instancePreferences.show();
+        } catch (error) {
+            console.error('Error showing instance details:', error);
+            this.showError('Failed to load instance details');
+        }
+    },
+
     createDetailRow(label, value) {
         return `
             <tr>
-                <td class="fw-bold" style="width: 35%">${label}:</td>
+                <td class="fw-bold" style="width: 35%">${label}</td>
                 <td>
                     <span class="copy-value" role="button" data-value="${value}"
                           style="cursor: pointer" title="Click to copy">
