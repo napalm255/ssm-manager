@@ -20,7 +20,8 @@ class PreferencesHandler:
         "logging": {
             "level": "INFO"
         },
-        "regions": []
+        "regions": [],
+        "instances": []
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -89,8 +90,24 @@ class PreferencesHandler:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 
-    def get_port_range(self):
+    def get_instance_properties(self, name, remote_port):
+        """Get properties for specific instance"""
+        for instance in self.preferences.get('instances', []):
+            if instance['name'] != name:
+                continue
+            if 'services' not in instance:
+                continue
+            for service in instance['services']:
+                if service['remote_port'] == remote_port:
+                    return service.get('local_port', None)
+        return None
+
+    def get_port_range(self, name, remote_port):
         """Get port range for free port finder"""
+        local_port = self.get_instance_properties(name, remote_port)
+        if local_port:
+            logging.info(f"Using preferred local port {local_port} for {name}")
+            return local_port, local_port
         port_range = self.preferences.get('port_range', self.DEFAULT_PREFERENCES['port_range'])
         return port_range['start'], port_range['end']
 

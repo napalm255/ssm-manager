@@ -186,7 +186,7 @@ def start_rdp(instance_id):
         instance_id (str): ID of the EC2 instance
     Returns: JSON response with status and connection details
     """
-    # pylint: disable=line-too-long
+    # pylint: disable=line-too-long, too-many-locals
     try:
         logger.debug(f"Starting RDP - Instance: {instance_id}")
         data = request.json
@@ -196,7 +196,8 @@ def start_rdp(instance_id):
 
         connection_id = f"rdp_{instance_id}_{int(time.time())}"
 
-        local_port = find_free_port()
+        remote_port = "3389"
+        local_port = find_free_port(name=name, remote_port=remote_port)
         if local_port is None:
             logger.error("Could not find available port for RDP connection")
             return jsonify({'error': 'No available ports for RDP connection'}), 503
@@ -205,7 +206,7 @@ def start_rdp(instance_id):
 
         cmd_exec = None
         cmd_run = None
-        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
+        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
         if get_os() == 'Linux':
             cmd_exec = 'aws'
             cmd_run = cmd_aws
@@ -279,7 +280,7 @@ def start_custom_port(instance_id):
 
         connection_id = f"port_{mode}_{instance_id}_{int(time.time())}"
 
-        local_port = find_free_port()
+        local_port = find_free_port(name=name, remote_port=remote_port)
         if local_port is None:
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
@@ -520,12 +521,12 @@ def favicon():
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-def find_free_port():
+def find_free_port(name: str, remote_port: str):
     """
     Find a free port in the given range for AWS SSM port forwarding
     Returns: A free port number or None if no port is found
     """
-    start_port, end_port = preferences.get_port_range()
+    start_port, end_port = preferences.get_port_range(name, remote_port)
     logger.debug(f"Finding free port between {start_port} and {end_port}")
     start = start_port
     end = end_port
@@ -557,7 +558,7 @@ def find_free_port():
     return None
 
 
-def get_pid(executable, command):
+def get_pid(executable:str, command:str):
     """
     Get the PID of a process by executable and command
     Args:
