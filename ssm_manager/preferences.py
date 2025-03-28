@@ -51,8 +51,12 @@ class PreferencesHandler:
     def update_preferences(self, new_preferences):
         """Update preferences with new values"""
         try:
-            updated_prefs = {**self.preferences, **new_preferences}
-            if self.save_preferences(updated_prefs):
+            prefs = self.preferences.copy()
+            prefs['port_range'] = new_preferences.get('port_range', prefs['port_range'])
+            prefs['logging'] = new_preferences.get('logging', prefs['logging'])
+            prefs['regions'] = new_preferences.get('regions', prefs['regions'])
+            prefs['instances'] = new_preferences.get('instances', prefs['instances'])
+            if self.save_preferences(prefs):
                 logger.info("Preferences updated successfully")
                 return True
         except Exception as e:  # pylint: disable=broad-except
@@ -63,7 +67,7 @@ class PreferencesHandler:
         """Save preferences to file"""
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
-                json.dump(preferences, f, indent=4)
+                json.dump(preferences, f, indent=2)
             self.preferences = preferences
             self.apply_preferences()
             return True

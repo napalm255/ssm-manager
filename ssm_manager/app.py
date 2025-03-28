@@ -80,6 +80,21 @@ def get_regions():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/regions/all')
+def get_all_regions():
+    """
+    Endpoint to get all AWS regions
+    Returns: JSON list of all region names
+    """
+    try:
+        logger.debug("Loading all AWS regions...")
+        regions = aws_manager.get_regions()
+        return jsonify(regions)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to load all AWS regions: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/api/connect', methods=['POST'])
 def connect():
     """
@@ -406,7 +421,7 @@ def refresh_data():
             "instances": instances if instances else []
         })
     except Exception as e:  # pylint: disable=broad-except
-        print(f"Error refreshing data: {str(e)}")
+        logger.error(f"Error refreshing data: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
