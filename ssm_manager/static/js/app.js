@@ -784,7 +784,7 @@ app.savePreferences = async function() {
         });
         if (!response.ok) throw new Error('Failed to save preferences');
 
-        this.preferences = newPreferences;
+        await this.loadPreferences();
         await this.loadProfilesAndRegions();
         await this.loadLastUsedProfileAndRegion();
 

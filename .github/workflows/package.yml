@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout
