@@ -32,7 +32,8 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 ## Features
 
 ### Core Functionality
-  - Runs as a system tray icon and uses your default browser to display the UI
+  - Runs as a system tray icon
+  - Uses your default browser to display the UI
   - Easy switching between AWS profiles (including sso)
   - Region selection
   - Connection status monitoring
