@@ -20,7 +20,8 @@ class PreferencesHandler:
         "logging": {
             "level": "INFO"
         },
-        "regions": []
+        "regions": [],
+        "instances": []
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -50,8 +51,12 @@ class PreferencesHandler:
     def update_preferences(self, new_preferences):
         """Update preferences with new values"""
         try:
-            updated_prefs = {**self.preferences, **new_preferences}
-            if self.save_preferences(updated_prefs):
+            prefs = self.preferences.copy()
+            prefs['port_range'] = new_preferences.get('port_range', prefs['port_range'])
+            prefs['logging'] = new_preferences.get('logging', prefs['logging'])
+            prefs['regions'] = new_preferences.get('regions', prefs['regions'])
+            prefs['instances'] = new_preferences.get('instances', prefs['instances'])
+            if self.save_preferences(prefs):
                 logger.info("Preferences updated successfully")
                 return True
         except Exception as e:  # pylint: disable=broad-except
@@ -62,7 +67,7 @@ class PreferencesHandler:
         """Save preferences to file"""
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
-                json.dump(preferences, f, indent=4)
+                json.dump(preferences, f, indent=2)
             self.preferences = preferences
             self.apply_preferences()
             return True
@@ -89,8 +94,25 @@ class PreferencesHandler:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 
-    def get_port_range(self):
+    def get_instance_properties(self, name, remote_port: int, remote_host=None):
+        """Get properties for specific instance"""
+        for instance in self.preferences.get('instances', []):
+            if instance.get('name') != name:
+                continue
+            if int(instance.get('remote_port')) != remote_port:
+                continue
+            if instance.get('remote_host') != remote_host:
+                continue
+            return int(instance.get('local_port'))
+        return None
+
+    def get_port_range(self, name, remote_port: int, remote_host=None):
         """Get port range for free port finder"""
+        local_port = self.get_instance_properties(name, remote_port, remote_host)
+        if local_port:
+            message = f"{remote_host} proxying via {name}" if remote_host else f'{name}'
+            logging.info(f'Using preferred local port {str(local_port)} for {message}')
+            return local_port, local_port
         port_range = self.preferences.get('port_range', self.DEFAULT_PREFERENCES['port_range'])
         return port_range['start'], port_range['end']
 

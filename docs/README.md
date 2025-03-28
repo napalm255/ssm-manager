@@ -32,7 +32,8 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 ## Features
 
 ### Core Functionality
-  - Runs as a system tray icon and uses your default browser to display the UI
+  - Runs as a system tray icon
+  - Uses your default browser to display the UI
   - Easy switching between AWS profiles (including sso)
   - Region selection
   - Connection status monitoring
@@ -48,30 +49,28 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 - **SSH Sessions**
   - Direct SSH connection to instances
   - Session monitoring and management
-  - Automatic session cleanup
 
 - **RDP Connections**
   - Automated RDP port forwarding setup
-  - Integration with Windows Remote Desktop
   - Dynamic local port allocation
+  - Session monitoring and management
+  - Integration with Windows Remote Desktop
 
 - **Port Forwarding**
   - User-defined port forwarding
-  - Dynamic local port assignment
-  - Connection monitoring
-  - Remote host connection through instances
-  - Custom remote host and port configuration
   - Dynamic local port allocation
+  - Session monitoring and management
+  - Remote host connection through instances
   
 
 ### Active Connection Management
 - Real-time connection status monitoring
 - Active session termination
-- Connection details display
 
 ### Additional Features
 - Logging system with configurable levels
 - Light and dark mode themes for the UI
+- Customizable preferences (e.g., port range, log level, regions)
 
 ## Requirements
 

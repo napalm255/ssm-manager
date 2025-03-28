@@ -54,7 +54,7 @@ def get_profiles():
     Returns: JSON list of profile names
     """
     try:
-        logger.debug(f"Loading AWS profiles...")
+        logger.debug("Loading AWS profiles...")
         profiles = aws_manager.get_profiles()
         return jsonify(profiles)
     except Exception as e:  # pylint: disable=broad-except
@@ -69,15 +69,30 @@ def get_regions():
     Returns: JSON list of region names
     """
     try:
-        logger.debug(f"Loading AWS regions...")
+        logger.debug("Loading AWS regions...")
         preferences.reload_preferences()
         regions = preferences.get_regions()
         if not regions:
             regions = aws_manager.get_regions()
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load AWS regions: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to load AWS regions: {str(e)}", exc_info=True)
+        return jsonify({"error": "Failed to load regions"}), 500
+
+
+@app.route('/api/regions/all')
+def get_all_regions():
+    """
+    Endpoint to get all AWS regions
+    Returns: JSON list of all region names
+    """
+    try:
+        logger.debug("Loading all AWS regions...")
+        regions = aws_manager.get_regions()
+        return jsonify(regions)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to load all AWS regions: {str(e)}", exc_info=True)
+        return jsonify({"error": "Failed to load all regions"}), 500
 
 
 @app.route('/api/connect', methods=['POST'])
@@ -102,8 +117,8 @@ def connect():
             'account_id': aws_manager.account_id
         })
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Connection error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Connection error: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Connection error'}), 500
 
 
 @app.route('/api/instances')
@@ -186,7 +201,7 @@ def start_rdp(instance_id):
         instance_id (str): ID of the EC2 instance
     Returns: JSON response with status and connection details
     """
-    # pylint: disable=line-too-long
+    # pylint: disable=line-too-long, too-many-locals
     try:
         logger.debug(f"Starting RDP - Instance: {instance_id}")
         data = request.json
@@ -196,7 +211,8 @@ def start_rdp(instance_id):
 
         connection_id = f"rdp_{instance_id}_{int(time.time())}"
 
-        local_port = find_free_port()
+        remote_port = 3389
+        local_port = find_free_port(name=name, remote_port=remote_port)
         if local_port is None:
             logger.error("Could not find available port for RDP connection")
             return jsonify({'error': 'No available ports for RDP connection'}), 503
@@ -205,7 +221,7 @@ def start_rdp(instance_id):
 
         cmd_exec = None
         cmd_run = None
-        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber=3389,localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
+        cmd_aws = f"aws ssm start-session --target {instance_id} --document-name AWS-StartPortForwardingSession --parameters portNumber={remote_port},localPortNumber={local_port} --region {region} --profile {profile} --reason {connection_id}"
         if get_os() == 'Linux':
             cmd_exec = 'aws'
             cmd_run = cmd_aws
@@ -274,12 +290,12 @@ def start_custom_port(instance_id):
         region = data.get('region')
         name = data.get('name')
         mode = data.get('mode', 'local')  # Default to local mode
-        remote_port = data.get('remote_port')
+        remote_port = int(data.get('remote_port'))
         remote_host = data.get('remote_host')  # Will be None for local mode
 
         connection_id = f"port_{mode}_{instance_id}_{int(time.time())}"
 
-        local_port = find_free_port()
+        local_port = find_free_port(name=name, remote_port=remote_port, remote_host=remote_host)
         if local_port is None:
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
@@ -405,7 +421,7 @@ def refresh_data():
             "instances": instances if instances else []
         })
     except Exception as e:  # pylint: disable=broad-except
-        print(f"Error refreshing data: {str(e)}")
+        logger.error(f"Error refreshing data: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -520,12 +536,12 @@ def favicon():
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-def find_free_port():
+def find_free_port(name: str, remote_port: int, remote_host: str = None):
     """
     Find a free port in the given range for AWS SSM port forwarding
     Returns: A free port number or None if no port is found
     """
-    start_port, end_port = preferences.get_port_range()
+    start_port, end_port = preferences.get_port_range(name, remote_port, remote_host)
     logger.debug(f"Finding free port between {start_port} and {end_port}")
     start = start_port
     end = end_port
@@ -557,7 +573,7 @@ def find_free_port():
     return None
 
 
-def get_pid(executable, command):
+def get_pid(executable: str, command: str):
     """
     Get the PID of a process by executable and command
     Args:
@@ -590,98 +606,133 @@ def get_os():
     return system
 
 
-def create_icon(width, height, color1, color2):
+class ServerThread(threading.Thread):
     """
-    Generates a simple fallback image
-    Args:
-        width (int): Image width
-        height (int): Image height
-        color1 (str): Background color
-        color2 (str): Foreground color
-    Returns:
-        Image: The generated image
+    Thread class for running the Flask server
     """
-    image = Image.new('RGB', (width, height), color1)
-    dc = ImageDraw.Draw(image)
-    dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
-    dc.rectangle((0, height // 2, width // 2, height), fill=color2)
-    return image
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+        self.daemon = True
+        self.target = self.run
+        self.debug = False
+
+    def stop(self):
+        """
+        Stop the server
+        """
+        self._stop_event.set()
+
+    def stopped(self):
+        """
+        Check if the server is stopped
+        """
+        return self._stop_event.is_set()
+
+    def run(self):
+        """
+        Run the server
+        """
+        while not self.stopped():
+            logging.info("Starting server...")
+            app.run(
+                host='127.0.0.1',
+                port=5000,
+                debug=self.debug,
+                use_reloader=self.debug
+            )
+            self.stop()
+        logging.info("Server stopped")
 
 
-def get_resource_path(relative_path):
+class TrayIcon():
     """
-    Get absolute path to resource, works for dev and for PyInstaller
-    Args:
-        relative_path (str): Relative path to the resource
-    Returns:
-        str: Absolute path to the resource
+    System tray icon class
     """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
-    except AttributeError:
-        base_path = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, icon_file):
+        self.server = ServerThread()
+        self.server.daemon = True
+        self.icon = None
+        self.icon_file = self.get_resource_path(icon_file)
 
-    return os.path.join(base_path, relative_path)
+    @property
+    def image(self):
+        """
+        Load the icon image
+        """
+        try:
+            image = Image.open(self.icon_file)
+        except FileNotFoundError:
+            logger.warning("Icon file not found, generating fallback image")
+            image = self.create_icon(32, 32, 'black', 'white')
+        return image
 
+    @property
+    def menu(self):
+        """
+        Create the system tray menu
+        """
+        return Menu(
+            MenuItem('Open', self.open_app, default=True),
+            MenuItem('Exit', self.exit_app)
+        )
 
-def run_server(debug=False):
-    """
-    Run the Flask server
-    """
-    app.run(
-        host='127.0.0.1',
-        port=5000,
-        debug=debug,
-        use_reloader=debug
-    )
+    def get_resource_path(self, relative_path):
+        """
+        Get absolute path to resource, works for dev and for PyInstaller
+        Args:
+            relative_path (str): Relative path to the resource
+        Returns:
+            str: Absolute path to the resource
+        """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
+        except AttributeError:
+            base_path = os.path.dirname(os.path.realpath(__file__))
 
+        return os.path.join(base_path, relative_path)
 
-def run_server_thread():
-    """
-    Run the Flask server in a separate thread
-    """
-    server = threading.Thread(target=run_server)
-    server.daemon = True
-    server.start()
-    # Wait a bit for the server to start
-    time.sleep(1)
+    def create_icon(self, width, height, color1, color2):
+        """
+        Generates a simple fallback image
+        Args:
+            width (int): Image width
+            height (int): Image height
+            color1 (str): Background color
+            color2 (str): Foreground color
+        Returns:
+            Image: The generated image
+        """
+        image = Image.new('RGB', (width, height), color1)
+        dc = ImageDraw.Draw(image)
+        dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
+        dc.rectangle((0, height // 2, width // 2, height), fill=color2)
+        return image
 
-
-def create_tray():
-    """
-    Create the system tray icon
-    """
-    try:
-        icon_file = get_resource_path('static/favicon.ico')
-        image = Image.open(icon_file)
-    except FileNotFoundError:
-        logger.warning("Icon file not found, using fallback image")
-        image = create_icon(32, 32, 'black', 'white')
-
-    def exit_app(icon, item):
+    def exit_app(self, icon, item):
         """
         Exit the application
         """
-        logger.info(f"Exiting application...")
+        # pylint: disable=unused-argument
+        logger.info("Exiting application...")
+        self.server.stop()
         icon.stop()
-        server.stop()
         os.kill(os.getpid(), signal.SIGTERM)
 
-    def open_app(icon, item):
+    def open_app(self, icon, item):
         """
         Open the application in the default browser
         """
         # pylint: disable=unused-argument
-        logger.info(f"Opening application...")
+        logger.info("Opening application...")
         webbrowser.open('http://localhost:5000')
 
-    menu = Menu(
-        MenuItem('Open', open_app, default=True),
-        MenuItem('Exit', exit_app)
-    )
-
-    server = run_server_thread()
-
-    icon = Icon('SSM Manager', image, 'SSM Manager', menu=menu)
-    icon.run()
+    def run(self):
+        """
+        Run the system tray icon
+        """
+        self.server.start()
+        time.sleep(1)
+        self.icon = Icon('SSM Manager', self.image, 'SSM Manager', menu=self.menu)
+        self.icon.run()

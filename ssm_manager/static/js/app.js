@@ -25,7 +25,8 @@ const app = {
         startPort: 60000,
         endPort: 60255,
         logLevel: 'WARNING',
-        regions: []
+        regions: [],
+        instances: []
     },
 
     async init() {
@@ -51,6 +52,7 @@ const app = {
         this.elements = {
             profileSelect: document.getElementById('profileSelect'),
             regionSelect: document.getElementById('regionSelect'),
+            regionsSelect: document.getElementById('regionsSelect'),
             connectBtn: document.getElementById('connectBtn'),
             refreshBtn: document.getElementById('refreshBtn'),
             autoRefreshSwitch: document.getElementById('autoRefreshSwitch'),
@@ -70,6 +72,7 @@ const app = {
         }
 
         const instanceDetailsModal = document.getElementById('instanceDetailsModal');
+        const instancePreferencesModal = document.getElementById('instancePreferencesModal');
         const customPortModal = document.getElementById('customPortModal');
         const preferencesModal = document.getElementById('preferencesModal');
 
@@ -77,6 +80,12 @@ const app = {
             this.modals.instanceDetails = new bootstrap.Modal(instanceDetailsModal);
         } else {
             console.warn('Instance details modal element not found');
+        }
+
+        if (instancePreferencesModal) {
+            this.modals.instancePreferences = new bootstrap.Modal(instancePreferencesModal);
+        } else {
+            console.warn('Instance preferences modal element not found');
         }
 
         if (customPortModal) {
@@ -148,7 +157,6 @@ const app = {
             const profiles = await profilesRes.json();
             console.log('[Profile Loading] Loaded profiles:', profiles);
 
-            // Then load regions
             const regionsRes = await fetch('/api/regions');
             console.log('[Profile Loading] Region response:', regionsRes);
 
@@ -171,7 +179,6 @@ const app = {
             }
         } catch (error) {
             console.error('[Profile Loading] Error loading profiles and regions:', error);
-            // Show error to user
             this.showError('Failed to load profiles and regions: ' + error.message);
         }
     },
@@ -192,8 +199,6 @@ const app = {
 
     updateSelect(select, options, defaultOption = '') {
         if (!select || !options) return;
-        console.log(`Updating select ${select.id} with options:`, options);
-
         select.innerHTML = `<option value="">Select ${select.id.replace('Select', '')}</option>`;
         options.forEach(option => {
             const opt = document.createElement('option');
@@ -340,7 +345,7 @@ const app = {
                             </div>
                         </div>
                         <div>
-                            ${this.createActionButtons(instance.id)}
+                            ${this.createActionButtons(instance.id, instance.name)}
                         </div>
                     </div>
                 </div>
@@ -349,7 +354,7 @@ const app = {
         return card;
     },
 
-    createActionButtons(instanceId) {
+    createActionButtons(instanceId, instanceName) {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
@@ -364,7 +369,10 @@ const app = {
                     </button>
                 ` : ''}
                 <button class="btn btn-sm btn-ottanio text-white" onclick="app.showInstanceDetails('${instanceId}')">
-                    <i class="bi bi-info-circle"></i> Info
+                    <i class="bi bi-info-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-darkseagreen text-white" onclick="app.showInstancePreferences('${instanceId}', '${instanceName}')">
+                    <i class="bi bi-sliders2"></i>
                 </button>
             </div>
         `;
@@ -452,15 +460,12 @@ const app = {
     showCustomPortModal(instanceId) {
         console.log(`Showing custom port modal for instance ${instanceId}`);
         this.selectedInstanceId = instanceId;
-
         document.getElementById('remotePort').value = '1433';
-
         this.modals.customPort.show();
     },
 
     async showInstanceDetails(instanceId) {
         console.log(`Showing instance details for ${instanceId}`);
-
         try {
             const response = await fetch(`/api/instance-details/${instanceId}`);
             if (!response.ok) throw new Error('Failed to fetch instance details');
@@ -503,10 +508,56 @@ const app = {
         }
     },
 
+    async showInstancePreferences(instanceId, instanceName) {
+        console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
+        try {
+            const details = [];
+            this.preferences.instances.forEach(i => {
+                if (i.name === instanceName) {
+                    details.push(i);
+                }
+            });
+
+            const detailsHtml = details.map(d => {
+                remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
+                return this.createDetailRow(d.local_port, remote);
+            }).join('');
+
+            const contentDiv = document.getElementById('instancePreferencesContent');
+            contentDiv.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Local Port</th>
+                            <th>Remote [Host:]Port</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                          ${detailsHtml}
+                        </tbody>
+                    </table>
+                    <div class="text-muted small text-center mt-2">
+                        Click on any value to copy to clipboard
+                    </div>
+                </div>
+            `;
+
+            contentDiv.querySelectorAll('.copy-value').forEach(element => {
+                element.addEventListener('click', () => this.copyToClipboard(element.dataset.value));
+            });
+
+            this.modals.instancePreferences.show();
+        } catch (error) {
+            console.error('Error showing instance preferences:', error);
+            this.showError('Failed to load instance preferences');
+        }
+    },
+
     createDetailRow(label, value) {
         return `
             <tr>
-                <td class="fw-bold" style="width: 35%">${label}:</td>
+                <td class="fw-bold" style="width: 35%">${label}</td>
                 <td>
                     <span class="copy-value" role="button" data-value="${value}"
                           style="cursor: pointer" title="Click to copy">
@@ -597,7 +648,6 @@ app.toggleAutoRefresh = function(enabled) {
     }
 
     console.log('Toggle auto-refresh:', enabled);
-
     if (enabled) {
         this.startAutoRefresh();
     } else {
@@ -657,12 +707,30 @@ app.updateRefreshTimer = function() {
 
 app.showPreferences = async function() {
     console.log('Showing preferences dialog');
-
     try {
-        const response = await fetch('/api/preferences');
-        if (!response.ok) throw new Error('Failed to load preferences');
+        const preferencesRes = await fetch('/api/preferences');
+        if (!preferencesRes.ok) throw new Error('Failed to load preferences');
+        const prefs = await preferencesRes.json();
 
-        const prefs = await response.json();
+        const regionsAllRes = await fetch('/api/regions/all');
+        if (!regionsAllRes.ok) throw new Error('Failed to load all regions');
+        const regionsAll = await regionsAllRes.json();
+
+        if (Array.isArray(regionsAll)) {
+            select = this.elements.regionsSelect;
+            if (!select) return;
+            select.innerHTML = '';
+
+            regionsAll.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                opt.selected = prefs.regions.includes(option);
+                select.appendChild(opt);
+            });
+        } else {
+            console.error('Invalid regions data:', regionsAll);
+        }
 
         document.getElementById('startPort').value = prefs.port_range.start;
         document.getElementById('endPort').value = prefs.port_range.end;
@@ -685,6 +753,8 @@ app.savePreferences = async function() {
         const startPort = parseInt(document.getElementById('startPort').value);
         const endPort = parseInt(document.getElementById('endPort').value);
         const logLevel = document.getElementById('logLevel').value;
+        const selectedRegions = this.elements.regionsSelect.querySelectorAll('option:checked');
+        const newRegions = Array.from(selectedRegions).map(r => r.value);
 
         if (startPort >= endPort) {
             this.showError('Start port must be less than end port');
@@ -703,7 +773,8 @@ app.savePreferences = async function() {
             },
             logging: {
                 level: logLevel
-            }
+            },
+            regions: newRegions
         };
 
         const response = await fetch('/api/preferences', {
@@ -711,10 +782,11 @@ app.savePreferences = async function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newPreferences)
         });
-
         if (!response.ok) throw new Error('Failed to save preferences');
 
         this.preferences = newPreferences;
+        await this.loadProfilesAndRegions();
+        await this.loadLastUsedProfileAndRegion();
 
         if (this.modals.preferences) {
             this.modals.preferences.hide();
@@ -734,7 +806,6 @@ app.loadPreferences = async function() {
         if (!response.ok) throw new Error('Failed to load preferences');
 
         this.preferences = await response.json();
-        console.log('Loaded preferences:', this.preferences);
     } catch (error) {
         console.error('Error loading initial preferences:', error);
     }

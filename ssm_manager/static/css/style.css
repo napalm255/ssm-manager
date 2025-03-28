@@ -46,6 +46,17 @@ body {
     background-color: #660066;
     border-color: #660066;
 }
+
+.btn-darkseagreen {
+    background-color: #8FBC8B;
+    border-color: #8FBC8B;
+    color: #fff;
+}
+.btn-darkseagreen:hover {
+    background-color: #6b8e6b;
+    border-color: #6b8e6b;
+}
+
 .btn-ottanio {
     background-color: #267896FF;
     border-color: #267896FF;
