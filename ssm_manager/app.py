@@ -91,8 +91,8 @@ def get_all_regions():
         regions = aws_manager.get_regions()
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load all AWS regions: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to load all AWS regions: {str(e)}", exc_info=True)
+        return jsonify({"error": "Failed to load all regions"}), 500
 
 
 @app.route('/api/connect', methods=['POST'])
