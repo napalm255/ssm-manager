@@ -146,7 +146,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 Create an issue on GitHub, please include the following (if one of them is not applicable to the issue then it's not needed):
 - The steps to reproduce the bug
-- Logs file app.log
+- Logs file ssm_manager.log
 - The version of software
 - Your OS & Browser including server OS
 - What you were expecting to see

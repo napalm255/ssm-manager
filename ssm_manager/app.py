@@ -76,8 +76,8 @@ def get_regions():
             regions = aws_manager.get_regions()
         return jsonify(regions)
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load AWS regions: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to load AWS regions: {str(e)}", exc_info=True)
+        return jsonify({"error": "Failed to load regions"}), 500
 
 
 @app.route('/api/regions/all')
@@ -117,8 +117,8 @@ def connect():
             'account_id': aws_manager.account_id
         })
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Connection error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Connection error: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Connection error'}), 500
 
 
 @app.route('/api/instances')
