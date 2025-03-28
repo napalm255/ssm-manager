@@ -549,8 +549,8 @@ const app = {
 
             this.modals.instancePreferences.show();
         } catch (error) {
-            console.error('Error showing instance details:', error);
-            this.showError('Failed to load instance details');
+            console.error('Error showing instance preferences:', error);
+            this.showError('Failed to load instance preferences');
         }
     },
 
