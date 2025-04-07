@@ -226,7 +226,7 @@ const app = {
                 body: JSON.stringify({ profile, region })
             });
 
-            if (!response.ok) throw new Error('Connection failed');
+            if (!response.ok) throw new Error('Scan failed');
 
             const result = await response.json();
             if (result.status === 'success') {
@@ -241,12 +241,12 @@ const app = {
                 localStorage.setItem('lastRegion', region);
 
                 await this.loadInstances();
-                this.showSuccess('Connected successfully');
+                this.showSuccess('Scanned successfully');
             } else {
-                throw new Error(result.error || 'Connection failed');
+                throw new Error(result.error || 'Scan failed');
             }
         } catch (error) {
-            this.showError('Connection error: ' + error.message);
+            this.showError('Scan error: ' + error.message);
         } finally {
             this.hideLoading();
             this.elements.connectBtn.innerHTML = '<i class="bi bi-search"></i>';
@@ -265,25 +265,6 @@ const app = {
             accountId.textContent = '';
         }
     },
-
-    // disconnect() {
-    //     this.currentProfile = '';
-    //     this.currentRegion = '';
-    //     this.awsAccountId = null;
-    //     this.instances = [];
-
-    //     this.updateAwsAccountDisplay();
-    //     this.elements.connectBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
-    //     this.elements.connectBtn.classList.replace('btn-danger', 'btn-success');
-    //     this.elements.instancesList.innerHTML = '';
-    //     this.updateCounters();
-
-    //     if (this.autoRefreshInterval) {
-    //         this.toggleAutoRefresh({ target: { checked: false }});
-    //     }
-
-    //     this.showSuccess('Disconnected successfully');
-    // },
 
     async loadInstances() {
         try {
