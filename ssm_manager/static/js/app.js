@@ -2,7 +2,6 @@
 //app.js
 const app = {
     // State
-    isConnected: false,
     refreshInterval: null,
     refreshCountdown: 30,
     currentProfile: '',
@@ -209,13 +208,7 @@ const app = {
         });
     },
 
-    async toggleConnection() {
-        if (this.isConnected) {
-            if (!confirm('Are you sure you want to disconnect?')) return;
-            this.disconnect();
-            return;
-        }
-
+    async scanSubscription() {
         const profile = this.elements.profileSelect.value;
         const region = this.elements.regionSelect.value;
 
@@ -226,6 +219,7 @@ const app = {
 
         try {
             this.showLoading();
+            this.elements.connectBtn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden pe-2">Loading...</span></div>';
             const response = await fetch('/api/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -236,15 +230,11 @@ const app = {
 
             const result = await response.json();
             if (result.status === 'success') {
-                this.isConnected = true;
                 this.currentProfile = profile;
                 this.currentRegion = region;
                 this.awsAccountId = result.account_id;
 
                 this.updateAwsAccountDisplay();
-
-                this.elements.connectBtn.innerHTML = '<i class="bi bi-plug fs-5"></i> Disconnect';
-                this.elements.connectBtn.classList.replace('btn-success', 'btn-danger');
 
                 // Save last used profile/region
                 localStorage.setItem('lastProfile', profile);
@@ -259,6 +249,7 @@ const app = {
             this.showError('Connection error: ' + error.message);
         } finally {
             this.hideLoading();
+            this.elements.connectBtn.innerHTML = '<i class="bi bi-search"></i>';
         }
     },
 
@@ -266,7 +257,7 @@ const app = {
         const accountContainer = document.getElementById('accountIdContainer');
         const accountId = document.getElementById('awsAccountId');
 
-        if (this.isConnected && this.awsAccountId) {
+        if (this.awsAccountId) {
             accountId.textContent = this.awsAccountId;
             accountContainer.style.display = 'block';
         } else {
@@ -275,29 +266,26 @@ const app = {
         }
     },
 
-    disconnect() {
-        this.isConnected = false;
-        this.currentProfile = '';
-        this.currentRegion = '';
-        this.awsAccountId = null;
-        this.instances = [];
+    // disconnect() {
+    //     this.currentProfile = '';
+    //     this.currentRegion = '';
+    //     this.awsAccountId = null;
+    //     this.instances = [];
 
-        this.updateAwsAccountDisplay();
-        this.elements.connectBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
-        this.elements.connectBtn.classList.replace('btn-danger', 'btn-success');
-        this.elements.instancesList.innerHTML = '';
-        this.updateCounters();
+    //     this.updateAwsAccountDisplay();
+    //     this.elements.connectBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
+    //     this.elements.connectBtn.classList.replace('btn-danger', 'btn-success');
+    //     this.elements.instancesList.innerHTML = '';
+    //     this.updateCounters();
 
-        if (this.autoRefreshInterval) {
-            this.toggleAutoRefresh({ target: { checked: false }});
-        }
+    //     if (this.autoRefreshInterval) {
+    //         this.toggleAutoRefresh({ target: { checked: false }});
+    //     }
 
-        this.showSuccess('Disconnected successfully');
-    },
+    //     this.showSuccess('Disconnected successfully');
+    // },
 
     async loadInstances() {
-        if (!this.isConnected) return;
-
         try {
             const response = await fetch('/api/instances');
             if (!response.ok) throw new Error('Failed to load instances');
@@ -613,8 +601,6 @@ const app = {
 };
 
 app.refreshData = async function() {
-    if (!this.isConnected) return;
-
     try {
         this.showLoading();
 
@@ -689,7 +675,7 @@ app.stopAutoRefresh = function() {
 
 app.setupEventListeners = function() {
     console.log('Setting up event listeners...');
-    this.elements.connectBtn.onclick = () => this.toggleConnection();
+    this.elements.connectBtn.onclick = () => this.scanSubscription();
     this.elements.refreshBtn.onclick = () => this.refreshData();
 
     this.elements.autoRefreshSwitch.onchange = (e) => {
