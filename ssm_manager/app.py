@@ -108,8 +108,36 @@ def connect():
         region = data.get('region')
         if not profile or not region:
             return jsonify({'error': 'Profile and region are required'}), 400
-        aws_manager.set_profile_and_region(profile, region)
-        aws_manager.list_ssm_instances()
+
+        try:
+            aws_manager.set_profile_and_region(profile, region)
+        except ValueError:
+            cmd_exec = None
+            cmd_run = None
+            cmd_aws = f"aws sso login --profile {profile}"
+            if get_os() == 'Linux':
+                cmd_exec = 'aws'
+                cmd_run = cmd_aws
+            elif get_os() == 'Windows':
+                cmd_exec = 'aws.exe'
+                cmd_aws = cmd_aws.replace('aws ', 'aws.exe ')
+                cmd_run = f'powershell -Command "{cmd_aws}"'
+
+            startupinfo = None
+            if get_os() == 'Windows':
+                logger.info('detected')
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+
+            logger.info(f"Initiating SSO login...")
+            process = subprocess.Popen(shlex.split(cmd_run),
+                startupinfo=startupinfo,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            process.wait()
+            aws_manager.set_profile_and_region(profile, region)
 
         logger.info(f"Connected to AWS - Profile: {profile}, Region: {region}")
         return jsonify({
