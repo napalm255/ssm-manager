@@ -32,7 +32,7 @@ jobs:
       - name: Build package
         run: |
           $env:PIPENV_VENV_IN_PROJECT = 1
-          $env:VERSION = Get-Content -Path .\VERSION
+          $env:VERSION = Get-Content -Path .\ssm_manager\VERSION
           Write-Host "Version: $env:VERSION"
           pipenv install --dev
           pipenv run python -m pip list
