@@ -584,10 +584,10 @@ def run_cmd(cmd, hide):
     if not hide and system == 'Linux':
         cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
     elif not hide and system == 'Windows':
-        cmd = cmd.replace('aws ', f'{cmd_exec} ')
+        cmd_run = cmd.replace('aws ', f'{cmd_exec} ')
         cmd_run = f'start cmd /k {cmd}'
     elif hide and system == 'Windows':
-        cmd = cmd.replace('aws ', f'{cmd_exec} ')
+        cmd_run = cmd.replace('aws ', f'{cmd_exec} ')
         cmd_run = f'powershell -Command "{cmd}"'
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
