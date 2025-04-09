@@ -55,7 +55,7 @@ app = Flask(__name__)
 aws_manager = AWSManager()
 
 
-@app.route('/version')
+@app.route('/api/version')
 def get_version():
     """
     Endpoint to get the version of the application
