@@ -578,7 +578,10 @@ def run_cmd(cmd, hide):
     """
     startupinfo = None
 
-    if not hide and system == 'Linux':
+    if hide and system == 'Linux':
+        cmd_exec = 'aws'
+        cmd_run = cmd
+    elif not hide and system == 'Linux':
         cmd_exec = 'aws'
         cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
     elif not hide and system == 'Windows':
