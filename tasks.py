@@ -10,7 +10,7 @@ import zipfile
 from invoke import task
 
 NAME="ssm_manager"
-VERSION_FILE = "VERSION"
+VERSION_FILE = "ssm_manager/VERSION"
 DIST_DIR = "dist"
 RELEASE_DIR = "release"
 
@@ -50,11 +50,12 @@ def bump_version(c):
 def build(c):
     """Builds the executable using PyInstaller."""
     # pylint: disable=unused-argument
+    print("Starting build...")
     static_dir = pathlib.Path("ssm_manager", "static")
     templates_dir = pathlib.Path("ssm_manager", "templates")
     favicon_path = static_dir / "favicon.ico"
     command = ["pyinstaller", "--onedir", "--noconsole", "--clean", "--noconfirm",
-               '--add-data', f'{VERSION_FILE}:{VERSION_FILE}',
+               '--add-data', f'{VERSION_FILE}:ssm_manager/VERSION',
                '--add-data', f'{static_dir}:ssm_manager/static',
                '--add-data', f'{templates_dir}:ssm_manager/templates',
                f'--icon={favicon_path}',
@@ -64,10 +65,11 @@ def build(c):
     print("Build completed successfully.")
 
 
-@task
+@task(pre=[build])
 def package(c):
     """Use 7z cli to create a self-extracting archive."""
     # pylint: disable=unused-argument
+    print("Creating package...")
     dist_dir = pathlib.Path(DIST_DIR)
     release_dir = pathlib.Path(RELEASE_DIR)
     os.makedirs(release_dir, exist_ok=True)
@@ -76,7 +78,7 @@ def package(c):
         version = f.read().strip()
     archive_name = f"{NAME}_{version}.zip"
     archive_path = release_dir / archive_name
-    with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_LZMA) as archive:
+    with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for file in dist_dir.rglob('*'):
             if file.is_file():
                 archive.write(file, os.path.relpath(file, dist_dir))

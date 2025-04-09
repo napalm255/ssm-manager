@@ -22,6 +22,7 @@ from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
+APP_NAME = 'SSM Manager'
 
 # Configure detailed logging
 logging.basicConfig(
@@ -53,6 +54,26 @@ app = Flask(__name__)
 
 aws_manager = AWSManager()
 
+
+@app.route('/version/')
+def get_version():
+    """
+    Endpoint to get the version of the application
+    Returns: JSON response with version information
+    """
+    try:
+        logger.debug("Getting version...")
+        version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
+        version = {}
+        with open(version_file, 'r') as file:
+            version = {
+                'version': file.read().strip(),
+                'name': APP_NAME
+            }
+        return jsonify(version)
+    except Exception as e:
+        logger.error(f"Error getting version: {str(e)}")
+        return jsonify({'error': 'Error getting version'}), 500
 
 @app.route('/api/profiles')
 def get_profiles():
@@ -750,5 +771,5 @@ class TrayIcon():
         """
         self.server.start()
         time.sleep(1)
-        self.icon = Icon('SSM Manager', self.image, 'SSM Manager', menu=self.menu)
+        self.icon = Icon(APP_NAME, self.image, APP_NAME, menu=self.menu)
         self.icon.run()
