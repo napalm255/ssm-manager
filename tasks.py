@@ -54,8 +54,9 @@ def build(c):
     static_dir = pathlib.Path("ssm_manager", "static")
     templates_dir = pathlib.Path("ssm_manager", "templates")
     favicon_path = static_dir / "favicon.ico"
+    version_path = pathlib.Path(VERSION_FILE)
     command = ["pyinstaller", "--onedir", "--noconsole", "--clean", "--noconfirm",
-               '--add-data', f'{VERSION_FILE}:ssm_manager/VERSION',
+               '--add-data', f'{version_path}:ssm_manager/VERSION',
                '--add-data', f'{static_dir}:ssm_manager/static',
                '--add-data', f'{templates_dir}:ssm_manager/templates',
                f'--icon={favicon_path}',
