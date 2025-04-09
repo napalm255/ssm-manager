@@ -577,10 +577,10 @@ def run_cmd(cmd, hide):
         tuple: The process and the PID of the command
     """
     startupinfo = None
-    cmd_exec = 'aws'
     cmd_run = cmd
 
     if not hide and system == 'Linux':
+        cmd_exec = 'aws'
         cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
     elif not hide and system == 'Windows':
         cmd_exec = 'aws.exe'
@@ -606,7 +606,7 @@ def run_cmd(cmd, hide):
     max_retries = 10
     retries = 0
     while not pid and retries < max_retries:
-        time.sleep(1)
+        time.sleep(2)
         pid = get_pid(cmd_exec, cmd)
         retries += 1
 
