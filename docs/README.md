@@ -133,6 +133,12 @@ _This assumes you have already cloned the repository and are in the root directo
 inv build
 ```
 
+### Packaging as a zipfile
+
+```powershell
+inv package
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
