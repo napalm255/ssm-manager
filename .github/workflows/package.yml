@@ -80,7 +80,7 @@ jobs:
         with:
           tag_name: dev
           files: |
-            ssm_manager.zip
+            ssm_manager_*.zip
             ssm_manager.exe
           make_latest: false
           body: |
