@@ -599,9 +599,16 @@ def run_cmd(cmd, hide):
     )
 
     pid = None
-    while not pid:
+    max_retries = 10
+    retries = 0
+    while not pid and retries < max_retries:
         time.sleep(1)
         pid = get_pid(cmd_exec, cmd)
+        retries += 1
+
+    if not pid:
+        logger.error(f"Failed to get PID for command: {cmd}")
+        return None, None
 
     return process, pid
 
