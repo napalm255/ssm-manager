@@ -32,16 +32,11 @@ jobs:
       - name: Build package
         run: |
           $env:PIPENV_VENV_IN_PROJECT = 1
+          $env:VERSION = Get-Content -Path .\VERSION
+          Write-Host "Version: $env:VERSION"
           pipenv install --dev
           pipenv run python -m pip list
-          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm `
-            --add-data "ssm_manager\static:ssm_manager\static" `
-            --add-data "ssm_manager\templates:ssm_manager\templates" `
-            --icon="ssm_manager\static\favicon.ico" `
-            --name="ssm_manager" `
-            main.py
-          mkdir release
-          Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
+          pipenv run invoke build package
           cd dist
           7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
           cd -
@@ -50,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ssm_manager_zip
-          path: release/ssm_manager.zip
+          path: release/ssm_manager_*.zip
           if-no-files-found: error
           overwrite: true
 

@@ -17,6 +17,7 @@ pystray = "*"
 
 [dev-packages]
 pylint = "*"
+invoke = "*"
 
 [requires]
 python_version = "3.12"
