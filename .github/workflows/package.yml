@@ -32,25 +32,20 @@ jobs:
       - name: Build package
         run: |
           $env:PIPENV_VENV_IN_PROJECT = 1
+          $env:VERSION = Get-Content -Path .\ssm_manager\VERSION
+          Write-Host "Version: $env:VERSION"
           pipenv install --dev
           pipenv run python -m pip list
-          pipenv run pyinstaller --onedir --noconsole --clean --noconfirm `
-            --add-data "ssm_manager\static:ssm_manager\static" `
-            --add-data "ssm_manager\templates:ssm_manager\templates" `
-            --icon="ssm_manager\static\favicon.ico" `
-            --name="ssm_manager" `
-            main.py
-          mkdir release
-          Compress-Archive -Path "dist\ssm_manager\*" -DestinationPath "release\ssm_manager.zip" -Force
+          pipenv run invoke build package
           cd dist
-          7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
+          7z a -sfx "${{ github.workspace }}\release\ssm_manager_$($env:VERSION).exe" *
           cd -
 
       - name: Upload ssm_manager.zip
         uses: actions/upload-artifact@v4
         with:
           name: ssm_manager_zip
-          path: release/ssm_manager.zip
+          path: release/ssm_manager_*.zip
           if-no-files-found: error
           overwrite: true
 
@@ -58,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ssm_manager_exe
-          path: release/ssm_manager.exe
+          path: release/ssm_manager_*.exe
           if-no-files-found: error
           overwrite: true
 
@@ -85,8 +80,8 @@ jobs:
         with:
           tag_name: dev
           files: |
-            ssm_manager.zip
-            ssm_manager.exe
+            ssm_manager_*.zip
+            ssm_manager_*.exe
           make_latest: false
           body: |
             **** Development Release ****
@@ -99,8 +94,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            ssm_manager.zip
-            ssm_manager.exe
+            ssm_manager_*.zip
+            ssm_manager_*.exe
           make_latest: true
           body: |
             Release ${{ github.ref_name }}
