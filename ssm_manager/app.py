@@ -577,17 +577,19 @@ def run_cmd(cmd, hide):
         tuple: The process and the PID of the command
     """
     startupinfo = None
-    cmd_exec = aws_exec()
+    cmd_exec = 'aws'
     cmd_run = cmd
 
     if not hide and system == 'Linux':
-        cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
+        cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
     elif not hide and system == 'Windows':
-        cmd_run = cmd.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'start cmd /k {cmd}'
+        cmd_exec = 'aws.exe'
+        cmd_run = cmd_run.replace('aws ', f'{cmd_exec} ')
+        cmd_run = f'start cmd /k {cmd_run}'
     elif hide and system == 'Windows':
-        cmd_run = cmd.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'powershell -Command "{cmd}"'
+        cmd_exec = 'aws.exe'
+        cmd_run = cmd_run.replace('aws ', f'{cmd_exec} ')
+        cmd_run = f'powershell -Command "{cmd_run}"'
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
@@ -613,18 +615,6 @@ def run_cmd(cmd, hide):
         return None, None
 
     return process, pid
-
-
-def aws_exec():
-    """
-    Get the AWS CLI executable based on the operating system
-    Returns:
-        str: The AWS CLI executable name
-    """
-    cmd_exec = 'aws'
-    if system == 'Windows':
-        cmd_exec = 'aws.exe'
-    return cmd_exec
 
 
 class ServerThread(threading.Thread):
