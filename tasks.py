@@ -2,6 +2,7 @@
 Invoke Tasks.
 """
 import os
+import sys
 import subprocess
 import pathlib
 from datetime import datetime
@@ -87,7 +88,7 @@ def package(c):
 def run(c, api=False):
     """Runs the application."""
     # pylint: disable=unused-argument
-    command = ["python", "main.py"]
+    command = [sys.executable, "main.py"]
     if api:
         command.append("--api")
     subprocess.run(command, check=True)

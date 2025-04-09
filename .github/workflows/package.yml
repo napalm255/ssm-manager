@@ -38,7 +38,7 @@ jobs:
           pipenv run python -m pip list
           pipenv run invoke build package
           cd dist
-          7z a -sfx "${{ github.workspace }}\release\ssm_manager.exe" *
+          7z a -sfx "${{ github.workspace }}\release\ssm_manager_$($env:VERSION).exe" *
           cd -
 
       - name: Upload ssm_manager.zip
@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ssm_manager_exe
-          path: release/ssm_manager.exe
+          path: release/ssm_manager_*.exe
           if-no-files-found: error
           overwrite: true
 
@@ -81,7 +81,7 @@ jobs:
           tag_name: dev
           files: |
             ssm_manager_*.zip
-            ssm_manager.exe
+            ssm_manager_*.exe
           make_latest: false
           body: |
             **** Development Release ****
@@ -94,8 +94,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            ssm_manager.zip
-            ssm_manager.exe
+            ssm_manager_*.zip
+            ssm_manager_*.exe
           make_latest: true
           body: |
             Release ${{ github.ref_name }}

@@ -122,7 +122,7 @@ git clone https://github.com/napalm255/ssm-manager.git
 cd ssm-manager
 pipenv install -d
 pipenv shell
-python main.py
+inv run
 ```
 
 ### Building from Source
@@ -130,12 +130,7 @@ python main.py
 _This assumes you have already cloned the repository and are in the root directory of the project with an active virtual environment._
 
 ```powershell
-pyinstaller --onedir --noconsole --clean --noconfirm `
-  --add-data "ssm_manager\static:ssm_manager\static" `
-  --add-data "ssm_manager\templates:ssm_manager\templates" `
-  --icon="ssm_manager\static\favicon.ico" `
-  --name="ssm_manager" `
-  main.py
+inv build
 ```
 
 ## Contributing
