@@ -773,5 +773,6 @@ class TrayIcon():
         """
         self.server.start()
         time.sleep(1)
+        self.open_app(None, None)
         self.icon = Icon(APP_NAME, self.image, APP_NAME, menu=self.menu)
         self.icon.run()
