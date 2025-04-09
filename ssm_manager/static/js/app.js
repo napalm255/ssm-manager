@@ -37,6 +37,7 @@ const app = {
             this.loadTheme();
             await this.loadProfilesAndRegions();
             await this.loadLastUsedProfileAndRegion();
+            this.checkConnections();
             this.startConnectionMonitoring();
             console.log('Application initialized successfully');
         } catch (error) {
@@ -926,7 +927,7 @@ app.startConnectionMonitoring = function() {
     if (this.monitoringInterval) {
         clearInterval(this.monitoringInterval);
     }
-    this.monitoringInterval = setInterval(() => this.checkConnections(), 2000);
+    this.monitoringInterval = setInterval(() => this.checkConnections(), 4000);
 };
 
 app.checkConnections = async function() {
