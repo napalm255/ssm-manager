@@ -598,11 +598,14 @@ def run_cmd(cmd, hide):
 
     logger.debug(f"Running command: {cmd_run}")
 
-    process = subprocess.Popen(shlex.split(cmd_run),
-        startupinfo=startupinfo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    if hide:
+        process = subprocess.Popen(shlex.split(cmd_run),
+            startupinfo=startupinfo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    else:
+        process = subprocess.Popen(cmd_run, shell=True)
 
     pid = None
     max_retries = 10
