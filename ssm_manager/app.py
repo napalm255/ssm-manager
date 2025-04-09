@@ -576,27 +576,36 @@ def run_cmd(cmd, hide):
     Returns:
         tuple: The process and the PID of the command
     """
-    logger.debug(f"Running command: {cmd}")
     startupinfo = None
-    cmd_exec = aws_exec()
-    cmd_run = cmd
 
-    if not hide and system == 'Linux':
+    if hide and system == 'Linux':
+        cmd_exec = 'aws'
+        cmd_run = cmd
+    elif not hide and system == 'Linux':
+        cmd_exec = 'aws'
         cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
     elif not hide and system == 'Windows':
+        cmd_exec = 'aws.exe'
+        cmd = cmd.replace('aws ', f'{cmd_exec} ')
         cmd_run = f'start cmd /k {cmd}'
     elif hide and system == 'Windows':
+        cmd_exec = 'aws.exe'
         cmd = cmd.replace('aws ', f'{cmd_exec} ')
         cmd_run = f'powershell -Command "{cmd}"'
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
 
-    process = subprocess.Popen(shlex.split(cmd_run),
-        startupinfo=startupinfo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    logger.debug(f"Running command: {cmd_run}")
+
+    if hide:
+        process = subprocess.Popen(shlex.split(cmd_run),
+            startupinfo=startupinfo,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    else:
+        process = subprocess.Popen(cmd_run, shell=True)
 
     pid = None
     max_retries = 10
@@ -611,18 +620,6 @@ def run_cmd(cmd, hide):
         return None, None
 
     return process, pid
-
-
-def aws_exec():
-    """
-    Get the AWS CLI executable based on the operating system
-    Returns:
-        str: The AWS CLI executable name
-    """
-    cmd_exec = 'aws'
-    if system == 'Windows':
-        cmd_exec = 'aws.exe'
-    return cmd_exec
 
 
 class ServerThread(threading.Thread):
