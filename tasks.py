@@ -10,7 +10,7 @@ import zipfile
 from invoke import task
 
 NAME="ssm_manager"
-VERSION_FILE = "ssm_manager/VERSION"
+VERSION_FILE = pathlib.Path("ssm_manager", "VERSION")
 DIST_DIR = "dist"
 RELEASE_DIR = "release"
 
@@ -51,14 +51,14 @@ def build(c):
     """Builds the executable using PyInstaller."""
     # pylint: disable=unused-argument
     print("Starting build...")
-    static_dir = pathlib.Path("ssm_manager", "static")
-    templates_dir = pathlib.Path("ssm_manager", "templates")
+    root_dir = pathlib.Path("ssm_manager")
+    static_dir = root_dir / "static"
+    templates_dir = root_dir / "templates"
     favicon_path = static_dir / "favicon.ico"
-    version_path = pathlib.Path(VERSION_FILE)
     command = ["pyinstaller", "--onedir", "--noconsole", "--clean", "--noconfirm",
-               '--add-data', f'{version_path}:ssm_manager/VERSION',
-               '--add-data', f'{static_dir}:ssm_manager/static',
-               '--add-data', f'{templates_dir}:ssm_manager/templates',
+               '--add-data', f'{VERSION_FILE}:{root_dir}',
+               '--add-data', f'{static_dir}:{static_dir}',
+               '--add-data', f'{templates_dir}:{templates_dir}',
                f'--icon={favicon_path}',
                f'--name={NAME}',
                'main.py']
