@@ -576,7 +576,6 @@ def run_cmd(cmd, hide):
     Returns:
         tuple: The process and the PID of the command
     """
-    logger.debug(f"Running command: {cmd}")
     startupinfo = None
     cmd_exec = aws_exec()
     cmd_run = cmd
@@ -592,6 +591,8 @@ def run_cmd(cmd, hide):
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
+
+    logger.debug(f"Running command: {cmd_run}")
 
     process = subprocess.Popen(shlex.split(cmd_run),
         startupinfo=startupinfo,
