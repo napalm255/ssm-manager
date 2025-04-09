@@ -602,17 +602,19 @@ def run_cmd(cmd, hide):
         stderr=subprocess.PIPE
     )
 
-    pid = None
-    max_retries = 10
-    retries = 0
-    while not pid and retries < max_retries:
-        time.sleep(2)
-        pid = get_pid(cmd_exec, cmd)
-        retries += 1
+    time.sleep(2)  # Wait for the process to start
+    pid = get_pid(cmd_exec, cmd)
+    # pid = None
+    # max_retries = 10
+    # retries = 0
+    # while not pid and retries < max_retries:
+    #     time.sleep(2)
+    #     pid = get_pid(cmd_exec, cmd)
+    #     retries += 1
 
-    if not pid:
-        logger.error(f"Failed to get PID for command: {cmd}")
-        return None, None
+    # if not pid:
+    #     logger.error(f"Failed to get PID for command: {cmd}")
+    #     return None, None
 
     return process, pid
 
