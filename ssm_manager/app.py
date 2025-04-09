@@ -577,19 +577,18 @@ def run_cmd(cmd, hide):
         tuple: The process and the PID of the command
     """
     startupinfo = None
-    cmd_run = cmd
 
     if not hide and system == 'Linux':
         cmd_exec = 'aws'
-        cmd_run = f'gnome-terminal -- bash -c "{cmd_run}"'
+        cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
     elif not hide and system == 'Windows':
         cmd_exec = 'aws.exe'
-        cmd_run = cmd_run.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'start cmd /k {cmd_run}'
+        cmd = cmd.replace('aws ', f'{cmd_exec} ')
+        cmd_run = f'start cmd /k {cmd}'
     elif hide and system == 'Windows':
         cmd_exec = 'aws.exe'
-        cmd_run = cmd_run.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'powershell -Command "{cmd_run}"'
+        cmd = cmd.replace('aws ', f'{cmd_exec} ')
+        cmd_run = f'powershell -Command "{cmd}"'
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = subprocess.SW_HIDE
@@ -602,19 +601,17 @@ def run_cmd(cmd, hide):
         stderr=subprocess.PIPE
     )
 
-    time.sleep(2)  # Wait for the process to start
-    pid = get_pid(cmd_exec, cmd)
-    # pid = None
-    # max_retries = 10
-    # retries = 0
-    # while not pid and retries < max_retries:
-    #     time.sleep(2)
-    #     pid = get_pid(cmd_exec, cmd)
-    #     retries += 1
+    pid = None
+    max_retries = 10
+    retries = 0
+    while not pid and retries < max_retries:
+        time.sleep(1)
+        pid = get_pid(cmd_exec, cmd)
+        retries += 1
 
-    # if not pid:
-    #     logger.error(f"Failed to get PID for command: {cmd}")
-    #     return None, None
+    if not pid:
+        logger.error(f"Failed to get PID for command: {cmd}")
+        return None, None
 
     return process, pid
 
