@@ -24,7 +24,8 @@ def bump_version(c):
     PATCH = Numerical value for Build Number
     """
     # pylint: disable=unused-variable
-    year, month = datetime.now().strftime("%y/%-m").split("/")
+    year = datetime.now().strftime("%y")
+    month = datetime.now().month
     major, minor, patch = (0, 0, 0)
     try:
         with open(VERSION_FILE, "r", encoding='utf-8') as f:

@@ -55,7 +55,7 @@ app = Flask(__name__)
 aws_manager = AWSManager()
 
 
-@app.route('/version/')
+@app.route('/version')
 def get_version():
     """
     Endpoint to get the version of the application
@@ -65,15 +65,17 @@ def get_version():
         logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
         version = {}
-        with open(version_file, 'r') as file:
+        with open(version_file, 'r') as vfile:
             version = {
-                'version': file.read().strip(),
+                'version': vfile.read().strip(),
                 'name': APP_NAME
             }
+        logger.debug(f"Version: {version}")
         return jsonify(version)
     except Exception as e:
         logger.error(f"Error getting version: {str(e)}")
         return jsonify({'error': 'Error getting version'}), 500
+
 
 @app.route('/api/profiles')
 def get_profiles():
