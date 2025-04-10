@@ -634,7 +634,7 @@ def run_cmd(cmd, hide):
     max_retries = 10
     retries = 0
     while not pid and retries < max_retries:
-        time.sleep(1)
+        time.sleep(2)
         pid = get_pid(cmd_exec, cmd)
         retries += 1
 
