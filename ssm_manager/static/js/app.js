@@ -568,6 +568,7 @@ const app = {
             this.connections = this.connections.filter(c => c.id !== connectionId);
             this.renderConnections();
             this.updateCounters();
+            this.checkConnections();
             this.showSuccess('Connection terminated successfully');
         } catch (error) {
             this.showError('Failed to terminate connection: ' + error.message);
