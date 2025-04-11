@@ -501,6 +501,26 @@ def terminate_connection(connection_id):
         return jsonify({'error': f'Error terminating connection: {connection_id}'}), 500
 
 
+@app.route('/api/rdp/<local_port>', methods=['GET'])
+def open_rdp_client(local_port):
+    """
+    Open the RDP client with the specified local port
+    Args:
+        local_port (int): The local port to connect to
+    """
+    logger.debug(f"Opening RDP client on port {local_port}")
+
+    try:
+        if system == 'Windows':
+            subprocess.Popen(f'mstsc /v:localhost:{local_port}')
+        else:
+            logger.warning("Opening an RDP client is not currently supported on Linux")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Error opening rdp client: {str(e)}")
+        return jsonify({'error': f'Error opening rdp client: {local_port}'}), 500
+
+
 @app.route('/')
 def home():
     """
@@ -554,20 +574,6 @@ def find_free_port(name: str, remote_port: int, remote_host: str = None):
             sock.close()
     logger.error(f"No free port found after {max_attempts} attempts")
     return None
-
-
-def open_rdp_client(local_port: int):
-    """
-    Open the RDP client with the specified local port
-    Args:
-        local_port (int): The local port to connect to
-    """
-    logger.debug(f"Opening RDP client on port {local_port}")
-
-    if system == 'Windows':
-        subprocess.Popen(f'mstsc /v:localhost:{local_port}')
-    else:
-        logger.warning("Opening an RDP client is not currently supported on Linux")
 
 
 def get_pid(executable: str, command: str):
