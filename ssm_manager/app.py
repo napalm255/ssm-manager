@@ -199,7 +199,8 @@ def start_ssh(instance_id):
                '--profile', profile,
                '--reason', connection_id])
 
-        logger.info(f"Starting SSH - Instance: {instance_id}")
+        # logger.info(f"Starting SSH - Instance: {instance_id}")
+        logger.info("Starting SSH session - Instance: %s", instance_id)
         process, pid = run_cmd(cmd, hide=False)
         logger.debug(f"SSH process PID: {pid}")
 
@@ -616,6 +617,7 @@ def run_cmd(cmd, hide):
     """
     startupinfo = None
 
+    cmd_run = None
     if hide and system == 'Linux':
         cmd_exec = 'aws'
         cmd_run = cmd
