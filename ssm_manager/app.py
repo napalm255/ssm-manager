@@ -11,6 +11,7 @@ import platform
 import socket
 import time
 import shlex
+import shutil
 import subprocess
 import random
 import psutil
@@ -513,6 +514,14 @@ def open_rdp_client(local_port):
     try:
         if system == 'Windows':
             subprocess.Popen(f'mstsc /v:localhost:{local_port}')
+        elif system == 'Linux':
+            cmd = None
+            remmina = shutil.which("remmina")
+            if remmina:
+                cmd = f'{remmina} -c rdp://localhost:{local_port} --no-tray-icon'
+
+            if cmd:
+                subprocess.Popen(shlex.split(cmd))
         else:
             logger.warning("Opening an RDP client is not currently supported on Linux")
         return jsonify({'status': 'success'})
