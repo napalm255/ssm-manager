@@ -430,7 +430,6 @@ const app = {
     showCustomPortModal(instanceId) {
         console.log(`Showing custom port modal for instance ${instanceId}`);
         this.selectedInstanceId = instanceId;
-        document.getElementById('remotePort').value = '1433';
         this.modals.customPort.show();
     },
 
