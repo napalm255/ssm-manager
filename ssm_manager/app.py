@@ -67,14 +67,14 @@ def get_version():
         logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
         version = {}
-        with open(version_file, 'r') as vfile:
+        with open(version_file, 'r', encoding='utf-8') as vfile:
             version = {
                 'version': vfile.read().strip(),
                 'name': APP_NAME
             }
         logger.debug(f"Version: {version}")
         return jsonify(version)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error getting version: {str(e)}")
         return jsonify({'error': 'Error getting version'}), 500
 
