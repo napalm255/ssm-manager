@@ -7,6 +7,9 @@ from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 
+UNSUPPORTED_SYSTEM = "Unsupported system type"
+
+
 class Instance(BaseModel):
     """
     Model representing an instance with a name and ID.
@@ -71,7 +74,7 @@ class SSOCommand(BaseModel):
             return 'aws'
         if self.system == 'Windows':
             return 'aws.exe'
-        raise ValueError("Unsupported system type")
+        raise ValueError(UNSUPPORTED_SYSTEM)
 
     @property
     def cmd(self) -> str:
@@ -86,7 +89,7 @@ class SSOCommand(BaseModel):
             if self.hide:
                 return f'powershell -Command "{self._build_cmd()}"'
             return f'start cmd /k {self._build_cmd()}'
-        raise ValueError("Unsupported system type")
+        raise ValueError(UNSUPPORTED_SYSTEM)
 
     def __str__(self) -> str:
         return self._build_cmd()
@@ -152,7 +155,7 @@ class SSMCommand(BaseModel):
             return 'aws'
         if self.system == 'Windows':
             return 'aws.exe'
-        raise ValueError("Unsupported system type")
+        raise ValueError(UNSUPPORTED_SYSTEM)
 
     @property
     def cmd(self) -> str:
@@ -167,7 +170,7 @@ class SSMCommand(BaseModel):
             if self.hide:
                 return f'powershell -Command "{self._build_cmd()}"'
             return f'start cmd /k {self._build_cmd()}'
-        raise ValueError("Unsupported system type")
+        raise ValueError(UNSUPPORTED_SYSTEM)
 
     def __str__(self) -> str:
         return self._build_cmd()
