@@ -629,7 +629,7 @@ def run_cmd(cmd):
     process = None
     if cmd.hide:
         process = subprocess.Popen(cmd.cmd,
-            startupinfo=None,
+            startupinfo=cmd.startupinfo,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
