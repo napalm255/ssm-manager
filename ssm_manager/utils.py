@@ -43,7 +43,7 @@ class RDPCommand(BaseModel):
     system: Literal["Linux", "Windows"]
 
     @property
-    def cmd(self) -> str:
+    def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
         """
@@ -89,7 +89,7 @@ class AWSCommand(BaseModel):
         raise ValueError(UNSUPPORTED_SYSTEM)
 
     @property
-    def cmd(self) -> str:
+    def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
         """
