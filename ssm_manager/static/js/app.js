@@ -329,20 +329,20 @@ const app = {
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
                     <button class="btn btn-sm btn-warning" onclick="app.startSSH('${instanceId}')">
-                        <i class="bi bi-terminal"></i> SSH
+                        <i class="bi bi-terminal" title="Conosle"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="app.startRDP('${instanceId}')">
-                        <i class="bi bi-display"></i> RDP
+                        <i class="bi bi-display" title="Remote Desktop"></i>
                     </button>
                     <button class="btn btn-sm btn-purple text-white" onclick="app.showCustomPortModal('${instanceId}')">
-                        <i class="bi bi-arrow-left-right"></i> Port
+                        <i class="bi bi-arrow-left-right" title="Port Forwarding"></i>
                     </button>
                 ` : ''}
                 <button class="btn btn-sm btn-ottanio text-white" onclick="app.showInstanceDetails('${instanceId}')">
-                    <i class="bi bi-info-circle"></i>
+                    <i class="bi bi-info-circle" title="Instance Details"></i>
                 </button>
                 <button class="btn btn-sm btn-darkseagreen text-white" onclick="app.showInstancePreferences('${instanceId}', '${instanceName}')">
-                    <i class="bi bi-sliders2"></i>
+                    <i class="bi bi-sliders2" title="Instance Preferences"></i>
                 </button>
             </div>
         `;
