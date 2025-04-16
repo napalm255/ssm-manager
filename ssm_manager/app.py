@@ -368,8 +368,9 @@ def get_instance_details(instance_id):
     Returns: JSON response with instance details
     """
     try:
-        logger.debug(f"Getting instance details - Instance: {instance_id}")
-        details = aws_manager.get_instance_details(instance_id)
+        instance = Instance(id=instance_id)
+        logger.debug(f"Getting instance details - Instance: {instance.id}")
+        details = aws_manager.get_instance_details(instance.id)
         if details is None:
             return jsonify({'error': 'Instance details not found'}), 404
         return jsonify(details)

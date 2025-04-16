@@ -175,8 +175,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <!-- Modalità di selezione -->
-                        <label class="form-label">Select Mode</label>
+                        <label for="modeSelect" class="form-label">Select Mode</label>
                         <select id="modeSelect" class="form-select">
                             <option value="local">Local Remote Port</option>
                             <option value="other">Other Host Remote Port</option>
@@ -284,7 +283,7 @@
 
     <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 1060;">
         <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <output class="visually-hidden" aria-live="polite">Loading...</output>
         </div>
     </div>
 

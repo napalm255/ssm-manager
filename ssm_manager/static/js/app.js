@@ -173,7 +173,7 @@ const app = {
             }
 
             if (Array.isArray(regions)) {
-                this.updateSelect(this.elements.regionSelect, regions, defaultOption = '');
+                this.updateSelect(this.elements.regionSelect, regions, '');
             } else {
                 console.error('[Profile Loading] Invalid regions data:', regions);
             }
@@ -488,7 +488,7 @@ const app = {
             });
 
             const detailsHtml = details.map(d => {
-                remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
+                const remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
                 return this.createDetailRow(d.local_port, remote);
             }).join('');
 
@@ -611,7 +611,7 @@ app.refreshData = async function() {
 };
 
 app.toggleAutoRefresh = function(enabled) {
-    if (enabled && enabled.target) {
+    if (enabled?.target) {
         enabled = enabled.target.checked;
     }
 
@@ -685,7 +685,7 @@ app.showPreferences = async function() {
         const regionsAll = await regionsAllRes.json();
 
         if (Array.isArray(regionsAll)) {
-            select = this.elements.regionsSelect;
+            const select = this.elements.regionsSelect;
             if (!select) return;
             select.innerHTML = '';
 
