@@ -10,8 +10,6 @@ import threading
 import platform
 import socket
 import time
-import shlex
-import shutil
 import subprocess
 import random
 import psutil
@@ -21,7 +19,7 @@ from flask import Flask, jsonify, request, render_template, send_file
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
-from ssm_manager.utils import Instance, Connection, SSMCommand, SSOCommand
+from ssm_manager.utils import Instance, Connection, SSMCommand, SSOCommand, RDPCommand
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 APP_NAME = 'SSM Manager'
@@ -534,18 +532,8 @@ def open_rdp_client(local_port):
     logger.debug(f"Opening RDP client on port {local_port}")
 
     try:
-        if system == 'Windows':
-            subprocess.Popen(f'mstsc /v:localhost:{local_port}')
-        elif system == 'Linux':
-            cmd = None
-            remmina = shutil.which("remmina")
-            if remmina:
-                cmd = f'{remmina} -c rdp://localhost:{local_port} --no-tray-icon'
-
-            if cmd:
-                subprocess.Popen(shlex.split(cmd))
-        else:
-            logger.warning("Opening an RDP client is not currently supported on Linux")
+        command = RDPCommand(local_port=local_port, system=system)
+        subprocess.Popen(command.cmd)
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error opening rdp client: {str(e)}")
@@ -640,7 +628,7 @@ def run_cmd(cmd):
 
     process = None
     if cmd.hide:
-        process = subprocess.Popen(shlex.split(cmd.cmd),
+        process = subprocess.Popen(cmd.cmd,
             startupinfo=None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE

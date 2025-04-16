@@ -1,6 +1,8 @@
 """
 Utilities for SSM-Manager.
 """
+import shlex
+import shutil
 import subprocess
 from time import time
 from typing import Optional, Literal
@@ -31,6 +33,28 @@ class Connection(BaseModel):
         if self.instance.name:
             name = f"{self.instance.name}_{self.instance.id}"
         return f"{self.method}_{name}_{self.time}".lower()
+
+
+class RDPCommand(BaseModel):
+    """
+    Model representing the RDP command.
+    """
+    local_port: int
+    system: Literal["Linux", "Windows"]
+
+    @property
+    def cmd(self) -> str:
+        """
+        Build the command to run based on the system type.
+        """
+        if self.system == 'Linux':
+            remmina = shutil.which("remmina")
+            if remmina:
+                return shlex.split(f'{remmina} -c rdp://localhost:{self.local_port} --no-tray-icon')
+            raise ValueError("No linux RDP client found")
+        if self.system == 'Windows':
+            return f'mstsc /v:localhost:{self.local_port}'
+        raise ValueError(UNSUPPORTED_SYSTEM)
 
 
 class AWSCommand(BaseModel):
@@ -71,11 +95,11 @@ class AWSCommand(BaseModel):
         """
         if self.system == 'Linux':
             if self.hide:
-                return self._build_cmd()
+                return shlex.split(self._build_cmd())
             return f'gnome-terminal -- bash -c "{self._build_cmd()}"'
         if self.system == 'Windows':
             if self.hide:
-                return f'powershell -Command "{self._build_cmd()}"'
+                return shlex.split(f'powershell -Command "{self._build_cmd()}"')
             return f'start cmd /k {self._build_cmd()}'
         raise ValueError(UNSUPPORTED_SYSTEM)
 
