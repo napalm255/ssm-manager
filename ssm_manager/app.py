@@ -628,7 +628,7 @@ def get_pid(executable: str, command: str):
     return None
 
 
-def run_cmd(cmd: SSMCommand):
+def run_cmd(cmd):
     """
     Run a shell command and return the pid
     Args:
