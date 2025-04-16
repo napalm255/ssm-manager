@@ -440,8 +440,8 @@ def get_active_connections():
         to_remove = []
 
         active_connections = cache.get('active_connections')
-        # if not active_connections:
-        #     return jsonify([])
+        if not active_connections:
+            return jsonify([])
 
         for conn in active_connections:
             try:
