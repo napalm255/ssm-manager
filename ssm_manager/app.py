@@ -146,7 +146,8 @@ def connect():
             command = SSOCommand(region=region,
                                  profile=profile,
                                  system=system,
-                                 action='login')
+                                 action='login',
+                                 timeout=60)
 
             logger.info(f"Starting SSO login - Profile: {command.profile}")
             run_cmd(command)
@@ -626,6 +627,7 @@ def run_cmd(cmd):
     """
     logger.debug(f"Running command: {cmd.cmd}")
 
+    print(cmd.timeout)
     process = None
     if cmd.hide:
         process = subprocess.Popen(cmd.cmd,
@@ -649,7 +651,7 @@ def run_cmd(cmd):
         return None
 
     if cmd.wait:
-        process.wait()
+        process.wait(timeout=cmd.timeout)
 
     return pid
 

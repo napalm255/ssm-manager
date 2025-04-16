@@ -64,6 +64,7 @@ class AWSCommand(BaseModel):
     region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
     profile: str = Field(min_length=1)
     system: Literal["Linux", "Windows"]
+    timeout: int | None = Field(default=None, ge=0)
 
     @property
     def startupinfo(self):
