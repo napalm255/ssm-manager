@@ -10,7 +10,6 @@ import threading
 import platform
 import socket
 import time
-import shlex
 import subprocess
 import random
 import psutil
@@ -20,6 +19,7 @@ from flask import Flask, jsonify, request, render_template, send_file
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
+from ssm_manager.utils import Instance, Connection, SSMCommand, SSOCommand, RDPCommand
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 APP_NAME = 'SSM Manager'
@@ -65,14 +65,14 @@ def get_version():
         logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
         version = {}
-        with open(version_file, 'r') as vfile:
+        with open(version_file, 'r', encoding='utf-8') as vfile:
             version = {
                 'version': vfile.read().strip(),
                 'name': APP_NAME
             }
         logger.debug(f"Version: {version}")
         return jsonify(version)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error getting version: {str(e)}")
         return jsonify({'error': 'Error getting version'}), 500
 
@@ -136,19 +136,23 @@ def connect():
         data = request.json
         profile = data.get('profile')
         region = data.get('region')
+
         if not profile or not region:
             return jsonify({'error': 'Profile and region are required'}), 400
 
         try:
             aws_manager.set_profile_and_region(profile, region)
         except ValueError:
-            cmd = f"aws sso login --profile {profile}"
+            command = SSOCommand(region=region,
+                                 profile=profile,
+                                 system=system,
+                                 action='login',
+                                 timeout=60)
 
-            logger.info(f"Starting SSO login - Profile: {profile}")
-            process, pid = run_cmd(cmd, hide=True)
-            logger.debug(f"SSO login process PID: {pid}")
-            process.wait()
-            aws_manager.set_profile_and_region(profile, region)
+            logger.info(f"Starting SSO login - Profile: {command.profile}")
+            run_cmd(command)
+
+            aws_manager.set_profile_and_region(command.profile, command.region)
 
         logger.info(f"Connected to AWS - Profile: {profile}, Region: {region}")
         return jsonify({
@@ -172,6 +176,7 @@ def get_instances():
         logger.info(f"Successfully loaded {len(instances)} EC2 instances")
         return jsonify(instances) if instances else jsonify([])
     except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to load instances: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to load instances'}), 500
 
 
@@ -183,40 +188,41 @@ def start_ssh(instance_id):
         instance_id (str): ID of the EC2 instance
     Returns: JSON response with status and connection details
     """
-    # pylint: disable=line-too-long
     try:
         logger.debug(f"Starting SSH - Instance: {instance_id}")
         data = request.json
-        profile = data.get('profile')
-        region = data.get('region')
-        name = data.get('name')
-        connection_id = f"ssh_{instance_id}_{int(time.time())}"
+        method = 'SSH'
 
-        cmd = ' '.join(['aws', 'ssm', 'start-session',
-               '--target', instance_id,
-               '--region', region,
-               '--profile', profile,
-               '--reason', connection_id])
+        instance = Instance(name=data.get('name'),
+                            id=instance_id)
+        connection = Connection(method=method,
+                                instance=instance)
+        command = SSMCommand(instance=instance,
+                             region=data.get('region'),
+                             profile=data.get('profile'),
+                             reason=connection,
+                             system=system,
+                             hide=False)
 
-        logger.info(f"Starting SSH - Instance: {instance_id}")
-        process, pid = run_cmd(cmd, hide=False)
+        logger.info(f"Starting SSH - Instance: {instance.id}")
+        pid = run_cmd(command)
         logger.debug(f"SSH process PID: {pid}")
 
-        connection = {
-            'connection_id': connection_id,
-            'instance_id': instance_id,
-            'name': name,
-            'type': 'SSH',
-            'profile': profile,
-            'region': region,
+        connection_state = {
+            'connection_id': str(connection),
+            'instance_id': instance.id,
+            'name': instance.name,
+            'type': connection.method,
+            'profile': command.profile,
+            'region': command.region,
             'pid': pid,
             'timestamp': int(time.time()),
             'status': 'active'
         }
-        cache.append('active_connections', connection)
+        cache.append('active_connections', connection_state)
 
-        logger.info(f"SSH session started - Instance: {instance_id}")
-        return jsonify(connection)
+        logger.info(f"SSH session started - Instance: {instance.id}")
+        return jsonify(connection_state)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting SSH: {str(e)}")
         return jsonify({'error': f'Error starting SSH connection: {instance_id}'}), 500
@@ -234,46 +240,51 @@ def start_rdp(instance_id):
     try:
         logger.debug(f"Starting RDP - Instance: {instance_id}")
         data = request.json
-        profile = data.get('profile')
-        region = data.get('region')
-        name = data.get('name')
-        connection_id = f"rdp_{instance_id}_{int(time.time())}"
+        method = 'RDP'
+
+        instance = Instance(name=data.get('name'),
+                            id=instance_id)
+        connection = Connection(method=method,
+                                instance=instance)
 
         remote_port = 3389
-        local_port = find_free_port(name=name, remote_port=remote_port)
+        local_port = find_free_port(name=instance.name,
+                                    remote_port=remote_port)
         if local_port is None:
             logger.error("Could not find available port for RDP connection")
             return jsonify({'error': 'No available ports for RDP connection'}), 503
 
-        cmd = ' '.join(['aws', 'ssm', 'start-session',
-               '--target', instance_id,
-               '--document-name', 'AWS-StartPortForwardingSession',
-               '--parameters', f'portNumber=3389,localPortNumber={local_port}',
-               '--region', region,
-               '--profile', profile,
-               '--reason', connection_id])
+        command = SSMCommand(instance=instance,
+                             region=data.get('region'),
+                             profile=data.get('profile'),
+                             reason=connection,
+                             system=system,
+                             hide=True,
+                             document_name='AWS-StartPortForwardingSession',
+                             remote_port=remote_port,
+                             local_port=local_port)
 
-        logger.info(f"Starting RDP - Instance: {instance_id}, Port: {local_port}")
-        process, pid = run_cmd(cmd, hide=True)
+        logger.info(f"Starting RDP - Instance: {instance.id}, Port: {command.local_port}")
+        pid = run_cmd(command)
         logger.debug(f"RDP process PID: {pid}")
-        open_rdp_client(local_port)
+        open_rdp_client(command.local_port)
 
-        connection = {
-            'connection_id': connection_id,
-            'instance_id': instance_id,
-            'name': name,
-            'type': 'RDP',
-            'local_port': local_port,
-            'profile': profile,
-            'region': region,
+        connection_state = {
+            'connection_id': str(connection),
+            'instance_id': instance.id,
+            'name': instance.name,
+            'type': connection.method,
+            'local_port': command.local_port,
+            'profile': command.profile,
+            'region': command.region,
             'pid': pid,
-            'timestamp': int(time.time()),
+            'timestamp': connection.time,
             'status': 'active'
         }
-        cache.append('active_connections', connection)
+        cache.append('active_connections', connection_state)
 
-        logger.info(f"RDP session started - Instance: {instance_id}, Port: {local_port}")
-        return jsonify(connection)
+        logger.info(f"RDP session started - Instance: {instance.id}, Port: {local_port}")
+        return jsonify(connection_state)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting RDP: {str(e)}")
         return jsonify({'error': 'Error starting RDP connection: {instance_id}'}), 500
@@ -291,51 +302,58 @@ def start_custom_port(instance_id):
     try:
         logger.debug(f"Starting port forwarding - Instance: {instance_id}")
         data = request.json
-        profile = data.get('profile')
-        region = data.get('region')
-        name = data.get('name')
         mode = data.get('mode', 'local')  # Default to local mode
+        method = 'PORT'
+
+        instance = Instance(name=data.get('name'),
+                            id=instance_id)
+        connection = Connection(method=method,
+                                instance=instance)
+
+
+        remote_host = data.get('remote_host', None)
         remote_port = int(data.get('remote_port'))
-        remote_host = data.get('remote_host')  # Will be None for local mode
-
-        connection_id = f"port_{mode}_{instance_id}_{int(time.time())}"
-
-        local_port = find_free_port(name=name, remote_port=remote_port, remote_host=remote_host)
+        local_port = find_free_port(name=instance.name,
+                                    remote_port=remote_port,
+                                    remote_host=remote_host)
         if local_port is None:
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
 
-        cmd = ' '.join(['aws', 'ssm', 'start-session',
-               '--target', instance_id,
-               '--document-name', 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession',
-               '--parameters', f'host={remote_host},portNumber={remote_port},localPortNumber={local_port}' if mode != 'local' else f'portNumber={remote_port},localPortNumber={local_port}',
-               '--region', region,
-               '--profile', profile,
-               '--reason', connection_id])
+        document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
+        command = SSMCommand(instance=instance,
+                             region=data.get('region'),
+                             profile=data.get('profile'),
+                             reason=connection,
+                             system=system,
+                             hide=True,
+                             document_name=document_name,
+                             remote_host=remote_host,
+                             remote_port=remote_port,
+                             local_port=local_port)
 
-        logger.info(f"Starting {mode} port forwarding - Instance: {instance_id}, Local Port: {local_port}, Remote Host: {remote_host}, Remote Port: {remote_port}")
-        process, pid = run_cmd(cmd, hide=True)
+        logger.info(f"Starting {mode} port forwarding - Instance: {instance.id}, Local Port: {command.local_port}, Remote Host: {command.remote_host}, Remote Port: {command.remote_port}")
+        pid = run_cmd(command)
         logger.debug(f"Port forwarding process PID: {pid}")
 
-        # Create connection object with appropriate type and info
-        connection = {
-            'connection_id': connection_id,
-            'instance_id': instance_id,
-            'name': name,
+        connection_state = {
+            'connection_id': str(connection),
+            'instance_id': instance.id,
+            'name': instance.name,
             'type': 'Custom Port' if mode == 'local' else 'Remote Host Port',
-            'local_port': local_port,
-            'remote_port': remote_port,
-            'remote_host': remote_host if mode != 'local' else None,
-            'profile': profile,
-            'region': region,
+            'local_port': command.local_port,
+            'remote_port': command.remote_port,
+            'remote_host': command.remote_host if mode != 'local' else None,
+            'profile': command.profile,
+            'region': command.region,
             'pid': pid,
-            'timestamp': int(time.time()),
+            'timestamp': connection.time,
             'status': 'active'
         }
-        cache.append('active_connections', connection)
+        cache.append('active_connections', connection_state)
 
-        logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance_id}")
-        return jsonify(connection)
+        logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance.id}")
+        return jsonify(connection_state)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({'error': f'Error starting port forwarding: {instance_id}'}), 500
@@ -420,7 +438,11 @@ def get_active_connections():
         active = []
         to_remove = []
 
-        for conn in cache.get('active_connections'):
+        active_connections = cache.get('active_connections')
+        if not active_connections:
+            return jsonify([])
+
+        for conn in active_connections:
             try:
                 is_active = False
                 pid = conn.get('pid')
@@ -501,6 +523,24 @@ def terminate_connection(connection_id):
         return jsonify({'error': f'Error terminating connection: {connection_id}'}), 500
 
 
+@app.route('/api/rdp/<local_port>', methods=['GET'])
+def open_rdp_client(local_port):
+    """
+    Open the RDP client with the specified local port
+    Args:
+        local_port (int): The local port to connect to
+    """
+    logger.debug(f"Opening RDP client on port {local_port}")
+
+    try:
+        command = RDPCommand(local_port=local_port, system=system)
+        subprocess.Popen(command.cmd)
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Error opening rdp client: {str(e)}")
+        return jsonify({'error': f'Error opening rdp client: {local_port}'}), 500
+
+
 @app.route('/')
 def home():
     """
@@ -556,20 +596,6 @@ def find_free_port(name: str, remote_port: int, remote_host: str = None):
     return None
 
 
-def open_rdp_client(local_port: int):
-    """
-    Open the RDP client with the specified local port
-    Args:
-        local_port (int): The local port to connect to
-    """
-    logger.debug(f"Opening RDP client on port {local_port}")
-
-    if system == 'Windows':
-        subprocess.Popen(f'mstsc /v:localhost:{local_port}')
-    else:
-        logger.warning("Opening an RDP client is not currently supported on Linux")
-
-
 def get_pid(executable: str, command: str):
     """
     Get the PID of a process by executable and command
@@ -591,7 +617,7 @@ def get_pid(executable: str, command: str):
     return None
 
 
-def run_cmd(cmd, hide):
+def run_cmd(cmd):
     """
     Run a shell command and return the pid
     Args:
@@ -599,50 +625,35 @@ def run_cmd(cmd, hide):
     Returns:
         tuple: The process and the PID of the command
     """
-    startupinfo = None
+    logger.debug(f"Running command: {cmd.cmd}")
 
-    if hide and system == 'Linux':
-        cmd_exec = 'aws'
-        cmd_run = cmd
-    elif not hide and system == 'Linux':
-        cmd_exec = 'aws'
-        cmd_run = f'gnome-terminal -- bash -c "{cmd}"'
-    elif not hide and system == 'Windows':
-        cmd_exec = 'aws.exe'
-        cmd = cmd.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'start cmd /k {cmd}'
-    elif hide and system == 'Windows':
-        cmd_exec = 'aws.exe'
-        cmd = cmd.replace('aws ', f'{cmd_exec} ')
-        cmd_run = f'powershell -Command "{cmd}"'
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-
-    logger.debug(f"Running command: {cmd_run}")
-
-    if hide:
-        process = subprocess.Popen(shlex.split(cmd_run),
-            startupinfo=startupinfo,
+    print(cmd.timeout)
+    process = None
+    if cmd.hide:
+        process = subprocess.Popen(cmd.cmd,
+            startupinfo=cmd.startupinfo,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
     else:
-        process = subprocess.Popen(cmd_run, shell=True)
+        process = subprocess.Popen(cmd.cmd, shell=True)
 
     pid = None
     max_retries = 10
     retries = 0
     while not pid and retries < max_retries:
         time.sleep(2)
-        pid = get_pid(cmd_exec, cmd)
+        pid = get_pid(str(cmd.exec), str(cmd))
         retries += 1
 
     if not pid:
-        logger.error(f"Failed to get PID for command: {cmd}")
-        return None, None
+        logger.error(f"Failed to get PID for command: {str(cmd)}")
+        return None
 
-    return process, pid
+    if cmd.wait:
+        process.wait(timeout=cmd.timeout)
+
+    return pid
 
 
 class ServerThread(threading.Thread):

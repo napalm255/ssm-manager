@@ -329,20 +329,20 @@ const app = {
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
                     <button class="btn btn-sm btn-warning" onclick="app.startSSH('${instanceId}')">
-                        <i class="bi bi-terminal"></i> SSH
+                        <i class="bi bi-terminal" title="Conosle"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="app.startRDP('${instanceId}')">
-                        <i class="bi bi-display"></i> RDP
+                        <i class="bi bi-display" title="Remote Desktop"></i>
                     </button>
                     <button class="btn btn-sm btn-purple text-white" onclick="app.showCustomPortModal('${instanceId}')">
-                        <i class="bi bi-arrow-left-right"></i> Port
+                        <i class="bi bi-arrow-left-right" title="Port Forwarding"></i>
                     </button>
                 ` : ''}
                 <button class="btn btn-sm btn-ottanio text-white" onclick="app.showInstanceDetails('${instanceId}')">
-                    <i class="bi bi-info-circle"></i>
+                    <i class="bi bi-info-circle" title="Instance Details"></i>
                 </button>
                 <button class="btn btn-sm btn-darkseagreen text-white" onclick="app.showInstancePreferences('${instanceId}', '${instanceName}')">
-                    <i class="bi bi-sliders2"></i>
+                    <i class="bi bi-sliders2" title="Instance Preferences"></i>
                 </button>
             </div>
         `;
@@ -430,7 +430,6 @@ const app = {
     showCustomPortModal(instanceId) {
         console.log(`Showing custom port modal for instance ${instanceId}`);
         this.selectedInstanceId = instanceId;
-        document.getElementById('remotePort').value = '1433';
         this.modals.customPort.show();
     },
 
@@ -891,9 +890,12 @@ app.renderConnections = function() {
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge ${this.getConnectionTypeColor(conn.type)}">
+                        <button type="button" class="btn btn-sm ${this.getConnectionTypeColor(conn.type)}"
+			 style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .45rem; --bs-btn-font-size: .70rem;"
+			 ${this.getConnectionTypeAction(conn)}
+			>
                             ${conn.type}
-                        </span>
+                        </button>
                     </div>
                     <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
                     ${connectionInfo}
@@ -913,6 +915,13 @@ app.renderConnections = function() {
     });
 };
 
+app.getConnectionTypeAction = function(conn) {
+    const actions = {
+        'RDP': "onclick=\"app.openRdp('" + conn.local_port + "')\""
+    };
+    return actions[conn.type] || '';
+};
+
 app.getConnectionTypeColor = function(type) {
     const colors = {
         'SSH': 'text-bg-warning',
@@ -921,6 +930,26 @@ app.getConnectionTypeColor = function(type) {
         'Remote Host Port': 'btn-purple'
     };
     return colors[type] || 'text-bg-secondary';
+};
+
+app.openRdp = async function(local_port) {
+    try {
+        this.showLoading();
+        const response = await fetch(`/api/rdp/${local_port}`, {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to open RDP client');
+        }
+
+        this.showSuccess('RDP client opened successfully');
+    } catch (error) {
+        this.showError('Failed to open RDP client: ' + error.message);
+    } finally {
+        this.hideLoading();
+    }
 };
 
 app.startConnectionMonitoring = function() {
