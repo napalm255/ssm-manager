@@ -4,7 +4,7 @@ Utilities for SSM-Manager.
 import subprocess
 from time import time
 from typing import Optional, Literal
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, Field
 
 
 class Instance(BaseModel):
@@ -12,7 +12,7 @@ class Instance(BaseModel):
     Model representing an instance with a name and ID.
     """
     name: Optional[str] = None
-    id: constr(pattern=r"^i-[0-9a-f]{8,17}$")
+    id: str = Field(pattern=r"^i-[0-9a-f]{8,17}$")
 
 
 class Connection(BaseModel):
@@ -34,7 +34,7 @@ class SSOCommand(BaseModel):
     """
     Model representing the SSO command.
     """
-    region: constr(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
+    region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
     profile: str
     system: Literal["Linux", "Windows"]
     action: Literal["login", "logout"]
@@ -97,7 +97,7 @@ class SSMCommand(BaseModel):
     Model representing the SSM command.
     """
     instance: Instance
-    region: constr(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
+    region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
     profile: str
     reason: Connection
     system: Literal["Linux", "Windows"]
