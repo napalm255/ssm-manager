@@ -611,7 +611,7 @@ app.refreshData = async function() {
 };
 
 app.toggleAutoRefresh = function(enabled) {
-    if (enabled && enabled.target) {
+    if (enabled?.target) {
         enabled = enabled.target.checked;
     }
 
@@ -685,7 +685,7 @@ app.showPreferences = async function() {
         const regionsAll = await regionsAllRes.json();
 
         if (Array.isArray(regionsAll)) {
-            select = this.elements.regionsSelect;
+            const select = this.elements.regionsSelect;
             if (!select) return;
             select.innerHTML = '';
 
