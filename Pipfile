@@ -14,6 +14,7 @@ pefile = {version = "*", sys_platform = "== 'win32'"}
 colorama = "*"
 cachelib = "*"
 pystray = "*"
+pydantic = "*"
 
 [dev-packages]
 pylint = "*"
