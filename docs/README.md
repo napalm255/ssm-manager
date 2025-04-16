@@ -1,6 +1,17 @@
 # SSM Manager (AWS)
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager/releases)
+[![GitHub](https://img.shields.io/github/license/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager/tree/develop?tab=License-1-ov-file)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 
 ![Screenshot](images/screenshot.jpg)
 
