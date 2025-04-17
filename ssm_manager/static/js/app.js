@@ -590,7 +590,7 @@ app.refreshData = async function() {
         await this.loadLastUsedProfileAndRegion();
 
         const response = await fetch('/api/refresh', {
-            method: 'POST'
+            method: 'GET'
         });
 
         if (!response.ok) throw new Error('Refresh failed');

@@ -174,7 +174,7 @@ def get_instances():
         logger.debug("Loading EC2 instances...")
         instances = aws_manager.list_ssm_instances()
         logger.info(f"Successfully loaded {len(instances)} EC2 instances")
-        return jsonify(instances) if instances else jsonify([])
+        return jsonify(instances)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to load instances: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to load instances'}), 500
@@ -379,7 +379,7 @@ def get_instance_details(instance_id):
         return jsonify({'error': f'Error getting instance details: {instance_id}'}), 500
 
 
-@app.route('/api/preferences', methods=['GET'])
+@app.route('/api/preferences')
 def get_preferences():
     """
     Get application preferences
@@ -409,7 +409,7 @@ def update_preferences():
     return jsonify({'status': 'success'})
 
 
-@app.route('/api/refresh', methods=['POST'])
+@app.route('/api/refresh')
 def refresh_data():
     """
     Refresh instance data
@@ -420,7 +420,7 @@ def refresh_data():
         instances = aws_manager.list_ssm_instances()
         return jsonify({
             'status': 'success',
-            'instances': instances if instances else []
+            'instances': instances
         })
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error refreshing data: {str(e)}")
@@ -524,7 +524,7 @@ def terminate_connection(connection_id):
         return jsonify({'error': f'Error terminating connection: {connection_id}'}), 500
 
 
-@app.route('/api/rdp/<local_port>', methods=['GET'])
+@app.route('/api/rdp/<local_port>')
 def open_rdp_client(local_port):
     """
     Open the RDP client with the specified local port
@@ -768,8 +768,7 @@ class TrayIcon():
         # pylint: disable=unused-argument
         logger.info("Exiting application...")
         self.server.stop()
-        icon.stop()
-        os.kill(os.getpid(), signal.SIGTERM)
+        self.icon.stop()
 
     def open_app(self, icon, item):
         """

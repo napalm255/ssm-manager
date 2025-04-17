@@ -116,7 +116,7 @@ class AWSManager:
         # pylint: disable=line-too-long
         if not self.is_connected:
             logger.warning("Attempted to list instances without an active connection")
-            return None
+            return []
 
         try:
             # Get all instances with SSM
@@ -161,7 +161,7 @@ class AWSManager:
             if 'ExpiredTokenException' in str(e):
                 self.is_connected = False
                 return {'error': 'Authentication token expired. Please reconnect.'}
-            return None
+            return []
 
     def get_instance_details(self, instance_id: str):
         """
