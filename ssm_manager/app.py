@@ -769,9 +769,6 @@ class TrayIcon():
         logger.info("Exiting application...")
         self.server.stop()
         self.icon.stop()
-        # pid = os.getpid()
-        # if pid:
-        #     os.kill(pid, signal.SIGTERM)
 
     def open_app(self, icon, item):
         """
