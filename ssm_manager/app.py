@@ -3,7 +3,6 @@ SSM Manager
 """
 import os
 import sys
-import signal
 import logging
 import webbrowser
 import threading
@@ -19,7 +18,10 @@ from flask import Flask, jsonify, request, render_template, send_file
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
-from ssm_manager.utils import Instance, Connection, SSMCommand, SSOCommand, RDPCommand
+from ssm_manager.utils import (
+    Instance, Connection, ConnectionState,
+    SSMCommand, SSOCommand, RDPCommand
+)
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
 APP_NAME = 'SSM Manager'
@@ -208,21 +210,21 @@ def start_ssh(instance_id):
         pid = run_cmd(command)
         logger.debug(f"SSH process PID: {pid}")
 
-        connection_state = {
-            'connection_id': str(connection),
-            'instance_id': instance.id,
-            'name': instance.name,
-            'type': connection.method,
-            'profile': command.profile,
-            'region': command.region,
-            'pid': pid,
-            'timestamp': int(time.time()),
-            'status': 'active'
-        }
-        cache.append('active_connections', connection_state)
+        connection_state = ConnectionState(
+            connection_id = str(connection),
+            instance_id = instance.id,
+            name = instance.name,
+            type = connection.method,
+            profile = command.profile,
+            region = command.region,
+            pid = pid,
+            timestamp = int(time.time()),
+            status = 'active'
+        )
+        # cache.append('active_connections', connection_state)
 
         logger.info(f"SSH session started - Instance: {instance.id}")
-        return jsonify(connection_state)
+        return jsonify(dict(connection_state))
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting SSH: {str(e)}")
         return jsonify({'error': f'Error starting SSH connection: {instance_id}'}), 500
@@ -269,22 +271,22 @@ def start_rdp(instance_id):
         logger.debug(f"RDP process PID: {pid}")
         open_rdp_client(command.local_port)
 
-        connection_state = {
-            'connection_id': str(connection),
-            'instance_id': instance.id,
-            'name': instance.name,
-            'type': connection.method,
-            'local_port': command.local_port,
-            'profile': command.profile,
-            'region': command.region,
-            'pid': pid,
-            'timestamp': connection.time,
-            'status': 'active'
-        }
-        cache.append('active_connections', connection_state)
+        connection_state = ConnectionState(
+            connection_id = str(connection),
+            instance_id = instance.id,
+            name = instance.name,
+            type = connection.method,
+            profile = command.profile,
+            region = command.region,
+            pid = pid,
+            timestamp = int(time.time()),
+            status = 'active',
+            local_port = command.local_port
+        )
+        # cache.append('active_connections', connection_state)
 
         logger.info(f"RDP session started - Instance: {instance.id}, Port: {local_port}")
-        return jsonify(connection_state)
+        return jsonify(dict(connection_state))
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting RDP: {str(e)}")
         return jsonify({'error': 'Error starting RDP connection: {instance_id}'}), 500
@@ -336,24 +338,24 @@ def start_custom_port(instance_id):
         pid = run_cmd(command)
         logger.debug(f"Port forwarding process PID: {pid}")
 
-        connection_state = {
-            'connection_id': str(connection),
-            'instance_id': instance.id,
-            'name': instance.name,
-            'type': 'Custom Port' if mode == 'local' else 'Remote Host Port',
-            'local_port': command.local_port,
-            'remote_port': command.remote_port,
-            'remote_host': command.remote_host if mode != 'local' else None,
-            'profile': command.profile,
-            'region': command.region,
-            'pid': pid,
-            'timestamp': connection.time,
-            'status': 'active'
-        }
-        cache.append('active_connections', connection_state)
+        connection_state = ConnectionState(
+            connection_id = str(connection),
+            instance_id = instance.id,
+            name = instance.name,
+            type = 'Custom Port' if mode == 'local' else 'Remote Host Port',
+            profile = command.profile,
+            region = command.region,
+            pid = pid,
+            timestamp = int(time.time()),
+            status = 'active',
+            local_port = command.local_port,
+            remote_port = command.remote_port,
+            remote_host = command.remote_host if mode != 'local' else None
+        )
+        # cache.append('active_connections', connection_state)
 
         logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance.id}")
-        return jsonify(connection_state)
+        return jsonify(dict(connection_state))
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({'error': f'Error starting port forwarding: {instance_id}'}), 500
@@ -435,48 +437,11 @@ def get_active_connections():
     """
     # pylint: disable=too-many-nested-blocks, too-many-branches
     try:
-        logger.debug("Getting active connections...")
         active = []
-        to_remove = []
 
-        active_connections = cache.get('active_connections')
-        if not active_connections:
-            return jsonify([])
-
-        for conn in active_connections:
-            try:
-                is_active = False
-                pid = conn.get('pid')
-
-                if pid:
-                    try:
-                        process = psutil.Process(pid)
-                        if process.is_running():
-                            if conn['type'] in ['RDP', 'Custom Port']:
-                                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                try:
-                                    result = sock.connect_ex(('127.0.0.1', conn['local_port']))
-                                    is_active = result == 0
-                                finally:
-                                    sock.close()
-                            else:
-                                is_active = True
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        pass
-
-                if is_active:
-                    active.append(conn)
-                else:
-                    to_remove.append(conn)
-            except Exception as e:  # pylint: disable=broad-except
-                logger.error(f"Error checking connection: {str(e)}")
-                to_remove.append(conn)
-
-        for conn in to_remove:
-            try:
-                cache.remove('active_connections', conn)
-            except ValueError:
-                pass
+        logger.debug("Getting active connections...")
+        for conn in cache.get('active_connections'):
+            active.append(dict(conn))
 
         return jsonify(active)
     except Exception as e:  # pylint: disable=broad-except
@@ -494,29 +459,29 @@ def terminate_connection(connection_id):
     """
     try:
         logger.debug(f"Terminating connection - ID: {connection_id}")
-        connection = next((c for c in cache.get('active_connections')
-                           if c.get('connection_id') == connection_id), None)
-
+        connection = None
+        for conn in cache.get('active_connections'):
+            logger.debug(f"Terminating: {conn}")
+            if conn.connection_id == connection_id:
+                connection = conn
+                break
         if not connection:
+            logger.error(f"Connection not found: {connection_id}")
             return jsonify({"error": 'Connection not found'}), 404
 
-        pid = connection.get('pid')
-        if pid:
-            try:
-                process = psutil.Process(pid)
-                for child in process.children(recursive=True):
-                    child.terminate()
-                process.terminate()
+        try:
+            process = psutil.Process(connection.pid)
+            for child in process.children(recursive=True):
+                child.terminate()
+            process.terminate()
 
-                _, alive = psutil.wait_procs([process], timeout=3)
-                for p in alive:
-                    p.kill()
+            _, alive = psutil.wait_procs([process], timeout=3)
+            for p in alive:
+                p.kill()
 
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                pass
-
-        cache.get('active_connections')[:] = [c for c in cache.get('active_connections')
-                                 if c.get('connection_id') != connection_id]
+            cache.remove('active_connections', connection)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
 
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
@@ -560,6 +525,53 @@ def favicon():
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
+def verify_pid(conn: Connection) -> bool:
+    """
+    Verify if a process with the given PID is running
+    Args:
+        pid (int): Process ID
+        conn (Connection): Connection object
+    Returns: True if the process is running, False otherwise
+    """
+    is_active = []
+    try:
+        process = psutil.Process(conn.pid)
+        is_active.append(process.is_running())
+        cmdline = process.cmdline()
+
+        validate = [
+            'aws', 'ssm', 'start-session',
+            conn.instance_id
+        ]
+        for item in validate:
+            is_active.append(item in cmdline)
+
+        if conn.local_port:
+            is_active.append(socket_is_open(conn.local_port))
+    except (KeyError, psutil.NoSuchProcess, psutil.AccessDenied):
+        return False
+    return all(is_active)
+
+
+def socket_is_open(port):
+    """
+    Check if a socket is open
+    Args:
+        host (str): Hostname or IP address
+        port (int): Port number
+    Returns: True if the socket is open, False otherwise
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        result = sock.connect_ex(('127.0.0.1', port))
+        return result == 0
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Error checking socket: {str(e)}")
+        return False
+    finally:
+        sock.close()
+
+
 def find_free_port(name: str, remote_port: int, remote_host: str = None):
     """
     Find a free port in the given range for AWS SSM port forwarding
@@ -580,19 +592,13 @@ def find_free_port(name: str, remote_port: int, remote_host: str = None):
 
         used_ports.add(port)
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            result = sock.connect_ex(('127.0.0.1', port))
-            sock.close()
-
-            if result != 0:  # Port is available
+            if not socket_is_open(port):
                 logger.info(f"Found free port: {port}")
                 return port
             logger.debug(f"Port {port} is in use")
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error checking port {port}: {str(e)}")
-        finally:
-            sock.close()
     logger.error(f"No free port found after {max_attempts} attempts")
     return None
 
@@ -628,7 +634,6 @@ def run_cmd(cmd):
     """
     logger.debug(f"Running command: {cmd.cmd}")
 
-    print(cmd.timeout)
     process = None
     if cmd.hide:
         process = subprocess.Popen(cmd.cmd,
@@ -656,6 +661,95 @@ def run_cmd(cmd):
 
     return pid
 
+
+class ConnectionMonitor(threading.Thread):
+    """
+    Thread class for monitoring active connections
+    """
+    def __init__(self, interval=1):
+        super().__init__()
+        self._stop_event = threading.Event()
+        self.interval = interval
+        self.target = self.run
+        self.daemon = True
+        self.existing_pids = []
+
+    def stop(self):
+        """
+        Stop the connection monitor
+        """
+        self._stop_event.set()
+
+    def stopped(self):
+        """
+        Check if the connection monitor is stopped
+        """
+        return self._stop_event.is_set()
+
+    def get_arg(self, cmd: str, name: str, default = None):
+        """
+        Get the argument from the command line
+        Args:
+            cmd (str): The command line
+            name (str): The argument name
+            default: Default value if not found
+        Returns: The argument value or default
+        """
+        try:
+            return cmd[cmd.index(name) + 1]
+        except (ValueError, IndexError):
+            return default
+
+    def remove_inactive(self):
+        """
+        Remove inactive connections from the cache
+        """
+        active_connections = cache.get('active_connections')
+        to_remove = []
+        for conn in active_connections:
+            try:
+                if not verify_pid(conn):
+                    to_remove.append(conn)
+            except Exception as e:  # pylint: disable=broad-except
+                logger.error(f"Error checking connection: {str(e)}")
+                to_remove.append(conn)
+
+        for conn in to_remove:
+            try:
+                cache.remove('active_connections', conn)
+            except ValueError:
+                pass
+
+    def get_connections(self):
+        """
+        Get active connections
+        Returns: A generator of ConnectionState objects
+        """
+        current_connections = cache.get('active_connections')
+        pids = [conn.pid for conn in current_connections]
+        for proc in psutil.process_iter(['pid', 'name', 'create_time']):
+            if proc.info['pid'] in pids:
+                continue
+            if proc.name().lower() != 'aws':
+                continue
+            connection_state = ConnectionState(
+                pid=int(proc.info['pid']),
+                instance_id=self.get_arg(proc.cmdline(), '--target'),
+                timestamp=proc.info['create_time']
+            )
+            connection_state.load(proc.cmdline())
+            yield connection_state
+
+    def run(self):
+        """
+        Run the connection monitor
+        """
+        self.remove_inactive()
+        while not self.stopped():
+            time.sleep(self.interval)
+            self.remove_inactive()
+            for connection in self.get_connections():
+                cache.append('active_connections', connection)
 
 class ServerThread(threading.Thread):
     """
@@ -703,6 +797,8 @@ class TrayIcon():
     def __init__(self, icon_file):
         self.server = ServerThread()
         self.server.daemon = True
+        self.monitor = ConnectionMonitor()
+        self.monitor.daemon = True
         self.icon = None
         self.icon_file = self.get_resource_path(icon_file)
 
@@ -782,6 +878,7 @@ class TrayIcon():
         """
         Run the system tray icon
         """
+        self.monitor.start()
         self.server.start()
         time.sleep(1)
         self.open_app(None, None)

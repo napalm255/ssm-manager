@@ -2,7 +2,7 @@
 Main entry point for the application
 """
 import sys
-from ssm_manager.app import TrayIcon, ServerThread
+from ssm_manager.app import TrayIcon, ServerThread, ConnectionMonitor
 
 
 def main():
@@ -10,6 +10,8 @@ def main():
     Main entry point
     """
     if len(sys.argv) > 1 and sys.argv[1] == '--api':
+        monitor = ConnectionMonitor()
+        monitor.start()
         server = ServerThread()
         server.debug = True
         server.run()

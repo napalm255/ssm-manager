@@ -5,8 +5,8 @@ import shlex
 import shutil
 import subprocess
 from time import time
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from typing import Optional, Literal, Any
+from pydantic import BaseModel, Field, ConfigDict
 
 
 UNSUPPORTED_SYSTEM = "Unsupported system type"
@@ -24,15 +24,92 @@ class Connection(BaseModel):
     """
     Model representing a connection with a method and an Instance.
     """
-    method: Literal["SSH", "RDP", "PORT"]
+    method: Literal["SSH", "RDP", "PORT", "MANUAL"]
     instance: Instance
-    time: int = time()
+    time: float = time()
 
     def __str__(self) -> str:
         name = self.instance.id
         if self.instance.name:
             name = f"{self.instance.name}_{self.instance.id}"
         return f"{self.method}_{name}_{self.time}".lower()
+
+
+class ConnectionState(BaseModel):
+    """
+    Model representing the state of a connection.
+    """
+    # pylint: disable=too-many-instance-attributes
+    model_config = ConfigDict(strict=True)
+
+    instance_id: str = Field(pattern=r"^i-[0-9a-f]{8,17}$")
+    pid: int
+    timestamp: float
+    region: str | None = None
+    profile: str | None = None
+    connection_id: str | None = None
+    name: str | None = None
+    status: Literal["active", "inactive"] | None = None
+
+    type: Literal["SSH", "RDP", "Custom Port", "Remote Host Port"] | None = None
+    local_port: int | None = None
+    remote_port: int | None = None
+    remote_host: str | None = None
+
+
+    def get(self, key: str, default=None):
+        """
+        Get the value of an attribute.
+        """
+        return getattr(self, key, default)
+
+
+    def load(self, cmd: list) -> bool:
+        """
+        Load data into the model.
+        """
+        def get_arg(name: str, default: Any = None) -> str | None:
+            try:
+                return cmd[cmd.index(name) + 1]
+            except (ValueError, IndexError):
+                return default
+
+        try:
+            if '--target' not in cmd:
+                raise ValueError("No instance id found")
+            connection = Connection(
+                method='MANUAL',
+                instance=Instance(id=get_arg('--target')),
+                time=self.timestamp
+            )
+            self.status = 'active'
+            self.connection_id = get_arg('--reason', str(connection))
+            self.region = get_arg('--region', '')
+            self.profile = get_arg('--profile', '')
+            self.name = self.instance_id
+            parameters = get_arg('--parameters')
+            params = {}
+            for param in parameters.split(','):
+                key, value = param.split('=')
+                params[key] = value
+            self.local_port = params.get('localPortNumber', None)
+            if self.local_port:
+                self.local_port = int(self.local_port)
+            self.remote_port = params.get('portNumber', None)
+            if self.remote_port:
+                self.remote_port = int(self.remote_port)
+            self.remote_host = params.get('host', None)
+
+            if self.remote_port == 3389:
+                self.type = 'RDP'
+            elif self.remote_port and not self.remote_host:
+                self.type = 'Custom Port'
+            elif self.remote_host and self.remote_port:
+                self.type = 'Remote Host Port'
+            else:
+                self.type = 'SSH'
+        except (ValueError, Exception):  # pylint: disable=broad-except
+            return False
 
 
 class RDPCommand(BaseModel):
