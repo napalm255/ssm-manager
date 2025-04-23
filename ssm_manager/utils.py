@@ -26,13 +26,13 @@ class Connection(BaseModel):
     """
     method: Literal["SSH", "RDP", "PORT", "MANUAL"]
     instance: Instance
-    time: float = time()
+    timestamp: float
 
     def __str__(self) -> str:
         name = self.instance.id
         if self.instance.name:
             name = f"{self.instance.name}_{self.instance.id}"
-        return f"{self.method}_{name}_{self.time}".lower()
+        return f"{self.method}_{name}_{self.timestamp}".lower()
 
 
 class ConnectionState(BaseModel):
@@ -80,7 +80,7 @@ class ConnectionState(BaseModel):
             connection = Connection(
                 method='MANUAL',
                 instance=Instance(id=get_arg('--target')),
-                time=self.timestamp
+                timestamp=self.timestamp
             )
             self.status = 'active'
             self.connection_id = get_arg('--reason', str(connection))

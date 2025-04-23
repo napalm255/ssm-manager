@@ -198,7 +198,8 @@ def start_ssh(instance_id):
         instance = Instance(name=data.get('name'),
                             id=instance_id)
         connection = Connection(method=method,
-                                instance=instance)
+                                instance=instance,
+                                timestamp=time.time())
         command = SSMCommand(instance=instance,
                              region=data.get('region'),
                              profile=data.get('profile'),
@@ -218,7 +219,7 @@ def start_ssh(instance_id):
             profile = command.profile,
             region = command.region,
             pid = pid,
-            timestamp = int(time.time()),
+            timestamp = connection.timestamp,
             status = 'active'
         )
         # cache.append('active_connections', connection_state)
@@ -247,7 +248,8 @@ def start_rdp(instance_id):
         instance = Instance(name=data.get('name'),
                             id=instance_id)
         connection = Connection(method=method,
-                                instance=instance)
+                                instance=instance,
+                                timestamp=time.time())
 
         remote_port = 3389
         local_port = find_free_port(name=instance.name,
@@ -279,7 +281,7 @@ def start_rdp(instance_id):
             profile = command.profile,
             region = command.region,
             pid = pid,
-            timestamp = int(time.time()),
+            timestamp = connection.timestamp,
             status = 'active',
             local_port = command.local_port
         )
@@ -310,8 +312,8 @@ def start_custom_port(instance_id):
         instance = Instance(name=data.get('name'),
                             id=instance_id)
         connection = Connection(method=method,
-                                instance=instance)
-
+                                instance=instance,
+                                timestamp=time.time())
 
         remote_host = data.get('remote_host', None)
         remote_port = int(data.get('remote_port'))
@@ -346,7 +348,7 @@ def start_custom_port(instance_id):
             profile = command.profile,
             region = command.region,
             pid = pid,
-            timestamp = int(time.time()),
+            timestamp = connection.timestamp,
             status = 'active',
             local_port = command.local_port,
             remote_port = command.remote_port,
@@ -440,8 +442,8 @@ def get_active_connections():
         active = []
 
         logger.debug("Getting active connections...")
-        monitor = ConnectionMonitor()
-        monitor.run()
+        monitor = ConnectionScanner()
+        monitor.scan()
 
         for conn in cache.get('active_connections'):
             active.append(dict(conn))
@@ -665,29 +667,13 @@ def run_cmd(cmd):
     return pid
 
 
-class ConnectionMonitor(threading.Thread):
+class ConnectionScanner():
     """
     Thread class for monitoring active connections
     """
     def __init__(self, interval=1):
-        super().__init__()
-        self._stop_event = threading.Event()
         self.interval = interval
-        self.target = self.run
-        self.daemon = True
         self.existing_pids = []
-
-    def stop(self):
-        """
-        Stop the connection monitor
-        """
-        self._stop_event.set()
-
-    def stopped(self):
-        """
-        Check if the connection monitor is stopped
-        """
-        return self._stop_event.is_set()
 
     def get_arg(self, cmd: str, name: str, default = None):
         """
@@ -746,7 +732,7 @@ class ConnectionMonitor(threading.Thread):
                 continue
             yield connection_state
 
-    def run(self):
+    def scan(self):
         """
         Run the connection monitor
         """

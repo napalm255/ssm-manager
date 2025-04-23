@@ -2,7 +2,7 @@
 Main entry point for the application
 """
 import sys
-from ssm_manager.app import TrayIcon, ServerThread, ConnectionMonitor
+from ssm_manager.app import TrayIcon, ServerThread
 
 
 def main():

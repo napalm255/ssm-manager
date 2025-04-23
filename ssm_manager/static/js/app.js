@@ -1,7 +1,4 @@
-// Main application module
-//app.js
 const app = {
-    // State
     refreshInterval: null,
     refreshCountdown: 30,
     currentProfile: '',
@@ -11,12 +8,10 @@ const app = {
     awsAccountId: null,
     elements: {},
 
-    // Local storage keys
     localTheme: 'lastTheme',
     localProfile: 'lastProfile',
     localRegion: 'lastRegion',
 
-    // Bootstrap components
     modals: {},
     toasts: {},
 
@@ -46,7 +41,6 @@ const app = {
 
     },
 
-    // Cache DOM elements for better performance
     cacheElements() {
         console.log('Caching DOM elements...');
         this.elements = {
@@ -237,7 +231,6 @@ const app = {
 
                 this.updateAwsAccountDisplay();
 
-                // Save last used profile/region
                 localStorage.setItem('lastProfile', profile);
                 localStorage.setItem('lastRegion', region);
 
@@ -855,6 +848,31 @@ app.startCustomPortForwarding = async function() {
     }
 };
 
+app.timeAgo = function(timestamp) {
+  const now = Date.now();
+  const seconds = Math.floor((now - timestamp * 1000) / 1000);
+
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+    second: 1,
+  };
+
+  for (const unit in intervals) {
+    const interval = intervals[unit];
+    const count = Math.floor(seconds / interval);
+
+    if (count >= 1) {
+      const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+      return rtf.format(-count, unit);
+    }
+  }
+  return 'just now';
+};
+
 app.renderConnections = function() {
     const container = this.elements.connectionsList;
     container.innerHTML = '';
@@ -873,7 +891,8 @@ app.renderConnections = function() {
         const element = document.createElement('div');
         element.className = 'connection-item border border-secondary';
 
-        const timestamp = new Date(conn.timestamp).toLocaleTimeString();
+        const timestamp = new Date(conn.timestamp * 1000).toLocaleString();
+        const timeago = this.timeAgo(conn.timestamp);
 
         let connectionInfo = '';
         if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
@@ -891,15 +910,14 @@ app.renderConnections = function() {
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm ${this.getConnectionTypeColor(conn.type)}"
-			 style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .45rem; --bs-btn-font-size: .70rem;"
-			 ${this.getConnectionTypeAction(conn)}
-			>
+                         style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .45rem; --bs-btn-font-size: .70rem;"
+                         ${this.getConnectionTypeAction(conn)}>
                             ${conn.type}
                         </button>
                     </div>
                     <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
                     ${connectionInfo}
-                    <p class="text-muted small mt-2 mb-1">Started at ${timestamp}</p>
+                    <p class="text-muted small mt-2 mb-1" title="${timestamp}">Started ${timeago}</p>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge" style="background-color: #fd9843;">${conn.region}</span>
                         <span class="badge" style="background-color: #e35d6a;">${conn.profile}</span>
