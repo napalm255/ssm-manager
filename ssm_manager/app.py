@@ -713,6 +713,7 @@ class ConnectionScanner():
         """
         current_connections = cache.get('active_connections')
         pids = [conn.pid for conn in current_connections]
+        logger.debug(f"Active connections pids: {pids}")
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
             if proc.info['pid'] in pids:
                 continue
@@ -725,7 +726,7 @@ class ConnectionScanner():
             )
             connection_state.load(proc.cmdline())
             if connection_state in current_connections:
-                print(f"Connection already exists: {connection_state}")
+                logger.warning(f"Connection already exists: {connection_state}")
                 continue
             yield connection_state
 
