@@ -712,9 +712,7 @@ class ConnectionScanner():
         Returns: A generator of ConnectionState objects
         """
         current_connections = cache.get('active_connections')
-        logger.debug(f"Current connections: {current_connections}")
         pids = [conn.pid for conn in current_connections]
-        logger.debug(f"Active connections pids: {pids}")
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
             logger.debug(f"Checking process: {proc.info}")
             if proc.info['pid'] in pids:
