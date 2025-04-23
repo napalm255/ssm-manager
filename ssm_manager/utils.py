@@ -87,26 +87,36 @@ class ConnectionState(BaseModel):
             self.region = get_arg('--region', '')
             self.profile = get_arg('--profile', '')
             self.name = self.instance_id
-            parameters = get_arg('--parameters')
-            params = {}
-            for param in parameters.split(','):
-                key, value = param.split('=')
-                params[key] = value
-            self.local_port = params.get('localPortNumber', None)
-            if self.local_port:
-                self.local_port = int(self.local_port)
-            self.remote_port = params.get('portNumber', None)
-            if self.remote_port:
-                self.remote_port = int(self.remote_port)
-            self.remote_host = params.get('host', None)
 
-            if self.remote_port == 3389:
-                self.type = 'RDP'
-            elif self.remote_port and not self.remote_host:
-                self.type = 'Custom Port'
-            elif self.remote_host and self.remote_port:
-                self.type = 'Remote Host Port'
-            else:
+            document_name = get_arg('--document-name')
+            parameters = get_arg('--parameters')
+            if parameters:
+                params = {}
+                for param in parameters.split(','):
+                    key, value = param.split('=')
+                    params[key] = value
+                self.local_port = params.get('localPortNumber', None)
+                if self.local_port:
+                    self.local_port = int(self.local_port)
+                self.remote_port = params.get('portNumber', None)
+                if self.remote_port:
+                    self.remote_port = int(self.remote_port)
+                self.remote_host = params.get('host', None)
+                if self.remote_host and self.remote_port:
+                    self.type = 'Remote Host Port'
+                if self.remote_port and not self.remote_host:
+                    self.type = 'Custom Port'
+                if self.remote_port == 3389:
+                    self.type = 'RDP'
+
+            if self.connection_id.startswith(('ssh_', 'rdp_', 'port_')):
+                conn_id = self.connection_id.split('_')
+                if not self.type:
+                    self.type = conn_id[0].upper()
+                self.name = conn_id[1]
+                self.timestamp = float(conn_id[-1])
+
+            if not document_name and not parameters:
                 self.type = 'SSH'
         except (ValueError, Exception):  # pylint: disable=broad-except
             return False

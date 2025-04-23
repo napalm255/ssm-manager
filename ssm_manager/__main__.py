@@ -10,8 +10,6 @@ def main():
     Main entry point
     """
     if len(sys.argv) > 1 and sys.argv[1] == '--api':
-        monitor = ConnectionMonitor()
-        monitor.start()
         server = ServerThread()
         server.debug = True
         server.run()

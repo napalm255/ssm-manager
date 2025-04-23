@@ -440,6 +440,9 @@ def get_active_connections():
         active = []
 
         logger.debug("Getting active connections...")
+        monitor = ConnectionMonitor()
+        monitor.run()
+
         for conn in cache.get('active_connections'):
             active.append(dict(conn))
 
@@ -738,6 +741,9 @@ class ConnectionMonitor(threading.Thread):
                 timestamp=proc.info['create_time']
             )
             connection_state.load(proc.cmdline())
+            if connection_state in current_connections:
+                print(f"Connection already exists: {connection_state}")
+                continue
             yield connection_state
 
     def run(self):
@@ -745,11 +751,8 @@ class ConnectionMonitor(threading.Thread):
         Run the connection monitor
         """
         self.remove_inactive()
-        while not self.stopped():
-            time.sleep(self.interval)
-            self.remove_inactive()
-            for connection in self.get_connections():
-                cache.append('active_connections', connection)
+        for connection in self.get_connections():
+            cache.append('active_connections', connection)
 
 class ServerThread(threading.Thread):
     """
@@ -797,8 +800,6 @@ class TrayIcon():
     def __init__(self, icon_file):
         self.server = ServerThread()
         self.server.daemon = True
-        self.monitor = ConnectionMonitor()
-        self.monitor.daemon = True
         self.icon = None
         self.icon_file = self.get_resource_path(icon_file)
 
@@ -878,7 +879,6 @@ class TrayIcon():
         """
         Run the system tray icon
         """
-        self.monitor.start()
         self.server.start()
         time.sleep(1)
         self.open_app(None, None)
