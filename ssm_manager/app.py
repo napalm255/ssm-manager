@@ -719,7 +719,7 @@ class ConnectionScanner():
             logger.debug(f"Checking process: {proc.info}")
             if proc.info['pid'] in pids:
                 continue
-            if proc.name().lower() != 'aws':
+            if proc.name().lower() not in ('aws', 'aws.exe'):
                 continue
             connection_state = ConnectionState(
                 pid=int(proc.info['pid']),
