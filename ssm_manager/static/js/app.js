@@ -833,13 +833,8 @@ app.startCustomPortForwarding = async function() {
 
         if (result.status === 'active') {
             this.addConnection(result);
-
-            const successMessage = mode === 'local'
-                ? `Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`
-                : `Remote host port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_host}:${result.remote_port})`;
-
-            this.showSuccess(successMessage);
             this.modals.customPort.hide();
+            this.showSuccess('Port fowarding started successfully');
         }
     } catch (error) {
         this.showError('Port forwarding error: ' + error.message);

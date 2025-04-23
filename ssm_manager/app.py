@@ -222,7 +222,6 @@ def start_shell(instance_id):
             timestamp = connection.timestamp,
             status = 'active'
         )
-        # cache.append('active_connections', connection_state)
 
         logger.info(f"Shell session started - Instance: {instance.id}")
         return jsonify(dict(connection_state))
@@ -285,7 +284,6 @@ def start_rdp(instance_id):
             status = 'active',
             local_port = command.local_port
         )
-        # cache.append('active_connections', connection_state)
 
         logger.info(f"RDP session started - Instance: {instance.id}, Port: {local_port}")
         return jsonify(dict(connection_state))
@@ -354,7 +352,6 @@ def start_custom_port(instance_id):
             remote_port = command.remote_port,
             remote_host = command.remote_host if mode != 'local' else None
         )
-        # cache.append('active_connections', connection_state)
 
         logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance.id}")
         return jsonify(dict(connection_state))
