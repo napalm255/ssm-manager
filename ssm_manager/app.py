@@ -716,6 +716,7 @@ class ConnectionScanner():
         pids = [conn.pid for conn in current_connections]
         logger.debug(f"Active connections pids: {pids}")
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
+            logger.debug(f"Checking process: {proc.info}")
             if proc.info['pid'] in pids:
                 continue
             if proc.name().lower() != 'aws':
