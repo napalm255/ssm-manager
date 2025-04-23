@@ -542,7 +542,7 @@ def verify_pid(conn: Connection) -> bool:
         cmdline = process.cmdline()
 
         validate = [
-            'aws', 'ssm', 'start-session',
+            'ssm', 'start-session',
             conn.instance_id
         ]
         for item in validate:
