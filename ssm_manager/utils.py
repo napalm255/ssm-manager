@@ -24,7 +24,7 @@ class Connection(BaseModel):
     """
     Model representing a connection with a method and an Instance.
     """
-    method: Literal["SSH", "RDP", "PORT", "MANUAL"]
+    method: Literal["Shell", "RDP", "PORT", "MANUAL"]
     instance: Instance
     timestamp: float
 
@@ -51,7 +51,7 @@ class ConnectionState(BaseModel):
     name: str | None = None
     status: Literal["active", "inactive"] | None = None
 
-    type: Literal["SSH", "RDP", "Custom Port", "Remote Host Port"] | None = None
+    type: Literal["Shell", "RDP", "Custom Port", "Remote Host Port"] | None = None
     local_port: int | None = None
     remote_port: int | None = None
     remote_host: str | None = None
@@ -109,7 +109,7 @@ class ConnectionState(BaseModel):
                 if self.remote_port == 3389:
                     self.type = 'RDP'
 
-            if self.connection_id.startswith(('ssh_', 'rdp_', 'port_')):
+            if self.connection_id.startswith(('shell_', 'rdp_', 'port_')):
                 conn_id = self.connection_id.split('_')
                 if not self.type:
                     self.type = conn_id[0].upper()
@@ -117,7 +117,7 @@ class ConnectionState(BaseModel):
                 self.timestamp = float(conn_id[-1])
 
             if not document_name and not parameters:
-                self.type = 'SSH'
+                self.type = 'Shell'
         except (ValueError, Exception):  # pylint: disable=broad-except
             return False
 

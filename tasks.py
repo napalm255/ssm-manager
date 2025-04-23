@@ -23,7 +23,7 @@ def bump_version(c):
     MINOR = Numerical value for Month
     PATCH = Numerical value for Build Number
     """
-    # pylint: disable=unused-variable
+    # pylint: disable=unused-argument
     year = datetime.now().strftime("%y")
     month = datetime.now().month
     major, minor, patch = (0, 0, 0)

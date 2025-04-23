@@ -321,11 +321,11 @@ const app = {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
-                    <button class="btn btn-sm btn-warning" onclick="app.startSSH('${instanceId}')">
-                        <i class="bi bi-terminal" title="Conosle"></i>
+                    <button class="btn btn-sm btn-warning" onclick="app.startShell('${instanceId}')">
+                        <i class="bi bi-terminal" title="Shell"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="app.startRDP('${instanceId}')">
-                        <i class="bi bi-display" title="Remote Desktop"></i>
+                        <i class="bi bi-display" title="RDP"></i>
                     </button>
                     <button class="btn btn-sm btn-purple text-white" onclick="app.showCustomPortModal('${instanceId}')">
                         <i class="bi bi-arrow-left-right" title="Port Forwarding"></i>
@@ -360,10 +360,10 @@ const app = {
         }
     },
 
-    async startSSH(instanceId) {
+    async startShell(instanceId) {
         try {
             this.showLoading();
-            const response = await fetch(`/api/ssh/${instanceId}`, {
+            const response = await fetch(`/api/shell/${instanceId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -373,18 +373,18 @@ const app = {
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to start SSH session');
+            if (!response.ok) throw new Error('Failed to start Shell session');
 
             const result = await response.json();
 
             if (result.status === 'active') {
                 this.addConnection(result);
-                this.showSuccess('SSH session started successfully');
+                this.showSuccess('Shell session started successfully');
             } else {
-                throw new Error(result.error || 'Failed to start SSH session');
+                throw new Error(result.error || 'Failed to start Shell session');
             }
         } catch (error) {
-            this.showError('SSH connection error: ' + error.message);
+            this.showError('Shell connection error: ' + error.message);
         } finally {
             this.hideLoading();
         }
@@ -942,7 +942,7 @@ app.getConnectionTypeAction = function(conn) {
 
 app.getConnectionTypeColor = function(type) {
     const colors = {
-        'SSH': 'text-bg-warning',
+        'Shell': 'text-bg-warning',
         'RDP': 'text-bg-primary',
         'Custom Port': 'btn-purple',
         'Remote Host Port': 'btn-purple'
@@ -975,7 +975,7 @@ app.startConnectionMonitoring = function() {
     if (this.monitoringInterval) {
         clearInterval(this.monitoringInterval);
     }
-    this.monitoringInterval = setInterval(() => this.checkConnections(), 4000);
+    this.monitoringInterval = setInterval(() => this.checkConnections(), 2500);
 };
 
 app.checkConnections = async function() {

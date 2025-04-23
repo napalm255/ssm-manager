@@ -182,18 +182,18 @@ def get_instances():
         return jsonify({'error': 'Failed to load instances'}), 500
 
 
-@app.route('/api/ssh/<instance_id>', methods=['POST'])
-def start_ssh(instance_id):
+@app.route('/api/shell/<instance_id>', methods=['POST'])
+def start_shell(instance_id):
     """
-    Endpoint to start an SSH session with an EC2 instance
+    Endpoint to start an Shell session with an EC2 instance
     Args:
         instance_id (str): ID of the EC2 instance
     Returns: JSON response with status and connection details
     """
     try:
-        logger.debug(f"Starting SSH - Instance: {instance_id}")
+        logger.debug(f"Starting Shell - Instance: {instance_id}")
         data = request.json
-        method = 'SSH'
+        method = 'Shell'
 
         instance = Instance(name=data.get('name'),
                             id=instance_id)
@@ -207,9 +207,9 @@ def start_ssh(instance_id):
                              system=system,
                              hide=False)
 
-        logger.info(f"Starting SSH - Instance: {instance.id}")
+        logger.info(f"Starting Shell - Instance: {instance.id}")
         pid = run_cmd(command)
-        logger.debug(f"SSH process PID: {pid}")
+        logger.debug(f"Shell session process PID: {pid}")
 
         connection_state = ConnectionState(
             connection_id = str(connection),
@@ -224,11 +224,11 @@ def start_ssh(instance_id):
         )
         # cache.append('active_connections', connection_state)
 
-        logger.info(f"SSH session started - Instance: {instance.id}")
+        logger.info(f"Shell session started - Instance: {instance.id}")
         return jsonify(dict(connection_state))
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error starting SSH: {str(e)}")
-        return jsonify({'error': f'Error starting SSH connection: {instance_id}'}), 500
+        logger.error(f"Error starting Shell: {str(e)}")
+        return jsonify({'error': f'Error starting Shell connection: {instance_id}'}), 500
 
 
 @app.route('/api/rdp/<instance_id>', methods=['POST'])

@@ -38,7 +38,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 ## Description
 
 SSM Manager is a cross-platform desktop application that provides a web interface for managing AWS Systems Manager sessions.
-It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for SSH sessions, RDP connections, custom port forwarding, and host port forwarding.
+It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for Shell sessions, RDP connections, custom port forwarding, and host port forwarding.
 
 ## Features
 
@@ -57,8 +57,8 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
   - Instance details (Name, ID, Type, OS, State, IP Address ecc..)
 
 ### Connection Types
-- **SSH Sessions**
-  - Direct SSH connection to instances
+- **Shell Sessions**
+  - Direct Shell connection to instances
   - Session monitoring and management
 
 - **RDP Connections**
@@ -111,7 +111,7 @@ A pre-built version is currently only available for Windows and comes in either 
 2. Select your AWS profile and region
 3. Click "Connect" to view available instances
 4. Use the action buttons to establish connections:
-   - SSH: Direct terminal access
+   - Shell: Direct terminal access
    - RDP: Remote desktop connection
    - PORT: Custom port forwarding
 
