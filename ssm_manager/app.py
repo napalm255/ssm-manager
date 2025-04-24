@@ -714,19 +714,23 @@ class ConnectionScanner():
         current_connections = cache.get('active_connections')
         pids = [conn.pid for conn in current_connections]
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
-            logger.debug(f"Checking process: {proc.info}")
-            if proc.info['pid'] in pids:
-                continue
-            if proc.name().lower() not in ('aws', 'aws.exe'):
-                continue
-            connection_state = ConnectionState(
-                pid=int(proc.info['pid']),
-                instance_id=self.get_arg(proc.cmdline(), '--target'),
-                timestamp=proc.info['create_time']
-            )
-            connection_state.load(proc.cmdline())
-            if connection_state in current_connections:
-                logger.warning(f"Connection already exists: {connection_state}")
+            try:
+                logger.debug(f"Checking process: {proc.info}")
+                if proc.info['pid'] in pids:
+                    continue
+                if proc.name().lower() not in ('aws', 'aws.exe'):
+                    continue
+                connection_state = ConnectionState(
+                    pid=int(proc.info['pid']),
+                    instance_id=self.get_arg(proc.cmdline(), '--target'),
+                    timestamp=proc.info['create_time']
+                )
+                connection_state.load(proc.cmdline())
+                if connection_state in current_connections:
+                    logger.warning(f"Connection already exists: {connection_state}")
+                    continue
+            except Exception as e:  # pylint: disable=broad-except
+                logger.warning(f"Error checking process: {str(e)}")
                 continue
             yield connection_state
 
@@ -748,6 +752,7 @@ class ServerThread(threading.Thread):
         self.daemon = True
         self.target = self.run
         self.debug = False
+        self.port = 5000
 
     def stop(self):
         """
@@ -767,14 +772,18 @@ class ServerThread(threading.Thread):
         """
         while not self.stopped():
             logging.info("Starting server...")
-            app.run(
-                host='127.0.0.1',
-                port=5000,
-                debug=self.debug,
-                use_reloader=self.debug
-            )
-            self.stop()
-        logging.info("Server stopped")
+            try:
+                app.run(
+                    host='127.0.0.1',
+                    port=self.port,
+                    debug=self.debug,
+                    use_reloader=self.debug
+                )
+            except Exception as e:  # pylint: disable=broad-except
+                logging.error(f"Unexpected error: {str(e)}")
+            finally:
+                self.stop()
+                logging.info("Exiting...")
 
 
 class TrayIcon():
@@ -851,7 +860,7 @@ class TrayIcon():
         self.server.stop()
         self.icon.stop()
 
-    def open_app(self, icon, item):
+    def open_app(self, *args):
         """
         Open the application in the default browser
         """
