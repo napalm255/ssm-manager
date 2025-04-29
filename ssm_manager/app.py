@@ -466,7 +466,7 @@ def terminate_connection(connection_id):
     Returns: JSON response with status
     """
     try:
-        logger.debug(f"Terminating connection - ID: {connection_id}")
+        logger.debug("Terminating connection...")
         connection = None
         for conn in cache.get('active_connections'):
             logger.debug(f"Terminating: {conn}")
@@ -474,7 +474,7 @@ def terminate_connection(connection_id):
                 connection = conn
                 break
         if not connection:
-            logger.error(f"Connection not found: {connection_id}")
+            logger.warning("Connection not found")
             return jsonify({"error": 'Connection not found'}), 404
 
         try:

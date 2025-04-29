@@ -58,6 +58,7 @@ class ConnectionState(BaseModel):
     connection_id: str | None = None
     name: str | None = None
     status: Literal["active", "inactive"] | None = None
+    document_name: str | None = None
 
     type: Literal["Shell", "RDP", "Custom Port", "Remote Host Port"] | None = None
     local_port: int | None = None
@@ -69,6 +70,34 @@ class ConnectionState(BaseModel):
         Get the value of an attribute.
         """
         return getattr(self, key, default)
+
+    def _parse_params(self, params: str) -> dict:
+        """
+        Parse parameters from a string.
+        """
+        _params = {}
+        for param in params.split(','):
+            key, value = param.split('=')
+            _params[key] = value
+
+        self.local_port = _params.get('localPortNumber', None)
+        if self.local_port:
+            self.local_port = int(self.local_port)
+
+        self.remote_port = _params.get('portNumber', None)
+        if self.remote_port:
+            self.remote_port = int(self.remote_port)
+
+        self.remote_host = _params.get('host', None)
+
+        if self.remote_port == 3389:
+            self.type = 'RDP'
+        elif self.remote_host and self.remote_port:
+            self.type = 'Remote Host Port'
+        elif self.remote_port and not self.remote_host:
+            self.type = 'Custom Port'
+
+        return _params
 
     def load(self, cmd: list) -> bool:
         """
@@ -92,28 +121,12 @@ class ConnectionState(BaseModel):
             self.connection_id = get_arg('--reason', str(connection))
             self.region = get_arg('--region', '')
             self.profile = get_arg('--profile', '')
+            self.document_name = get_arg('--document-name')
             self.name = self.name if self.name else connection.instance.id
 
-            document_name = get_arg('--document-name')
-            parameters = get_arg('--parameters')
+            parameters = get_arg('--parameters', None)
             if parameters:
-                params = {}
-                for param in parameters.split(','):
-                    key, value = param.split('=')
-                    params[key] = value
-                self.local_port = params.get('localPortNumber', None)
-                if self.local_port:
-                    self.local_port = int(self.local_port)
-                self.remote_port = params.get('portNumber', None)
-                if self.remote_port:
-                    self.remote_port = int(self.remote_port)
-                self.remote_host = params.get('host', None)
-                if self.remote_host and self.remote_port:
-                    self.type = 'Remote Host Port'
-                if self.remote_port and not self.remote_host:
-                    self.type = 'Custom Port'
-                if self.remote_port == 3389:
-                    self.type = 'RDP'
+                self._parse_params(parameters)
 
             if self.connection_id.startswith(('shell_', 'rdp_', 'port_')):
                 conn_id = self.connection_id.split('_')
@@ -122,9 +135,9 @@ class ConnectionState(BaseModel):
                 self.name = conn_id[1]
                 self.timestamp = float(conn_id[-1])
 
-            if not document_name and not parameters:
+            if not self.document_name and not parameters:
                 self.type = 'Shell'
-        except (ValueError, Exception):  # pylint: disable=broad-except
+        except ValueError:
             return False
 
 
