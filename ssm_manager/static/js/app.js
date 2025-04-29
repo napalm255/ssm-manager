@@ -910,7 +910,7 @@ app.renderConnections = function() {
                             ${conn.type}
                         </button>
                     </div>
-                    <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
+                    <div><b>${conn.name !== '' ? conn.name : conn.instance.id}</b></div>
                     ${connectionInfo}
                     <p class="text-muted small mt-2 mb-1" title="${timestamp}">Started ${timeago}</p>
                     <div class="d-flex align-items-center gap-2">
@@ -990,7 +990,7 @@ app.checkConnections = async function() {
 
         this.connections.forEach(conn => {
             if (!activeIds.has(conn.connection_id)) {
-                this.showToast(`Connection to ${this.getInstanceName(conn.instance_id)} was terminated`, 'warning');
+                this.showToast(`Connection to ${this.getInstanceName(conn.instance.id)} was terminated`, 'warning');
             }
         });
 

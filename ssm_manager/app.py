@@ -213,7 +213,7 @@ def start_shell(instance_id):
 
         connection_state = ConnectionState(
             connection_id = str(connection),
-            instance_id = instance.id,
+            instance = instance,
             name = instance.name,
             type = connection.method,
             profile = command.profile,
@@ -223,8 +223,9 @@ def start_shell(instance_id):
             status = 'active'
         )
 
+        print(dict(connection_state.dict()))
         logger.info(f"Shell session started - Instance: {instance.id}")
-        return jsonify(dict(connection_state))
+        return jsonify(connection_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting Shell: {str(e)}")
         return jsonify({'error': f'Error starting Shell connection: {instance_id}'}), 500
@@ -274,7 +275,7 @@ def start_rdp(instance_id):
 
         connection_state = ConnectionState(
             connection_id = str(connection),
-            instance_id = instance.id,
+            instance = instance,
             name = instance.name,
             type = connection.method,
             profile = command.profile,
@@ -286,7 +287,7 @@ def start_rdp(instance_id):
         )
 
         logger.info(f"RDP session started - Instance: {instance.id}, Port: {local_port}")
-        return jsonify(dict(connection_state))
+        return jsonify(connection_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting RDP: {str(e)}")
         return jsonify({'error': 'Error starting RDP connection: {instance_id}'}), 500
@@ -340,7 +341,7 @@ def start_custom_port(instance_id):
 
         connection_state = ConnectionState(
             connection_id = str(connection),
-            instance_id = instance.id,
+            instance = instance,
             name = instance.name,
             type = 'Custom Port' if mode == 'local' else 'Remote Host Port',
             profile = command.profile,
@@ -354,7 +355,7 @@ def start_custom_port(instance_id):
         )
 
         logger.info(f"Port forwarding started successfully - Mode: {mode}, Instance: {instance.id}")
-        return jsonify(dict(connection_state))
+        return jsonify(connection_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting port forwarding: {str(e)}")
         return jsonify({'error': f'Error starting port forwarding: {instance_id}'}), 500
@@ -442,8 +443,13 @@ def get_active_connections():
         monitor = ConnectionScanner()
         monitor.scan()
 
-        for conn in cache.get('active_connections'):
-            active.append(dict(conn))
+        active_connections = cache.get('active_connections')
+        if not active_connections:
+            logger.debug("No active connections found")
+            return jsonify([])
+
+        for conn in active_connections:
+            active.append(conn.dict())
 
         return jsonify(active)
     except Exception as e:  # pylint: disable=broad-except
@@ -543,7 +549,7 @@ def verify_pid(conn: Connection) -> bool:
 
         validate = [
             'ssm', 'start-session',
-            conn.instance_id
+            conn.instance.id
         ]
         for item in validate:
             is_active.append(item in cmdline)
@@ -712,6 +718,8 @@ class ConnectionScanner():
         Returns: A generator of ConnectionState objects
         """
         current_connections = cache.get('active_connections')
+        if not current_connections:
+            current_connections = []
         pids = [conn.pid for conn in current_connections]
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
             try:
@@ -720,9 +728,12 @@ class ConnectionScanner():
                     continue
                 if proc.name().lower() not in ('aws', 'aws.exe'):
                     continue
+                instance = Instance(
+                    id=self.get_arg(proc.cmdline(), '--target')
+                )
                 connection_state = ConnectionState(
                     pid=int(proc.info['pid']),
-                    instance_id=self.get_arg(proc.cmdline(), '--target'),
+                    instance=instance,
                     timestamp=proc.info['create_time']
                 )
                 connection_state.load(proc.cmdline())

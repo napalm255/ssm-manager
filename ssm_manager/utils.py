@@ -1,13 +1,18 @@
 """
 Utilities for SSM-Manager.
 """
+# pylint: disable=logging-fstring-interpolation
+import logging
 import shlex
 import shutil
 import subprocess
 from time import time
 from typing import Optional, Literal, Any
 from pydantic import BaseModel, Field, ConfigDict
+import boto3
 
+
+logger = logging.getLogger(__name__)
 
 UNSUPPORTED_SYSTEM = "Unsupported system type"
 
@@ -18,6 +23,9 @@ class Instance(BaseModel):
     """
     name: Optional[str] = None
     id: str = Field(pattern=r"^i-[0-9a-f]{8,17}$")
+
+    def get_name(self) -> str:
+        return 'Testing'
 
 
 class Connection(BaseModel):
@@ -42,7 +50,7 @@ class ConnectionState(BaseModel):
     # pylint: disable=too-many-instance-attributes
     model_config = ConfigDict(strict=True)
 
-    instance_id: str = Field(pattern=r"^i-[0-9a-f]{8,17}$")
+    instance: Instance
     pid: int
     timestamp: float
     region: str | None = None
@@ -56,13 +64,11 @@ class ConnectionState(BaseModel):
     remote_port: int | None = None
     remote_host: str | None = None
 
-
     def get(self, key: str, default=None):
         """
         Get the value of an attribute.
         """
         return getattr(self, key, default)
-
 
     def load(self, cmd: list) -> bool:
         """
@@ -86,7 +92,7 @@ class ConnectionState(BaseModel):
             self.connection_id = get_arg('--reason', str(connection))
             self.region = get_arg('--region', '')
             self.profile = get_arg('--profile', '')
-            self.name = self.instance_id
+            self.name = self.name if self.name else connection.instance.id
 
             document_name = get_arg('--document-name')
             parameters = get_arg('--parameters')
