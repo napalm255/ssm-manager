@@ -8,14 +8,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class PreferencesHandler:
+class Preferences:
     """Handler for application preferences"""
     # pylint: disable=line-too-long
 
     DEFAULT_PREFERENCES = {
         "port_range": {
             "start": 60000,
-            "end": 60255
+            "end": 65535
         },
         "logging": {
             "level": "INFO"
