@@ -44,6 +44,8 @@ class Cache:
         items = self._cache.get(key)
         if items is not None:
             items.remove(value)
+        else:
+            items = []
         self._cache.set(key, items)
 
     def append(self, key, value):

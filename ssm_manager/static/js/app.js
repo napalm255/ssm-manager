@@ -1,7 +1,4 @@
-// Main application module
-//app.js
 const app = {
-    // State
     refreshInterval: null,
     refreshCountdown: 30,
     currentProfile: '',
@@ -11,12 +8,10 @@ const app = {
     awsAccountId: null,
     elements: {},
 
-    // Local storage keys
     localTheme: 'lastTheme',
     localProfile: 'lastProfile',
     localRegion: 'lastRegion',
 
-    // Bootstrap components
     modals: {},
     toasts: {},
 
@@ -46,7 +41,6 @@ const app = {
 
     },
 
-    // Cache DOM elements for better performance
     cacheElements() {
         console.log('Caching DOM elements...');
         this.elements = {
@@ -237,7 +231,6 @@ const app = {
 
                 this.updateAwsAccountDisplay();
 
-                // Save last used profile/region
                 localStorage.setItem('lastProfile', profile);
                 localStorage.setItem('lastRegion', region);
 
@@ -328,11 +321,11 @@ const app = {
         return `
             <div class="d-flex justify-content-between mt-3 gap-2">
                 ${this.instances.find(i => i.id === instanceId).has_ssm ? `
-                    <button class="btn btn-sm btn-warning" onclick="app.startSSH('${instanceId}')">
-                        <i class="bi bi-terminal" title="Conosle"></i>
+                    <button class="btn btn-sm btn-warning" onclick="app.startShell('${instanceId}')">
+                        <i class="bi bi-terminal" title="Shell"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="app.startRDP('${instanceId}')">
-                        <i class="bi bi-display" title="Remote Desktop"></i>
+                        <i class="bi bi-display" title="RDP"></i>
                     </button>
                     <button class="btn btn-sm btn-purple text-white" onclick="app.showCustomPortModal('${instanceId}')">
                         <i class="bi bi-arrow-left-right" title="Port Forwarding"></i>
@@ -367,10 +360,10 @@ const app = {
         }
     },
 
-    async startSSH(instanceId) {
+    async startShell(instanceId) {
         try {
             this.showLoading();
-            const response = await fetch(`/api/ssh/${instanceId}`, {
+            const response = await fetch(`/api/shell/${instanceId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -380,18 +373,18 @@ const app = {
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to start SSH session');
+            if (!response.ok) throw new Error('Failed to start Shell session');
 
             const result = await response.json();
 
             if (result.status === 'active') {
                 this.addConnection(result);
-                this.showSuccess('SSH session started successfully');
+                this.showSuccess('Shell session started successfully');
             } else {
-                throw new Error(result.error || 'Failed to start SSH session');
+                throw new Error(result.error || 'Failed to start Shell session');
             }
         } catch (error) {
-            this.showError('SSH connection error: ' + error.message);
+            this.showError('Shell connection error: ' + error.message);
         } finally {
             this.hideLoading();
         }
@@ -840,19 +833,39 @@ app.startCustomPortForwarding = async function() {
 
         if (result.status === 'active') {
             this.addConnection(result);
-
-            const successMessage = mode === 'local'
-                ? `Port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_port})`
-                : `Remote host port forwarding started (Local: ${result.local_port}, Remote: ${result.remote_host}:${result.remote_port})`;
-
-            this.showSuccess(successMessage);
             this.modals.customPort.hide();
+            this.showSuccess('Port fowarding started successfully');
         }
     } catch (error) {
         this.showError('Port forwarding error: ' + error.message);
     } finally {
         this.hideLoading();
     }
+};
+
+app.timeAgo = function(timestamp) {
+  const now = Date.now();
+  const seconds = Math.floor((now - timestamp * 1000) / 1000);
+
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+    second: 1,
+  };
+
+  for (const unit in intervals) {
+    const interval = intervals[unit];
+    const count = Math.floor(seconds / interval);
+
+    if (count >= 1) {
+      const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+      return rtf.format(-count, unit);
+    }
+  }
+  return 'just now';
 };
 
 app.renderConnections = function() {
@@ -873,7 +886,8 @@ app.renderConnections = function() {
         const element = document.createElement('div');
         element.className = 'connection-item border border-secondary';
 
-        const timestamp = new Date(conn.timestamp).toLocaleTimeString();
+        const timestamp = new Date(conn.timestamp * 1000).toLocaleString();
+        const timeago = this.timeAgo(conn.timestamp);
 
         let connectionInfo = '';
         if (conn.type === 'RDP' || conn.type === 'Custom Port' || conn.type === 'Remote Host Port') {
@@ -891,15 +905,14 @@ app.renderConnections = function() {
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm ${this.getConnectionTypeColor(conn.type)}"
-			 style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .45rem; --bs-btn-font-size: .70rem;"
-			 ${this.getConnectionTypeAction(conn)}
-			>
+                         style="--bs-btn-padding-y: .15rem; --bs-btn-padding-x: .45rem; --bs-btn-font-size: .70rem;"
+                         ${this.getConnectionTypeAction(conn)}>
                             ${conn.type}
                         </button>
                     </div>
-                    <div><b>${conn.name !== '' ? conn.name : conn.instance_id}</b></div>
+                    <div><b>${conn.name !== '' ? conn.name : conn.instance.id}</b></div>
                     ${connectionInfo}
-                    <p class="text-muted small mt-2 mb-1">Started at ${timestamp}</p>
+                    <p class="text-muted small mt-2 mb-1" title="${timestamp}">Started ${timeago}</p>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge" style="background-color: #fd9843;">${conn.region}</span>
                         <span class="badge" style="background-color: #e35d6a;">${conn.profile}</span>
@@ -924,7 +937,7 @@ app.getConnectionTypeAction = function(conn) {
 
 app.getConnectionTypeColor = function(type) {
     const colors = {
-        'SSH': 'text-bg-warning',
+        'Shell': 'text-bg-warning',
         'RDP': 'text-bg-primary',
         'Custom Port': 'btn-purple',
         'Remote Host Port': 'btn-purple'
@@ -957,7 +970,7 @@ app.startConnectionMonitoring = function() {
     if (this.monitoringInterval) {
         clearInterval(this.monitoringInterval);
     }
-    this.monitoringInterval = setInterval(() => this.checkConnections(), 4000);
+    this.monitoringInterval = setInterval(() => this.checkConnections(), 2500);
 };
 
 app.checkConnections = async function() {
@@ -977,7 +990,7 @@ app.checkConnections = async function() {
 
         this.connections.forEach(conn => {
             if (!activeIds.has(conn.connection_id)) {
-                this.showToast(`Connection to ${this.getInstanceName(conn.instance_id)} was terminated`, 'warning');
+                this.showToast(`Connection to ${this.getInstanceName(conn.instance.id)} was terminated`, 'warning');
             }
         });
 

@@ -15,7 +15,7 @@ class PreferencesHandler:
     DEFAULT_PREFERENCES = {
         "port_range": {
             "start": 60000,
-            "end": 60255
+            "end": 65535
         },
         "logging": {
             "level": "INFO"
@@ -27,7 +27,8 @@ class PreferencesHandler:
     def __init__(self, config_file="preferences.json"):
         """Initialize preferences handler"""
         self.config_file = Path(config_file)
-        self.preferences = self.load_preferences()
+        self.preferences = None
+        self.load_preferences()
         self.apply_preferences()
 
     def load_preferences(self):
@@ -36,16 +37,15 @@ class PreferencesHandler:
             if self.config_file.exists():
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     loaded_prefs = json.load(f)
-                    return {**self.DEFAULT_PREFERENCES, **loaded_prefs}
+                    self.preferences = {**self.DEFAULT_PREFERENCES, **loaded_prefs}
             else:
                 self.save_preferences(self.DEFAULT_PREFERENCES)
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error loading preferences: {str(e)}")
-        return self.DEFAULT_PREFERENCES
 
     def reload_preferences(self):
         """Reload preferences from file"""
-        self.preferences = self.load_preferences()
+        self.load_preferences()
         self.apply_preferences()
 
     def update_preferences(self, new_preferences):
@@ -68,8 +68,7 @@ class PreferencesHandler:
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(preferences, f, indent=2)
-            self.preferences = preferences
-            self.apply_preferences()
+            self.reload_preferences()
             return True
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error saving preferences: {str(e)}")
