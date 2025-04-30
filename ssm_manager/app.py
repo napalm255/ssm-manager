@@ -14,7 +14,7 @@ import psutil
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
-from ssm_manager.preferences import Preferences
+from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.utils import (
@@ -46,7 +46,7 @@ if system not in ['Linux', 'Windows']:
     sys.exit(1)
 
 # Setup preferences
-preferences = Preferences()
+preferences = PreferencesHandler()
 
 # Setup cache
 cache = Cache()

@@ -404,7 +404,7 @@ class FreePort(BaseModel):
     end: int = Field(default=65535, le=65535)
 
     @property
-    def local_port(self) -> int:
+    def local_port(self) -> int | None:
         """
         Find a free port in the given range for AWS SSM port forwarding
         Returns: A free port number or None if no port is found

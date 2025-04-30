@@ -8,7 +8,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class Preferences:
+class PreferencesHandler:
     """Handler for application preferences"""
     # pylint: disable=line-too-long
 
