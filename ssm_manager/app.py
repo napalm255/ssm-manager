@@ -9,7 +9,6 @@ import threading
 import platform
 import time
 import subprocess
-import random
 import psutil
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
@@ -18,9 +17,9 @@ from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.utils import (
-    socket_is_open, run_cmd, FreePort,
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    run_cmd, FreePort
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
