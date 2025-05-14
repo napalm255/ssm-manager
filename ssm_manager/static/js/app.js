@@ -470,52 +470,6 @@ const app = {
         }
     },
 
-    async showInstancePreferences(instanceId, instanceName) {
-        console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
-        try {
-            const details = [];
-            this.preferences.instances.forEach(i => {
-                if (i.name === instanceName) {
-                    details.push(i);
-                }
-            });
-
-            const detailsHtml = details.map(d => {
-                const remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
-                return this.createDetailRow(d.local_port, remote);
-            }).join('');
-
-            const contentDiv = document.getElementById('instancePreferencesContent');
-            contentDiv.innerHTML = `
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Local Port</th>
-                            <th>Remote [Host:]Port</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                          ${detailsHtml}
-                        </tbody>
-                    </table>
-                    <div class="text-muted small text-center mt-2">
-                        Click on any value to copy to clipboard
-                    </div>
-                </div>
-            `;
-
-            contentDiv.querySelectorAll('.copy-value').forEach(element => {
-                element.addEventListener('click', () => this.copyToClipboard(element.dataset.value));
-            });
-
-            this.modals.instancePreferences.show();
-        } catch (error) {
-            console.error('Error showing instance preferences:', error);
-            this.showError('Failed to load instance preferences');
-        }
-    },
-
     createDetailRow(label, value) {
         return `
             <tr>
@@ -528,6 +482,139 @@ const app = {
                 </td>
             </tr>
         `;
+    },
+
+    async showInstancePreferences(instanceId, instanceName) {
+      console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
+      try {
+        const details = [];
+        this.preferences.instances.forEach(i => {
+            if (i.name === instanceName) {
+                details.push(i);
+            }
+        });
+
+        let mappingCount = -1
+        const detailsHtml = details.map(d => {
+          const remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
+          mappingCount++;
+          return this.createInstancePreferencesRow(d.local_port, remote, mappingCount);
+        }).join('');
+
+        const contentDiv = document.getElementById('instancePreferencesContent');
+        contentDiv.innerHTML = `
+          <input type="hidden" id="instanceId" value="${instanceId}">
+          <input type="hidden" id="instanceName" value="${instanceName}">
+          <div class="container text-center port-mappings">
+            <div class="row mb-2 fw-bold border-bottom">
+              <div class="col">
+                Local Port
+              </div>
+              <div class="col">
+                Remote [Host:]Port
+              </div>
+            </div>
+            ${detailsHtml}
+          </div>
+          <div class="container text-center">
+            <div class="row mb-2">
+              <div class="col">
+                <div class="col input-group">
+                  <input id="localPort_New" type="text" class="form-control" placeholder="50000" aria-label="Local Port">
+                  <input id="remoteHostPort_New" type="text" class="form-control" placeholder="80 or <ip address>:80" aria-label="Remote [Host:]Port">
+                  <button class="btn btn-outline-primary" type="button" id="mappingAddButton"><i class="bi bi-plus-square"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        contentDiv.querySelectorAll('.port-mapping').forEach((row, idx)=> {
+          const mappingDeleteButton = document.getElementById(`mappingDelete_${idx}`);
+          mappingDeleteButton.addEventListener('click', () => {
+            this.deleteInstancePreferencesRow(idx);
+          });
+        });
+
+        const addButton = document.getElementById('mappingAddButton');
+        addButton.addEventListener('click', this.addInstancePreferencesRow);
+
+        const saveButton = document.getElementById('portMappingSaveButton');
+        saveButton.addEventListener('click', this.saveInstancePreferences);
+
+        this.modals.instancePreferences.show();
+      } catch (error) {
+        console.error('Error showing instance preferences:', error);
+        this.showError('Failed to load instance preferences');
+      }
+    },
+
+    createInstancePreferencesRow(localPort, remoteHostPort, mappingCount) {
+      return `
+        <div class="row mb-2" id="portMapping_${mappingCount}">
+            <div class="col">
+                <div class="col input-group port-mapping">
+                    <input id="localPort_${mappingCount}" type="text" class="form-control" placeholder="Local Port" aria-label="Local Port" value="${localPort}">
+                    <input id="remoteHostPort_${mappingCount}" type="text" class="form-control" placeholder="Remote [Host:]Port" aria-label="Remote [Host:]Port" value="${remoteHostPort}">
+                    <button class="btn btn-outline-danger" type="button" id="mappingDelete_${mappingCount}"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        </div>
+      `;
+    },
+
+    async saveInstancePreferences() {
+      const instanceId = document.getElementById('instanceId').value;
+      const instanceName = document.getElementById('instanceName').value;
+      const allPortMappings = document.querySelectorAll('.port-mapping');
+      const portMappings = Array.from(allPortMappings).map(row => {
+        const localPort = row.querySelector('input[id^="localPort_"]').value;
+        const remoteHostPort = row.querySelector('input[id^="remoteHostPort_"]').value;
+        return {
+          local_port: localPort,
+          remote_host: remoteHostPort.includes(':') ? remoteHostPort.split(':')[0] : '',
+          remote_port: remoteHostPort.includes(':') ? remoteHostPort.split(':')[1] : remoteHostPort
+        };
+      });
+      const instancePreferences = {
+        instance_id: instanceId,
+        instance_name: instanceName,
+        port_mappings: portMappings
+      };
+      console.log('Saving instance preferences:', instancePreferences);
+    },
+
+    deleteInstancePreferencesRow(mappingCount) {
+      const portMapping = document.getElementById(`portMapping_${mappingCount}`);
+      if (portMapping) {
+        portMapping.remove();
+      }
+    },
+
+    addInstancePreferencesRow() {
+      const allPortMappings = document.querySelectorAll('.port-mapping');
+      mappingCount = allPortMappings.length + 1;
+
+      const localPortInput = document.getElementById('localPort_New');
+      const remoteHostPortInput = document.getElementById('remoteHostPort_New');
+      if (localPortInput.value === '' || remoteHostPortInput.value === '') {
+        this.showError('Please fill in both fields');
+        return;
+      }
+
+      const newRow = this.createInstancePreferencesRow(
+        localPortInput.value, remoteHostPortInput.value, mappingCount
+      );
+      const portMappings = document.querySelector('.port-mappings');
+      portMappings.insertAdjacentHTML('beforeend', newRow);
+
+      const newDeleteButton = document.getElementById(`mappingDelete_${mappingCount}`);
+      newDeleteButton.addEventListener('click', () => {
+        this.deleteInstancePreferencesRow(mappingCount);
+      });
+
+      localPortInput.value = '';
+      remoteHostPortInput.value = '';
     },
 
     async copyToClipboard(text) {

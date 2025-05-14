@@ -695,7 +695,7 @@ class TrayIcon():
         """
         # pylint: disable=unused-argument
         logger.info("Opening application...")
-        webbrowser.open('http://localhost:5000')
+        webbrowser.open('http://127.0.0.1:5000')
 
     def run(self):
         """
