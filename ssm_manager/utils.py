@@ -279,10 +279,10 @@ class RDPCommand(BaseModel):
         if self.system == 'Linux':
             remmina = shutil.which("remmina")
             if remmina:
-                return shlex.split(f'{remmina} -c rdp://localhost:{self.local_port} --no-tray-icon')
+                return shlex.split(f'{remmina} -c rdp://127.0.0.1:{self.local_port} --no-tray-icon')
             raise ValueError("No linux RDP client found")
         if self.system == 'Windows':
-            return f'mstsc /v:localhost:{self.local_port}'
+            return f'mstsc /v:127.0.0.1:{self.local_port}'
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 

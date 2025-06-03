@@ -41,20 +41,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:4990df0087fe7be944ba06c2d1e6512b5a24f821af5a4881f24309e13ae29e68",
-                "sha256:ab315d38409f5b3262b653a10b0fac786bcff7e51e03dcb99ff38ba16bf85630"
+                "sha256:4cd581f77e67dbc28579134e1ee7b522797cfde30e0c735e7537ec4a3fb6af45",
+                "sha256:78601ef259865a954ae0385f278fbe5d9b632cf6c5fe6500e1ceb94d35acf07f"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.38.4"
+            "version": "==1.38.5"
         },
         "botocore": {
             "hashes": [
-                "sha256:6143546bb56f1da4dff8d285cb6a3b8b0b6442451fe5937cb48a62bf7275386f",
-                "sha256:6206cf07be1069efaead2ddc858eb752dafef276ebbe88ac32b5c427b1d90570"
+                "sha256:506e8274f7ddb84ca4ec85f7f9229de59fb43702e2e0b1400bea07f7f4a7ba82",
+                "sha256:df1dc1dfe3607e3f802ddeb1f25a9f0abc8909ea674032480f71362e96c3c548"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==1.38.4"
+            "version": "==1.38.5"
         },
         "cachelib": {
             "hashes": [
@@ -140,11 +140,11 @@
         },
         "click": {
             "hashes": [
-                "sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2",
-                "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a"
+                "sha256:6b303f0b2aa85f1cb4e5303078fadcbcd4e476f114fab9b5007005711839325c",
+                "sha256:f5452aeddd9988eefa20f90f05ab66f17fce1ee2a36907fd30b05bbb5953814d"
             ],
-            "markers": "python_version >= '3.7'",
-            "version": "==8.1.8"
+            "markers": "python_version >= '3.10'",
+            "version": "==8.2.0"
         },
         "clr-loader": {
             "hashes": [
@@ -165,12 +165,12 @@
         },
         "flask": {
             "hashes": [
-                "sha256:5f873c5184c897c8d9d1b05df1e3d01b14910ce69607a117bd3277098a5836ac",
-                "sha256:d667207822eb83f1c4b50949b1623c8fc8d51f2341d65f72e1a1815397551136"
+                "sha256:07aae2bb5eaf77993ef57e357491839f5fd9f4dc281593a81a9e4d79a24f295c",
+                "sha256:284c7b8f2f58cb737f0cf1c30fd7eaf0ccfcde196099d24ecede3fc2005aa59e"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==3.1.0"
+            "version": "==3.1.1"
         },
         "itsdangerous": {
             "hashes": [
@@ -582,11 +582,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:a38f898dcd6e5380f4da4381a87ec90bd0a7eec23d204a5552e80ee3cab6bd27",
-                "sha256:c40a5b3729d58dd749c0f08f1a07d134fb8a0a3d7f87dc33e7c5e1f762138650"
+                "sha256:20fe373a22ef9f3925512650d1db90b1b8de01cdb6df91ab1788263139cbf9a2",
+                "sha256:f4b49d457765b3aae7cbbeb1c71f6633a61b729408c2d1a837dae064cca82ef2"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==80.0.0"
+            "version": "==80.0.1"
         },
         "six": {
             "hashes": [
@@ -643,7 +643,7 @@
                 "sha256:0633f1d2df477324f53a895b02c901fb961bdbf65a17122586ea7019292cbcf0",
                 "sha256:44f54bf6412c2c8464c14e8243eb163690a9800dbe2c367330883b19c7561049"
             ],
-            "markers": "python_version >= '3.11'",
+            "markers": "python_version >= '3.8'",
             "version": "==0.4.0"
         },
         "invoke": {
@@ -681,12 +681,12 @@
         },
         "pylint": {
             "hashes": [
-                "sha256:8b7c2d3e86ae3f94fb27703d521dd0b9b6b378775991f504d7c3a6275aa0a6a6",
-                "sha256:b634a041aac33706d56a0d217e6587228c66427e20ec21a019bc4cdee48c040a"
+                "sha256:2b11de8bde49f9c5059452e0c310c079c746a0a8eeaa789e5aa966ecc23e4559",
+                "sha256:43860aafefce92fca4cf6b61fe199cdc5ae54ea28f9bf4cd49de267b5195803d"
             ],
             "index": "pypi",
             "markers": "python_full_version >= '3.9.0'",
-            "version": "==3.3.6"
+            "version": "==3.3.7"
         },
         "tomlkit": {
             "hashes": [

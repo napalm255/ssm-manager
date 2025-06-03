@@ -20,7 +20,6 @@ class AWSManager:
         self.region = None
         self.is_connected = False
         self.account_id = None
-        self.state = {}
 
     @staticmethod
     def get_profiles():
