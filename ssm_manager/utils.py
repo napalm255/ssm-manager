@@ -6,6 +6,7 @@ import logging
 import shlex
 import shutil
 import subprocess
+import webbrowser
 from time import sleep
 from typing import Optional, Literal, Any
 import socket
@@ -473,6 +474,17 @@ def get_pid(executable: str, command: str):
             logger.error(f"Error getting PID for {executable} {command}")
             continue
     return None
+
+
+def open_browser(url: str) -> None:
+    """
+    Open a url in the default browser
+    Args:
+        url (str): The URL to open
+    Returns: None
+    """
+    # pylint: disable=unused-argument
+    webbrowser.open(url)
 
 
 def run_cmd(cmd):

@@ -4,7 +4,6 @@ SSM Manager
 import os
 import sys
 import logging
-import webbrowser
 import threading
 import platform
 import time
@@ -19,7 +18,7 @@ from ssm_manager.cache import Cache
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand,
-    run_cmd, FreePort
+    run_cmd, FreePort, open_browser
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
@@ -619,8 +618,9 @@ class TrayIcon():
     """
     System tray icon class
     """
-    def __init__(self, icon_file):
+    def __init__(self, icon_file, **kwargs):
         self.server = ServerThread()
+        self.server.port = kwargs.get('server_port', 5000)
         self.server.daemon = True
         self.icon = None
         self.icon_file = self.get_resource_path(icon_file)
@@ -695,7 +695,7 @@ class TrayIcon():
         """
         # pylint: disable=unused-argument
         logger.info("Opening application...")
-        webbrowser.open('http://127.0.0.1:5000')
+        open_browser(f'http://127.0.0.1:{self.server.port}/')
 
     def run(self):
         """
