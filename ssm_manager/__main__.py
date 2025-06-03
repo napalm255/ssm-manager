@@ -15,7 +15,9 @@ def main(port: int = 5000) -> None:
         server.debug = True
         server.run()
     else:
-        tray = TrayIcon('static/favicon.ico',
-                        server_port=port)
+        tray = TrayIcon(
+            'static/favicon.ico',
+            server_port=port
+        )
         tray.run()
     sys.exit(0)

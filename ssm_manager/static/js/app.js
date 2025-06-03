@@ -484,6 +484,20 @@ const app = {
         `;
     },
 
+    createInstancePreferencesRow(localPort, remoteHostPort, mappingCount) {
+      return `
+        <div class="row mb-2" id="portMapping_${mappingCount}">
+            <div class="col">
+                <div class="col input-group port-mapping">
+                    <input id="localPort_${mappingCount}" type="text" class="form-control" placeholder="Local Port" aria-label="Local Port" value="${localPort}">
+                    <input id="remoteHostPort_${mappingCount}" type="text" class="form-control" placeholder="Remote [Host:]Port" aria-label="Remote [Host:]Port" value="${remoteHostPort}">
+                    <button class="btn btn-outline-danger" type="button" id="mappingDelete_${mappingCount}"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        </div>
+      `;
+    },
+
     async showInstancePreferences(instanceId, instanceName) {
       console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
       try {
@@ -498,6 +512,7 @@ const app = {
         const detailsHtml = details.map(d => {
           const remote = d.remote_host ? d.remote_host + ":" + d.remote_port : d.remote_port;
           mappingCount++;
+          console.log(d.local_port, remote, mappingCount);
           return this.createInstancePreferencesRow(d.local_port, remote, mappingCount);
         }).join('');
 
@@ -549,20 +564,6 @@ const app = {
       }
     },
 
-    createInstancePreferencesRow(localPort, remoteHostPort, mappingCount) {
-      return `
-        <div class="row mb-2" id="portMapping_${mappingCount}">
-            <div class="col">
-                <div class="col input-group port-mapping">
-                    <input id="localPort_${mappingCount}" type="text" class="form-control" placeholder="Local Port" aria-label="Local Port" value="${localPort}">
-                    <input id="remoteHostPort_${mappingCount}" type="text" class="form-control" placeholder="Remote [Host:]Port" aria-label="Remote [Host:]Port" value="${remoteHostPort}">
-                    <button class="btn btn-outline-danger" type="button" id="mappingDelete_${mappingCount}"><i class="bi bi-trash"></i></button>
-                </div>
-            </div>
-        </div>
-      `;
-    },
-
     async saveInstancePreferences() {
       const instanceId = document.getElementById('instanceId').value;
       const instanceName = document.getElementById('instanceName').value;
@@ -602,7 +603,7 @@ const app = {
         return;
       }
 
-      const newRow = this.createInstancePreferencesRow(
+      let newRow = this.createInstancePreferencesRow(
         localPortInput.value, remoteHostPortInput.value, mappingCount
       );
       const portMappings = document.querySelector('.port-mappings');
