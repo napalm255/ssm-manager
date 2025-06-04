@@ -484,20 +484,6 @@ const app = {
         `;
     },
 
-    createInstancePreferencesRow(localPort, remoteHostPort, mappingCount) {
-      return `
-        <div class="row mb-2" id="portMapping_${mappingCount}">
-            <div class="col">
-                <div class="col input-group port-mapping">
-                    <input id="localPort_${mappingCount}" type="text" class="form-control" placeholder="Local Port" aria-label="Local Port" value="${localPort}">
-                    <input id="remoteHostPort_${mappingCount}" type="text" class="form-control" placeholder="Remote [Host:]Port" aria-label="Remote [Host:]Port" value="${remoteHostPort}">
-                    <button class="btn btn-outline-danger" type="button" id="mappingDelete_${mappingCount}"><i class="bi bi-trash"></i></button>
-                </div>
-            </div>
-        </div>
-      `;
-    },
-
     async showInstancePreferences(instanceId, instanceName) {
       console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
       try {
@@ -552,10 +538,14 @@ const app = {
         });
 
         const addButton = document.getElementById('mappingAddButton');
-        addButton.addEventListener('click', this.addInstancePreferencesRow);
+        addButton.addEventListener('click', () => {
+          this.addInstancePreferencesRow()
+        });
 
         const saveButton = document.getElementById('portMappingSaveButton');
-        saveButton.addEventListener('click', this.saveInstancePreferences);
+        saveButton.addEventListener('click', () => {
+          this.saveInstancePreferences()
+        });
 
         this.modals.instancePreferences.show();
       } catch (error) {
@@ -585,6 +575,20 @@ const app = {
       console.log('Saving instance preferences:', instancePreferences);
     },
 
+    createInstancePreferencesRow(localPort, remoteHostPort, mappingCount) {
+      return `
+        <div class="row mb-2" id="portMapping_${mappingCount}">
+            <div class="col">
+                <div class="col input-group port-mapping">
+                    <input id="localPort_${mappingCount}" type="text" class="form-control" placeholder="Local Port" aria-label="Local Port" value="${localPort}">
+                    <input id="remoteHostPort_${mappingCount}" type="text" class="form-control" placeholder="Remote [Host:]Port" aria-label="Remote [Host:]Port" value="${remoteHostPort}">
+                    <button class="btn btn-outline-danger" type="button" id="mappingDelete_${mappingCount}"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+        </div>
+      `;
+    },
+
     deleteInstancePreferencesRow(mappingCount) {
       const portMapping = document.getElementById(`portMapping_${mappingCount}`);
       if (portMapping) {
@@ -603,7 +607,7 @@ const app = {
         return;
       }
 
-      let newRow = this.createInstancePreferencesRow(
+      const newRow = this.createInstancePreferencesRow(
         localPortInput.value, remoteHostPortInput.value, mappingCount
       );
       const portMappings = document.querySelector('.port-mappings');
