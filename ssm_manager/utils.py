@@ -6,6 +6,7 @@ import logging
 import shlex
 import shutil
 import subprocess
+import webbrowser
 from time import sleep
 from typing import Optional, Literal, Any
 import socket
@@ -279,10 +280,10 @@ class RDPCommand(BaseModel):
         if self.system == 'Linux':
             remmina = shutil.which("remmina")
             if remmina:
-                return shlex.split(f'{remmina} -c rdp://localhost:{self.local_port} --no-tray-icon')
+                return shlex.split(f'{remmina} -c rdp://127.0.0.1:{self.local_port} --no-tray-icon')
             raise ValueError("No linux RDP client found")
         if self.system == 'Windows':
-            return f'mstsc /v:localhost:{self.local_port}'
+            return f'mstsc /v:127.0.0.1:{self.local_port}'
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
@@ -473,6 +474,16 @@ def get_pid(executable: str, command: str):
             logger.error(f"Error getting PID for {executable} {command}")
             continue
     return None
+
+
+def open_browser(url: str) -> None:
+    """
+    Open a url in the default browser
+    Args:
+        url (str): The URL to open
+    Returns: None
+    """
+    webbrowser.open(url)
 
 
 def run_cmd(cmd):

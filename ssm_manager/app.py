@@ -4,12 +4,10 @@ SSM Manager
 import os
 import sys
 import logging
-import webbrowser
 import threading
 import platform
 import time
 import subprocess
-import random
 import psutil
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
@@ -18,9 +16,9 @@ from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.utils import (
-    socket_is_open, run_cmd, FreePort,
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    run_cmd, FreePort, open_browser
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
@@ -449,6 +447,22 @@ def update_preferences():
     return jsonify({'status': 'success'})
 
 
+@app.route('/api/preferences/<instance_name>', methods=['POST'])
+def update_instance_preferences(instance_name):
+    """
+    Update preferences for a specific instance
+    Args:
+        instance_name (str): Name of the instance
+    Returns: JSON response with status
+    """
+    try:
+        preferences.update_instance_preferences(instance_name, request.json)
+        logger.info(f"*******Preferences updated for instance: {instance_name}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Error updating instance preferences: {str(e)}")
+        return jsonify({'error': f'Error updating preferences for instance: {instance_name}'}), 500
+    return jsonify({'status': 'success'})
+
 @app.route('/api/refresh')
 def refresh_data():
     """
@@ -620,8 +634,9 @@ class TrayIcon():
     """
     System tray icon class
     """
-    def __init__(self, icon_file):
+    def __init__(self, icon_file, **kwargs):
         self.server = ServerThread()
+        self.server.port = kwargs.get('server_port', 5000)
         self.server.daemon = True
         self.icon = None
         self.icon_file = self.get_resource_path(icon_file)
@@ -696,7 +711,7 @@ class TrayIcon():
         """
         # pylint: disable=unused-argument
         logger.info("Opening application...")
-        webbrowser.open('http://localhost:5000')
+        open_browser(f'http://127.0.0.1:{self.server.port}/')
 
     def run(self):
         """
@@ -704,6 +719,7 @@ class TrayIcon():
         """
         self.server.start()
         time.sleep(1)
-        self.open_app(None, None)
         self.icon = Icon(APP_NAME, self.image, APP_NAME, menu=self.menu)
-        self.icon.run()
+        self.open_app(None, None)
+        if not self.server.stopped():
+            self.icon.run()
