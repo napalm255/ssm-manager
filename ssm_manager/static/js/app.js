@@ -563,7 +563,6 @@ const app = {
     },
 
     async saveInstancePortMappings() {
-      const instanceId = document.getElementById('instanceId').value;
       const instanceName = document.getElementById('instanceName').value;
       const allPortMappings = document.querySelectorAll('.port-mapping');
       const portMappings = Array.from(allPortMappings).map(row => {
@@ -631,7 +630,7 @@ const app = {
 
     addInstancePortMappingsRow() {
       const allPortMappings = document.querySelectorAll('.port-mapping');
-      mappingCount = allPortMappings.length + 1;
+      const mappingCount = allPortMappings.length + 1;
 
       const localPortInput = document.getElementById('localPort_New');
       const remoteHostPortInput = document.getElementById('remoteHostPort_New');
