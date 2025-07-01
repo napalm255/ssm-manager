@@ -490,7 +490,7 @@ const app = {
     },
 
     async showInstancePortMappings(instanceId, instanceName) {
-      console.log(`Showing instance preferences for ${instanceId} (${instanceName})`);
+      console.log(`Showing instance port mappings for ${instanceId} (${instanceName})`);
       try {
         const details = [];
         const others = [];
@@ -557,8 +557,8 @@ const app = {
 
         this.modals.instancePortMappings.show();
       } catch (error) {
-        console.error('Error showing instance preferences:', error);
-        this.showError('Failed to load instance preferences');
+        console.error('Error showing instance port mappings:', error);
+        this.showError('Failed to load instance port mappings');
       }
     },
 
@@ -582,20 +582,20 @@ const app = {
         name: instanceName,
         ports: portMappings
       }
-      console.log('Saving instance preferences:', newPreferences);
+      console.log('Saving instance port mappings:', newPreferences);
       const response = await fetch('/api/preferences/' + instanceName, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPreferences)
       });
-      if (!response.ok) throw new Error('Failed to save instance preferences');
+      if (!response.ok) throw new Error('Failed to save instance port mappings');
 
       await this.loadPreferences();
 
       if (this.modals.instancePortMappings) {
         this.modals.instancePortMappings.hide();
       }
-      this.showSuccess('Instance preferences saved successfully');
+      this.showSuccess('Instance port mappings saved successfully');
     },
 
     createInstancePortMappingsRow(localPort, remoteHostPort, mappingCount, duplicate) {

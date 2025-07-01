@@ -483,7 +483,6 @@ def open_browser(url: str) -> None:
         url (str): The URL to open
     Returns: None
     """
-    # pylint: disable=unused-argument
     webbrowser.open(url)
 
 
