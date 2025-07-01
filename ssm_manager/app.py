@@ -447,6 +447,22 @@ def update_preferences():
     return jsonify({'status': 'success'})
 
 
+@app.route('/api/preferences/<instance_name>', methods=['POST'])
+def update_instance_preferences(instance_name):
+    """
+    Update preferences for a specific instance
+    Args:
+        instance_name (str): Name of the instance
+    Returns: JSON response with status
+    """
+    try:
+        preferences.update_instance_preferences(instance_name, request.json)
+        logger.info(f"*******Preferences updated for instance: {instance_name}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Error updating instance preferences: {str(e)}")
+        return jsonify({'error': f'Error updating preferences for instance: {instance_name}'}), 500
+    return jsonify({'status': 'success'})
+
 @app.route('/api/refresh')
 def refresh_data():
     """

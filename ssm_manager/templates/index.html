@@ -126,7 +126,7 @@
 
     </div>
     <!-- Instance Details Modal -->
-    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -138,29 +138,29 @@
                     <div id="instanceDetailsContent"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <!-- Instance Preferences Modal -->
-    <div class="modal fade" id="instancePreferencesModal" tabindex="-1" aria-labelledby="instancePreferencesModalLabel" aria-hidden="true">
+    <!-- Instance Port Mappings Modal -->
+    <div class="modal fade" id="instancePortMappingsModal" tabindex="-1" aria-labelledby="instancePortMappingsModalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="instancePreferencesModalLabel">Instance Preferences</h5>
+                    <h5 class="modal-title" id="instancePortMappingsModalLabel">Instance Port Mappings</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="portMappingForm">
                     <div class="modal-body">
                         <!-- This will be populated dynamically -->
-                        <div id="instancePreferencesContent"></div>
+                        <div id="instancePortMappingsContent"></div>
                     </div>
                     <div class="modal-footer">
-                        <button id="portMappingCloseButton" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button id="portMappingSaveButton" type="button" class="btn btn-success">Save</button>
+                        <button id="instancePortMappingsCloseBtn" type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+                        <button id="instancePortMappingsSaveBtn" type="button" class="btn btn-success">Save</button>
                     </div>
                 </form>
             </div>
@@ -168,13 +168,13 @@
     </div>
 
 
-    <!-- customPortModal -->
+    <!-- Custom Port Forwarding Modal -->
     <div class="modal fade" id="customPortModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Custom Port Forwarding</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -200,7 +200,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="startPortForwardingBtn">Start Forwarding</button>
                 </div>
             </div>
@@ -209,7 +209,7 @@
 
 
     <!-- Detail Instance -->
-    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -222,14 +222,14 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Preferences Modal -->
-    <div class="modal fade" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel" aria-hidden="true">
+    <div class="modal fade" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -270,7 +270,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="savePreferencesBtn">Save</button>
                 </div>
             </div>

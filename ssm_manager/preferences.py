@@ -48,6 +48,27 @@ class PreferencesHandler:
         self.load_preferences()
         self.apply_preferences()
 
+    def update_instance_preferences(self, instance_name, new_preferences):
+        """Update preferences for a specific instance"""
+        try:
+            prefs = self.preferences.copy()
+            updated = False
+            for pref in prefs.get('instances', []):
+                if pref.get('name') == instance_name:
+                    pref.update(new_preferences)
+                    updated = True
+                    break
+            if not updated:
+                new_instance = {'name': instance_name, **new_preferences}
+                prefs['instances'].append(new_instance)
+            prefs['instances'] = new_preferences.get('instances', prefs['instances'])
+            if self.save_preferences(prefs):
+                logger.info("Instance preferences updated successfully")
+                return True
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Error updating instance preferences: {str(e)}")
+        return False
+
     def update_preferences(self, new_preferences):
         """Update preferences with new values"""
         try:
@@ -98,11 +119,12 @@ class PreferencesHandler:
         for instance in self.preferences.get('instances', []):
             if instance.get('name') != name:
                 continue
-            if int(instance.get('remote_port')) != remote_port:
-                continue
-            if instance.get('remote_host') != remote_host:
-                continue
-            return int(instance.get('local_port'))
+            for port in instance.get('ports', []):
+                if int(port.get('remote_port')) != remote_port:
+                    continue
+                if remote_host and port.get('remote_host') != remote_host:
+                    continue
+                return int(port.get('local_port'))
         return None
 
     def get_port_range(self, name, remote_port: int, remote_host=None):
