@@ -53,24 +53,6 @@ main {
   border-left: 5px solid #212529;
   padding-left: 15px;
 }
-.gs-jobs {
-  background-size: contain;
-  background-position: right;
-  background-repeat: no-repeat;
-  cursor: default;
-}
-.gs-profiles {
-  background-size: contain;
-  background-position: right;
-  background-repeat: no-repeat;
-  cursor: default;
-}
-.gs-profiles .card-text, .gs-jobs .card-text {
-  margin-right: 80px;
-}
 .accordion-button{
   --bs-accordion-active-bg: #e9ecef;
-}
-.resolved-schedule {
-  font-style: italic;
 }

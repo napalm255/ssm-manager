@@ -3,8 +3,8 @@ const { createApp, ref, computed, onMounted } = Vue;
 createApp({
     setup() {
         const title = ref("SSM Manager");
-        const githubUrl = ref('https://github.com/napalm255/ssm-manager');
         const version = ref("");
+        const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
         const currentPage = ref("Start");
         const currentHash = ref('#/start');
@@ -54,12 +54,11 @@ createApp({
           const profilesPage = document.getElementById('profiles');
           switch (page) {
             case "Start":
-              switchPage('Home');
-              // if (jobs.value.length === 0 && profiles.value.length === 0) {
-              //   switchPage('Home')
-              // } else {
-              //   switchPage('Preferences')
-              // }
+              if (profiles.value.length === 0) {
+                switchPage('Home')
+              } else {
+                switchPage('Instances');
+              }
               break;
             case "Home":
               currentPage.value = "Home";
@@ -104,67 +103,6 @@ createApp({
           }
         }
 
-        // const serverPort = async () => {
-        //   return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        // };
-
-        // const serverHost = async () => {
-        //   return window.location.hostname;
-        // }
-
-        // const cupcakeSprinkles = async () => {
-        //   const host = await serverHost();
-        //   const port = await serverPort();
-        //   if (cupcakeSocket) {
-        //     cupcakeSocket.close();
-        //   }
-
-        //   cupcakeSocket = new WebSocket(`ws://${host}:${port}/ws/cupcake`);
-        //   // console.log('Cupcake WebSocket created', cupcakeSocket);
-
-        //   cupcakeSocket.onmessage = (event) => {
-        //     jobs.value = JSON.parse(event.data).jobs;
-        //     jobs.value.forEach(async (job) => {
-        //       job.last_run_ago = await formattedLastRun(job.last_run);
-        //     });
-        //     health.value = JSON.parse(event.data).health;
-        //   };
-
-        //   cupcakeSocket.onclose = () => {
-        //     // console.log('Cupcake WebSocket closed');
-        //     setTimeout(cupcakeSprinkles, reconnectInterval);
-        //     reconnectInterval = Math.min(reconnectInterval * 2, 30000); // Double, max 30s
-        //   };
-
-        //   cupcakeSocket.onerror = (error) => {
-        //     console.error('Cupcake WebSocket error:', error);
-        //   };
-        // };
-
-        // const formattedLastRun = async (lastRun) => {
-        //   const now = new Date();
-        //   const diff = Math.floor((now.getTime() / 1000) - lastRun); // Difference in seconds
-
-        //   if (diff < 60) {
-        //     return `${diff} seconds ago`;
-        //   } else if (diff < 3600) {
-        //     const minutes = Math.floor(diff / 60);
-        //     return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-        //   } else if (diff < 86400) {
-        //     const hours = Math.floor(diff / 3600);
-        //     return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-        //   } else if (diff < 2592000) { // Approx 30 days
-        //     const days = Math.floor(diff / 86400);
-        //     return `${days} day${days > 1 ? "s" : ""} ago`;
-        //   } else if (diff < 31536000) { // Approx 12 months
-        //     const months = Math.floor(diff / 2592000);
-        //     return `${months} month${months > 1 ? "s" : ""} ago`;
-        //   } else {
-        //     const years = Math.floor(diff / 31536000);
-        //     return `${years} year${years > 1 ? "s" : ""} ago`;
-        //   }
-        // };
-
         const getVersion = async () => {
           console.log('Fetching version...');
           await fetch("/api/version", {
@@ -172,7 +110,8 @@ createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            version.value = data;
+            version.value = data.version;
+            title.value = data.name;
             console.log('Version fetched:', version.value);
           })
           .catch((error) => console.error("Error fetching version:", error));
@@ -226,6 +165,14 @@ createApp({
           body.setAttribute('data-bs-theme', newTheme);
           localStorage.setItem('theme', newTheme);
         };
+
+        const serverPort = async () => {
+          return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        };
+
+        const serverHost = async () => {
+          return window.location.hostname;
+        }
 
         onMounted(async () => {
           // Set the initial theme

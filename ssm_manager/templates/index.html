@@ -51,95 +51,36 @@
 
     <div id="home" class="container-fluid page">
       <div class="px-4 py-5 my-5 text-center">
-        <h1 class="display-5 fw-bold" v-html="title"></h1>
+        <h1 class="display-5 fw-bold" v-html="title + ' v' + version"></h1>
         <div class="col-lg-6 mx-auto">
           <p class="lead mb-4">
-          Your sweet solution for managing transfers to and from your AWS S3 buckets. Imagine it as your personal bakery for data! You can bake up scheduled transfer jobs, setting them to rise at just the right time, and frost them with secure AWS credential profiles. No more messy data spills! Cupcake S3 makes your S3 management a piece of cake... or should we say, a piece of cupcake!
+            SSM Manager is a cross-platform desktop application that provides a web interface for managing AWS Systems Manager sessions.
+            It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for Shell sessions, RDP connections, custom port forwarding, and host port forwarding.
           </p>
           <div class="container-xxl px-4 py-5">
             <h2 class="pb-2 border-bottom">Getting Started</h2>
             <div class="row align-items-md-stretch text-start pt-3">
               <div class="col-md-6 pb-5">
                 <div class="card h-100">
-                  <h5 class="card-header">Profiles</h5>
-                  <div class="card-body gs-profiles">
-                    <p class="card-text">Create profiles to store AWS access keys. Profiles are used by your jobs to provide access to AWS S3.</p>
-                    <button class="btn btn-primary" type="button" @click="switchPage('Profiles')">Create a Profile</button>
+                  <h5 class="card-header">AWS CLI v2</h5>
+                  <div class="card-body">
+                    <p class="card-text">
+                    The AWS Command Line Interface (AWS CLI) is an open source tool that enables you to interact with AWS services using commands in your command-line shell.
+                    </p>
+                    <a class="btn btn-primary" type="button" href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank">Read More</a>
                   </div>
                 </div>
               </div>
               <div class="col-md-6 pb-5">
                 <div class="card h-100">
-                  <h5 class="card-header">Jobs</h5>
-                  <div class="card-body gs-jobs">
-                    <p class="card-text">Create jobs using standard cron expressions to schedule data transfers to or from AWS S3 Buckets.</p>
-                    <button class="btn btn-primary" type="button" @click="switchPage('Jobs')">Create a Job</button>
+                  <h5 class="card-header">Session Manager Plugin for AWS CLI</h5>
+                  <div class="card-body">
+                    <p class="card-text">
+                      To initiate Session Manager sessions with your managed nodes by using the AWS Command Line Interface (AWS CLI), you must install the Session Manager plugin on your local machine.
+                    </p>
+                    <a class="btn btn-primary" type="button" href="https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html" target="_blank">Read More</a>
                   </div>
                 </div>
-              </div>
-            </div>
-            <h2 class="pb-2 border-bottom">Setup AWS</h2>
-            <div class="row row-cols-1 row-cols-md-3 mb-4 text-center pt-2">
-              <div class="col py-2">
-                <div class="card mb-1 rounded-3 shadow-sm h-100">
-                  <div class="card-header py-3">
-                    <h5 class="my-0 fw-normal">Bucket</h5>
-                  </div>
-                  <div class="card-body text-start">
-                    <div class="pb-2">
-                      Create an S3 bucket in your AWS account.
-                    </div>
-                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
-                    <ul class="list mt-3 mb-4">
-                      <li>Enable versioning</li>
-                      <li>Block all public access (default)</li>
-                      <li>Lifecycle policy to remove older versions</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div class="col py-2">
-                <div class="card mb-1 rounded-3 shadow-sm h-100">
-                  <div class="card-header py-3">
-                    <h5 class="my-0 fw-normal">Role</h5>
-                  </div>
-                  <div class="card-body text-start">
-                    <div class="pb-2">
-                      Create a role to allow your user to access your bucket.
-                    </div>
-                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
-                    <ul class="list mt-3 mb-4">
-                      <li>Limit the role to only the required permissions.</li>
-                      <li>Limit the role to only the required bucket(s).</li>
-                      <li>Add IP restrictions if possible.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div class="col py-2">
-                <div class="card mb-1 rounded-3 shadow-sm h-100">
-                  <div class="card-header py-3">
-                    <h5 class="my-0 fw-normal">User</h5>
-                  </div>
-                  <div class="card-body text-start">
-                    <div class="pb-2">
-                      Create a user, attach the role and generate access keys.
-                    </div>
-                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
-                    <ul class="list mt-3 mb-4">
-                      <li>Limit the user policy to only be able to assume the role.</li>
-                      <li>Rotate the access keys on occasion</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card w-100 mb-4 bg-secondary">
-              <div class="card-body mb-1">
-                <h5 class="card-title">Quick Start</h5>
-                <p class="card-text">Download a curated CloudFormation template to quickly setup your AWS environment.</p>
-                <a href="/download/cupcake.yml" class="btn btn-primary">Download CloudFormation Template</a>
-                <p class="text-muted pt-3">For detailed instructions, please refer to the <a target="_blank" :href="githubUrl">GitHub</a> repository.</p>
               </div>
             </div>
           </div>
