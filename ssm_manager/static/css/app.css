@@ -56,3 +56,15 @@ main {
 .accordion-button{
   --bs-accordion-active-bg: #e9ecef;
 }
+
+.table-nowrap .table td, .table-nowrap .table th {
+    white-space: nowrap;
+}
+.table>:not(caption)>*>* {
+    padding: 0.75rem 1.25rem;
+    border-bottom-width: 1px;
+}
+table th {
+    font-weight: 600;
+    background-color: var(--bs-secondary) !important;
+}

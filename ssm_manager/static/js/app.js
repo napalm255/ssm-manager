@@ -1,6 +1,6 @@
 const { createApp, ref, computed, onMounted } = Vue;
 
-createApp({
+const app = createApp({
     setup() {
         const title = ref("SSM Manager");
         const version = ref("");
@@ -11,14 +11,11 @@ createApp({
         const health = ref("");
 
         const profiles = ref([]);
-        const regions = ref([]);
+        const regionsAll = ref([]);
+        const regionsSelected = ref([]);
 
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
-
-        // let socket = null
-        // let cupcakeSocket = null
-        // let reconnectInterval = 10000; // Initial delay
 
         const navBar = ref([
           {'name': 'Home', 'icon': 'fa-solid fa-house fa-lg', 'hash': '#/home'},
@@ -117,12 +114,13 @@ createApp({
           .catch((error) => console.error("Error fetching version:", error));
         };
 
-        const profileColumns = ref([
-          { label: 'Profile Name', key: 'name' },
-          { label: 'Region', key: 'region' },
-          { label: 'Account ID', key: 'sso_account_id' },
-          { label: 'Role Name', key: 'sso_role_name' },
-          { label: 'Session Name', key: 'sso_session' }
+        const profilesTableColumns = ref([
+          { title: 'Profile Name', field: 'name' },
+          { title: 'Output Format', field: 'output' },
+          { title: 'Region', field: 'region' },
+          { title: 'Account ID', field: 'sso_account_id' },
+          { title: 'Role Name', field: 'sso_role_name' },
+          { title: 'Session Name', field: 'sso_session' }
         ]);
 
         const getProfiles = async () => {
@@ -138,15 +136,28 @@ createApp({
           .catch((error) => console.error("Error fetching profiles:", error));
         };
 
-        const getRegions = async () => {
+        const getRegionsAll = async () => {
+          console.log('Fetching all regions...');
+          await fetch("/api/regions/all", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            regionsAll.value = data;
+            console.log('All regions fetched:', regionsAll.value);
+          })
+          .catch((error) => console.error("Error fetching regions:", error));
+        };
+
+        const getRegionsSelected = async () => {
           console.log('Fetching regions...');
           await fetch("/api/regions", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
-            regions.value = data;
-            console.log('Regions fetched:', regions.value);
+            regionsSelected.value = data;
+            console.log('Regions fetched:', regionsSelected.value);
           })
           .catch((error) => console.error("Error fetching regions:", error));
         };
@@ -155,7 +166,8 @@ createApp({
           console.log('Refreshing data...');
           await getVersion();
           await getProfiles();
-          await getRegions();
+          await getRegionsAll();
+          await getRegionsSelected();
         };
 
 				const themeToggle = async () => {
@@ -163,7 +175,7 @@ createApp({
           const currentTheme = body.getAttribute('data-bs-theme');
           const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
           body.setAttribute('data-bs-theme', newTheme);
-          localStorage.setItem('theme', newTheme);
+          localStorage.setItem('lastTheme', newTheme);
         };
 
         const serverPort = async () => {
@@ -176,9 +188,9 @@ createApp({
 
         onMounted(async () => {
           // Set the initial theme
-          const theme = localStorage.getItem('theme');
-          if (theme) {
-            document.body.setAttribute('data-bs-theme', theme);
+          const lastTheme = localStorage.getItem('lastTheme');
+          if (lastTheme) {
+            document.body.setAttribute('data-bs-theme', lastTheme);
           }
 
           // Set the initial page
@@ -198,12 +210,14 @@ createApp({
 
           // Watch for hash changes
           window.addEventListener('hashchange', updateHash);
+
         });
 
         return {
           title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle,
-          profiles, profileColumns, regions,
+          profiles, profilesTableColumns, regionsSelected, regionsAll,
           tooltipTriggerList, tooltipList
         };
     }
-}).mount("#app");
+});
+app.mount("#app");

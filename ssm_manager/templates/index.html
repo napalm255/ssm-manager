@@ -34,7 +34,7 @@
       <div class="border-top">
         <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
           <li class="nav-item">
-            <a href="#" class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="Theme" :data-bs-original-title="Theme" @click="themeToggle()">
+            <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="Theme" :data-bs-original-title="Theme" @click="themeToggle()">
               <i class="fa-solid fa-circle-half-stroke fa-xl"></i>
             </a>
           </li>
@@ -112,14 +112,87 @@
         <h1 class="h2">Preferences</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
-            <!--
-            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
-              <i class="fa-regular fa-square-plus"></i>
-            </button>
-            -->
+            <!-- Buttons -->
           </div>
         </div>
       </div>
+      <div class="row">
+        <div class="col-lg-8">
+          <!-- Port Range card-->
+          <div class="card mb-4">
+            <div class="card-header">Port Range</div>
+            <div class="card-body">
+              <form>
+                <div class="mb-3">
+                  <label class="small mb-1" for="currentPassword">Starting Port</label>
+                  <input class="form-control" id="currentPassword" type="number" placeholder="60000">
+                </div>
+                <div class="mb-3">
+                  <label class="small mb-1" for="newPassword">Ending Port</label>
+                  <input class="form-control" id="newPassword" type="number" placeholder="65535">
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Logging card-->
+          <div class="card mb-4">
+            <div class="card-header">Logging</div>
+            <div class="card-body">
+              <!-- Account privacy optinos-->
+              <h5 class="mb-1">Verbosity</h5>
+              <p class="small text-muted">Set the level of logging for the application. This will affect the amount of information logged to the console and log files.</p>
+              <form>
+                <div class="form-check">
+                  <input class="form-check-input" id="radioPrivacy1" type="radio" name="radioPrivacy">
+                  <label class="form-check-label" for="radioPrivacy1">Debug</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="radioPrivacy2" type="radio" name="radioPrivacy">
+                  <label class="form-check-label" for="radioPrivacy2">Info</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="radioPrivacy3" type="radio" name="radioPrivacy">
+                  <label class="form-check-label" for="radioPrivacy3">Warning</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="radioPrivacy4" type="radio" name="radioPrivacy">
+                  <label class="form-check-label" for="radioPrivacy4">Error</label>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Regions card-->
+          <div class="card mb-4">
+            <div class="card-header">Regions</div>
+            <div class="card-body">
+              <p>Select the AWS regions you want visible when managing instances.</p>
+              <form>
+                <div class="form-check">
+                  <label class="form-label" for="prefRegions">Available Regions</label>
+                  <select class="form-select" id="prefRegions" name="prefRegions" size="10" multiple>
+                    <option v-for="region in regionsAll" :value="region.value" v-html="region" :selected="regionsSelected.includes(region)"></option>
+                  </select>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Credentials card-->
+          <div class="card mb-4">
+            <div class="card-header">Credentials</div>
+            <div class="card-body">
+              <p>Provide credentials to be stored in a key ring.</p>
+              <p>
+                On Windows, these will be stored as generic credentials in the Windows Credential Manager.
+                They can be used to dynamically create Windows Credentials for tools such as SQL Server Management Studio (SSMS) or other applications that support Windows Authentication.
+              </p>
+              <p>
+                On Linux, there is currently no support use for these credentials, but they can be used to store credentials for other applications that support key rings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
 <!-- page: profiles -->
@@ -138,28 +211,23 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-12">
-          <div class="card shadow-sm">
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead>
-                    <tr>
-                      <th scope="col" v-for="column in profileColumns" :key="column.key">
-                        <span v-html="column.label"></span>
-                        <i class="bi bi-funnel-fill ms-1"></i>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="profile in profiles" :key="profile.name">
-                      <td v-for="column in profileColumns" :key="column.key">
-                        <span v-html="profile[column.key]"></span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+        <div class="col-12 mb-3 mb-lg-5">
+          <div class="overflow-hidden card table-nowrap table-card">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="small text-uppercase bg-body text-muted">
+                  <tr>
+                    <th v-for="column in profilesTableColumns" v-html="column.title"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="align-middle" v-for="profile in profiles">
+                    <td v-for="column in profilesTableColumns" :key="column.field">
+                      <span v-html="profile[column.field]"></span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
