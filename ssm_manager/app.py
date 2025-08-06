@@ -50,7 +50,7 @@ preferences = PreferencesHandler()
 cache = Cache()
 
 # Setup Flask
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/', template_folder='templates')
 
 aws_manager = AWSManager()
 

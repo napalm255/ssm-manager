@@ -1,0 +1,76 @@
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: block;
+}
+
+main {
+  height: 100vh;
+  min-height: -webkit-fill-available;
+  max-height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+#home {
+  display: none;
+}
+#instances {
+  display: none;
+}
+#preferences {
+  display: none;
+}
+#profiles {
+  display: none;
+}
+.page {
+  margin-top: 20px;
+}
+
+.nav-link {
+  cursor: pointer;
+}
+.table-hover tbody tr:hover {
+  cursor: pointer;
+}
+.log-display {
+  display: none;
+}
+
+.navbar-brand {
+  cursor: pointer;
+}
+.h2 {
+  border-left: 7px solid var(--bs-primary);
+  padding-left: 15px;
+}
+.h4 {
+  border-left: 5px solid #212529;
+  padding-left: 15px;
+}
+.gs-jobs {
+  background-size: contain;
+  background-position: right;
+  background-repeat: no-repeat;
+  cursor: default;
+}
+.gs-profiles {
+  background-size: contain;
+  background-position: right;
+  background-repeat: no-repeat;
+  cursor: default;
+}
+.gs-profiles .card-text, .gs-jobs .card-text {
+  margin-right: 80px;
+}
+.accordion-button{
+  --bs-accordion-active-bg: #e9ecef;
+}
+.resolved-schedule {
+  font-style: italic;
+}

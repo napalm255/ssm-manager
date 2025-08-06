@@ -1,315 +1,234 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>SSM Manager</title>
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        .instance-card {
-            transition: all 0.3s ease;
-        }
-        .instance-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-    </style>
-
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+    <link rel="stylesheet" href="css/all.min.css">
+    <link rel="stylesheet" href="css/app.css">
+    <script src="js/bootstrap.bundle.min.js" defer></script>
+    <script src="js/vue.global.prod.js" defer></script>
+    <script src="js/app.js" defer></script>
 </head>
-<body class="">
-    <div class="container-fluid py-4">
-        <!-- Header -->
-        <div class="row mb-4">
-                <div class="col">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-auto">
-                                <select id="profileSelect" class="form-select">
-                                    <option value="">Select Profile</option>
-                                </select>
-                            </div>
+<body>
+  <main id="app" class="d-flex flex-nowrap">
 
-                            <div class="col-auto">
-                                <select id="regionSelect" class="form-select">
-                                    <option value="">Select Region</option>
-                                </select>
-                            </div>
+<!-- navbar -->
 
-                            <div class="col-auto">
-                                <button id="connectBtn" class="btn btn-success">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
+    <div class="d-flex flex-column flex-shrink-0 bg-body-tertiary" style="width: 4.5rem;">
+      <a href="#/start" class="d-block p-3 link-body-emphasis text-decoration-none" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="SSM Manager">
+        <img width="40" src="/favicon.ico" alt="SSM Manager" class="d-block mx-auto mb-2">
+      </a>
+      <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+        <li class="nav-item" v-for="navItem in navBar">
+          <a :href="navItem.hash" class="nav-link py-3 border-bottom rounded-0" :class="{ active: currentPage === navItem.name }" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="navItem.name" :data-bs-original-title="navItem.name">
+            <i :class="navItem.icon"></i>
+          </a>
+        </li>
+      </ul>
+      <div class="border-top">
+        <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+          <li class="nav-item">
+            <a href="#" class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="Theme" :data-bs-original-title="Theme" @click="themeToggle()">
+              <i class="fa-solid fa-circle-half-stroke fa-xl"></i>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="GitHub" :data-bs-original-title="GitHub">
+              <i class="fa-brands fa-github fa-xl"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-                            <div class="col-auto">
-                                <button id="refreshBtn" class="btn btn-outline-secondary d-flex align-items-center justify-content-between">
-                                    <!-- Refresh sx -->
-                                    <i class="bi bi-arrow-clockwise fs-5 me-2" data-bs-toggle="tooltip" title="Refresh"></i>
+<!-- page: home -->
 
-                                    <!-- Switch auto-refresh dx -->
-                                    <div class="form-check form-switch m-1">
-                                        <input class="form-check-input" type="checkbox" id="autoRefreshSwitch">
-                                        <label class="form-check-label" for="autoRefreshSwitch">Auto Scan</label>
-                                    </div>
-                                    <div class="col-auto">
-                                        <span id="refreshTimer" class="badge bg-primary"></span>
-                                    </div>
-                                </button>
-                            </div>
-                            <div class="col-auto ms-auto">
-                                <button class="btn btn-outline-secondary" id="preferencesBtn" data-bs-toggle="tooltip" title="Settings">
-                                    <i class="bi bi-gear-fill fs-5"></i>
-                                </button>
-                            </div>
-                            <div class="col-auto">
-                                <button class="btn btn-outline-secondary"
-                                    id="themeToggle" data-bs-toggle="tooltip" title="Toggle Theme">
-                                    <i class="bi bi-circle-half fs-5"></i>
-                                </a>
-                            </div>
-                            <div class="col-auto">
-                                <button class="btn btn-outline-secondary"
-                                    onclick="window.open('http://github.com/napalm255/ssm-manager', '_blank');"
-                                    data-bs-toggle="tooltip" title="GitHub">
-                                    <i class="bi bi-github fs-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+    <div id="home" class="container-fluid page">
+      <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-5 fw-bold" v-html="title"></h1>
+        <div class="col-lg-6 mx-auto">
+          <p class="lead mb-4">
+          Your sweet solution for managing transfers to and from your AWS S3 buckets. Imagine it as your personal bakery for data! You can bake up scheduled transfer jobs, setting them to rise at just the right time, and frost them with secure AWS credential profiles. No more messy data spills! Cupcake S3 makes your S3 management a piece of cake... or should we say, a piece of cupcake!
+          </p>
+          <div class="container-xxl px-4 py-5">
+            <h2 class="pb-2 border-bottom">Getting Started</h2>
+            <div class="row align-items-md-stretch text-start pt-3">
+              <div class="col-md-6 pb-5">
+                <div class="card h-100">
+                  <h5 class="card-header">Profiles</h5>
+                  <div class="card-body gs-profiles">
+                    <p class="card-text">Create profiles to store AWS access keys. Profiles are used by your jobs to provide access to AWS S3.</p>
+                    <button class="btn btn-primary" type="button" @click="switchPage('Profiles')">Create a Profile</button>
+                  </div>
                 </div>
+              </div>
+              <div class="col-md-6 pb-5">
+                <div class="card h-100">
+                  <h5 class="card-header">Jobs</h5>
+                  <div class="card-body gs-jobs">
+                    <p class="card-text">Create jobs using standard cron expressions to schedule data transfers to or from AWS S3 Buckets.</p>
+                    <button class="btn btn-primary" type="button" @click="switchPage('Jobs')">Create a Job</button>
+                  </div>
+                </div>
+              </div>
             </div>
+            <h2 class="pb-2 border-bottom">Setup AWS</h2>
+            <div class="row row-cols-1 row-cols-md-3 mb-4 text-center pt-2">
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">Bucket</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create an S3 bucket in your AWS account.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Enable versioning</li>
+                      <li>Block all public access (default)</li>
+                      <li>Lifecycle policy to remove older versions</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">Role</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create a role to allow your user to access your bucket.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Limit the role to only the required permissions.</li>
+                      <li>Limit the role to only the required bucket(s).</li>
+                      <li>Add IP restrictions if possible.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">User</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create a user, attach the role and generate access keys.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Limit the user policy to only be able to assume the role.</li>
+                      <li>Rotate the access keys on occasion</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card w-100 mb-4 bg-secondary">
+              <div class="card-body mb-1">
+                <h5 class="card-title">Quick Start</h5>
+                <p class="card-text">Download a curated CloudFormation template to quickly setup your AWS environment.</p>
+                <a href="/download/cupcake.yml" class="btn btn-primary">Download CloudFormation Template</a>
+                <p class="text-muted pt-3">For detailed instructions, please refer to the <a target="_blank" :href="githubUrl">GitHub</a> repository.</p>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Main Content -->
-        <div class="row">
-            <!-- Instances Section - Now 8 columns -->
-            <div class="col-md-8">
-                <div class="card shadow-sm mb-4 mb-md-0">
-                    <div class="card-header d-flex justify-content-between align-items-center py-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <h5 class="m-0">Instances </h5>
-                            <h5 class="m-0" id="accountIdContainer" style="display: none;">
-                            - AWS ID: <span id="awsAccountId"></span>
-                            </h5>
-                        </div>
-                        <span class="badge bg-secondary" id="instanceCount">0 instances</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="instancesList" class="row g-4">
-                            <!-- Instances will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- page: instances -->
 
-            <!-- Active Connections Section - Now 4 columns -->
-            <div class="col-md-4">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center py-3">
-                        <h5 class="m-0">Active Connections</h5>
-                        <span class="badge bg-secondary" id="connectionCount">0 active</span>
-                    </div>
-                    <div class="card-body">
-                        <div id="connectionsList">
-                            <div class="text-center text-muted p-4">
-                                <i class="bi bi-diagram-2 fs-2"></i>
-                                <p class="mt-2">No active connections</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div id="instances" class="container-fluid page">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Instances</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <!--
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
+              <i class="fa-regular fa-square-plus"></i>
+            </button>
+            -->
+          </div>
         </div>
-
+      </div>
     </div>
-    <!-- Instance Details Modal -->
-    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="instanceDetailsModalLabel">Instance Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- This will be populated dynamically -->
-                    <div id="instanceDetailsContent"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
-                </div>
-            </div>
+
+<!-- page: preferences -->
+
+    <div id="preferences" class="container-fluid page">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Preferences</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <!--
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
+              <i class="fa-regular fa-square-plus"></i>
+            </button>
+            -->
+          </div>
         </div>
+      </div>
     </div>
 
+<!-- page: profiles -->
 
-    <!-- Instance Port Mappings Modal -->
-    <div class="modal fade" id="instancePortMappingsModal" tabindex="-1" aria-labelledby="instancePortMappingsModalLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="instancePortMappingsModalLabel">Instance Port Mappings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="portMappingForm">
-                    <div class="modal-body">
-                        <!-- This will be populated dynamically -->
-                        <div id="instancePortMappingsContent"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="instancePortMappingsCloseBtn" type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
-                        <button id="instancePortMappingsSaveBtn" type="button" class="btn btn-success">Save</button>
-                    </div>
-                </form>
-            </div>
+    <div id="profiles" class="container-fluid page">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Profiles</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <!--
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
+              <i class="fa-regular fa-square-plus"></i>
+            </button>
+            -->
+          </div>
         </div>
-    </div>
-
-
-    <!-- Custom Port Forwarding Modal -->
-    <div class="modal fade" id="customPortModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Custom Port Forwarding</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="modeSelect" class="form-label">Select Mode</label>
-                        <select id="modeSelect" class="form-select">
-                            <option value="local">Local Remote Port</option>
-                            <option value="other">Other Host Remote Port</option>
-                        </select>
-                    </div>
-                    <div class="mb-3" id="remotePortContainer">
-                        <label for="remotePort" class="form-label">Remote Port</label>
-                        <input type="number" class="form-control" id="remotePort" min="1" max="65535" value="1433">
-                    </div>
-                    <div id="otherHostContainer" style="display: none;">
-                        <div class="mb-3">
-                            <label for="remoteHost" class="form-label">Remote Host</label>
-                            <input type="text" class="form-control" id="remoteHost" placeholder="Enter remote host">
-                        </div>
-                        <div class="mb-3">
-                            <label for="otherRemotePort" class="form-label">Remote Port</label>
-                            <input type="number" class="form-control" id="otherRemotePort" min="1" max="65535" value="1433">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="startPortForwardingBtn">Start Forwarding</button>
-                </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th scope="col" v-for="column in profileColumns" :key="column.key">
+                        <span v-html="column.label"></span>
+                        <i class="bi bi-funnel-fill ms-1"></i>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="profile in profiles" :key="profile.name">
+                      <td v-for="column in profileColumns" :key="column.key">
+                        <span v-html="profile[column.key]"></span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
+<!-- footer -->
 
-    <!-- Detail Instance -->
-    <div class="modal fade" id="instanceDetailsModal" tabindex="-1" aria-labelledby="instanceDetailsModalLabel">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="instanceDetailsModalLabel">Instance Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="instanceDetailsContent">
-                        <!-- Content will be dynamically inserted here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <footer></footer>
 
-    <!-- Preferences Modal -->
-    <div class="modal fade" id="preferencesModal" tabindex="-1" aria-labelledby="preferencesModalLabel">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="preferencesModalLabel">Preferences</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Port Range Settings -->
-                    <div class="mb-3">
-                        <h6>Port Range</h6>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <label for="startPort" class="form-label">Start Port</label>
-                                <input type="number" class="form-control" id="startPort" min="1024" max="65535">
-                            </div>
-                            <div class="col-6">
-                                <label for="endPort" class="form-label">End Port</label>
-                                <input type="number" class="form-control" id="endPort" min="1024" max="65535">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Log Level Settings -->
-                    <div class="mb-3">
-                        <h6>Logging Level</h6>
-                        <select class="form-select" id="logLevel">
-                            <option value="DEBUG">Debug</option>
-                            <option value="INFO">Info</option>
-                            <option value="WARNING">Warning</option>
-                            <option value="ERROR">Error</option>
-                        </select>
-                    </div>
-                    <!-- Region Settings -->
-                    <div class="mb-3">
-                        <h6>Regions</h6>
-                        <select class="form-select" id="regionsSelect" multiple>
-                            <!-- Regions will be loaded here -->
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="savePreferencesBtn">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <!-- Toasts will be added here -->
-    </div>
-
-
-    <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center" style="z-index: 1060;">
-        <output class="spinner-border text-primary" aria-live="polite">
-            <span class="visually-hidden">Loading...</span>
-        </output>
-    </div>
-
-    <!-- Scripts -->
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script>
-        const modeSelect = document.getElementById('modeSelect');
-        const remotePortContainer = document.getElementById('remotePortContainer');
-        const otherHostContainer = document.getElementById('otherHostContainer');
-        const startPortForwardingBtn = document.getElementById('startPortForwardingBtn');
-
-        modeSelect.addEventListener('change', function () {
-            if (this.value === 'local') {
-                remotePortContainer.style.display = 'block';
-                otherHostContainer.style.display = 'none';
-                startPortForwardingBtn.id = 'startPortForwardingBtnLocal';
-            } else {
-                remotePortContainer.style.display = 'none';
-                otherHostContainer.style.display = 'block';
-                startPortForwardingBtn.id = 'startPortForwardingBtnOther';
-            }
-        });
-    </script>
+  </main>
 </body>
 </html>
