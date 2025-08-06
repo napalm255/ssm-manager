@@ -117,11 +117,14 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-6">
           <!-- Port Range card-->
           <div class="card mb-4">
-            <div class="card-header">Port Range</div>
+            <div class="card-header">Ports</div>
             <div class="card-body">
+              <h5 class="mb-1">Dynamic Port Range</h5>
+              <p class="small text-muted">This range is used to dynamically and randomly allocate ports for host port forwarding when connecting to instances.</p>
+              <p class="small text-muted">Ports are checked for availability before being allocated, and if a port is already in use, the next available random port in the range will be used.</p>
               <form>
                 <div class="mb-3">
                   <label class="small mb-1" for="currentPassword">Starting Port</label>
@@ -138,9 +141,8 @@
           <div class="card mb-4">
             <div class="card-header">Logging</div>
             <div class="card-body">
-              <!-- Account privacy optinos-->
               <h5 class="mb-1">Verbosity</h5>
-              <p class="small text-muted">Set the level of logging for the application. This will affect the amount of information logged to the console and log files.</p>
+              <p class="small text-muted">This defines the level of detail that will be logged in the application.</p>
               <form>
                 <div class="form-check">
                   <input class="form-check-input" id="radioPrivacy1" type="radio" name="radioPrivacy">
@@ -165,10 +167,12 @@
           <div class="card mb-4">
             <div class="card-header">Regions</div>
             <div class="card-body">
-              <p>Select the AWS regions you want visible when managing instances.</p>
+              <h5 class="mb-1">Visible Regions</h5>
+              <p class="small text-muted">Selecting regions will limit the regions that are visible in the application.</p>
+              <p class="small text-muted">This is useful if you only work with a specific set of regions and want to reduce clutter.</p>
+              <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
               <form>
                 <div class="form-check">
-                  <label class="form-label" for="prefRegions">Available Regions</label>
                   <select class="form-select" id="prefRegions" name="prefRegions" size="10" multiple>
                     <option v-for="region in regionsAll" :value="region.value" v-html="region" :selected="regionsSelected.includes(region)"></option>
                   </select>
@@ -180,12 +184,12 @@
           <div class="card mb-4">
             <div class="card-header">Credentials</div>
             <div class="card-body">
-              <p>Provide credentials to be stored in a key ring.</p>
-              <p>
+              <p class="small text-muted">Provide credentials to be stored in a key ring.</p>
+              <p class="small text-muted">
                 On Windows, these will be stored as generic credentials in the Windows Credential Manager.
                 They can be used to dynamically create Windows Credentials for tools such as SQL Server Management Studio (SSMS) or other applications that support Windows Authentication.
               </p>
-              <p>
+              <p class="small text-muted">
                 On Linux, there is currently no support use for these credentials, but they can be used to store credentials for other applications that support key rings.
               </p>
             </div>
