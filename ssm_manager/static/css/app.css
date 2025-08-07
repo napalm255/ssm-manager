@@ -16,6 +16,10 @@ main {
   overflow-y: hidden;
 }
 
+.page {
+  margin-top: 20px;
+}
+
 #home {
   display: none;
 }
@@ -28,43 +32,12 @@ main {
 #profiles {
   display: none;
 }
-.page {
-  margin-top: 20px;
-}
 
 .nav-link {
   cursor: pointer;
 }
-.table-hover tbody tr:hover {
-  cursor: pointer;
-}
-.log-display {
-  display: none;
-}
 
-.navbar-brand {
-  cursor: pointer;
-}
 .h2 {
   border-left: 7px solid var(--bs-primary);
   padding-left: 15px;
-}
-.h4 {
-  border-left: 5px solid #212529;
-  padding-left: 15px;
-}
-.accordion-button{
-  --bs-accordion-active-bg: #e9ecef;
-}
-
-.table-nowrap .table td, .table-nowrap .table th {
-    white-space: nowrap;
-}
-.table>:not(caption)>*>* {
-    padding: 0.75rem 1.25rem;
-    border-bottom-width: 1px;
-}
-table th {
-    font-weight: 600;
-    background-color: var(--bs-secondary) !important;
 }

@@ -73,7 +73,7 @@
               </div>
               <div class="col-md-6 pb-5">
                 <div class="card h-100">
-                  <h5 class="card-header">Session Manager Plugin for AWS CLI</h5>
+                  <h5 class="card-header">Session Manager Plugin</h5>
                   <div class="card-body">
                     <p class="card-text">
                       To initiate Session Manager sessions with your managed nodes by using the AWS Command Line Interface (AWS CLI), you must install the Session Manager plugin on your local machine.
@@ -113,6 +113,9 @@
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <!-- Buttons -->
+            <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()">
+              <i class="fa-solid fa-floppy-disk"></i>&nbsp;&nbsp;Save
+            </button>
           </div>
         </div>
       </div>
@@ -127,12 +130,12 @@
               <p class="small text-muted">Ports are checked for availability before being allocated, and if a port is already in use, the next available random port in the range will be used.</p>
               <form>
                 <div class="mb-3">
-                  <label class="small mb-1" for="currentPassword">Starting Port</label>
-                  <input class="form-control" id="currentPassword" type="number" placeholder="60000">
+                  <label class="small mb-1" for="prefPortStart">Starting Port</label>
+                  <input class="form-control" id="prefPortStart" type="number" placeholder="60000" v-model="prefPortStart">
                 </div>
                 <div class="mb-3">
-                  <label class="small mb-1" for="newPassword">Ending Port</label>
-                  <input class="form-control" id="newPassword" type="number" placeholder="65535">
+                  <label class="small mb-1" for="prefPortEnd">Ending Port</label>
+                  <input class="form-control" id="prefPortEnd" type="number" placeholder="65535" v-model="prefPortEnd">
                 </div>
               </form>
             </div>
@@ -145,20 +148,20 @@
               <p class="small text-muted">This defines the level of detail that will be logged in the application.</p>
               <form>
                 <div class="form-check">
-                  <input class="form-check-input" id="radioPrivacy1" type="radio" name="radioPrivacy">
-                  <label class="form-check-label" for="radioPrivacy1">Debug</label>
+                  <input class="form-check-input" id="prefLogLevel1" type="radio" name="prefLogLevel" value="DEBUG" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel1">Debug</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" id="radioPrivacy2" type="radio" name="radioPrivacy">
-                  <label class="form-check-label" for="radioPrivacy2">Info</label>
+                  <input class="form-check-input" id="prefLogLevel2" type="radio" name="prefLogLevel" value="INFO" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel2">Info</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" id="radioPrivacy3" type="radio" name="radioPrivacy">
-                  <label class="form-check-label" for="radioPrivacy3">Warning</label>
+                  <input class="form-check-input" id="prefLogLevel3" type="radio" name="prefLogLevel" value="WARNING" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel3">Warning</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" id="radioPrivacy4" type="radio" name="radioPrivacy">
-                  <label class="form-check-label" for="radioPrivacy4">Error</label>
+                  <input class="form-check-input" id="prefLogLevel4" type="radio" name="prefLogLevel" value="ERROR" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel4">Error</label>
                 </div>
               </form>
             </div>
@@ -173,8 +176,8 @@
               <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
               <form>
                 <div class="form-check">
-                  <select class="form-select" id="prefRegions" name="prefRegions" size="10" multiple>
-                    <option v-for="region in regionsAll" :value="region.value" v-html="region" :selected="regionsSelected.includes(region)"></option>
+                  <select class="form-select" id="prefRegions" name="prefRegions" size="10" multiple v-model="prefRegions">
+                    <option v-for="region in regionsAll" :value="region" v-html="region"></option>
                   </select>
                 </div>
               </form>
@@ -208,33 +211,27 @@
         <h1 class="h2">Profiles</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
-            <!--
-            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
-              <i class="fa-regular fa-square-plus"></i>
-            </button>
-            -->
+            <!-- Buttons -->
           </div>
         </div>
       </div>
       <div class="row">
         <div class="col-12 mb-3 mb-lg-5">
           <div class="overflow-hidden card table-nowrap table-card">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="small text-uppercase bg-body text-muted">
-                  <tr>
-                    <th v-for="column in profilesTableColumns" v-html="column.title"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="align-middle" v-for="profile in profiles">
-                    <td v-for="column in profilesTableColumns" :key="column.field">
-                      <span v-html="profile[column.field]"></span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table class="table table-striped table-hover">
+              <thead class="small text-uppercase">
+                <tr>
+                  <th v-for="column in profilesTableColumns" v-html="column.title"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="align-middle" v-for="profile in profiles">
+                  <td v-for="column in profilesTableColumns" :key="column.field">
+                    <span v-html="profile[column.field]"></span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

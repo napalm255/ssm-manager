@@ -13,6 +13,12 @@ const app = createApp({
         const profiles = ref([]);
         const regionsAll = ref([]);
         const regionsSelected = ref([]);
+        const preferences = ref({});
+
+        const prefPortStart = ref(60000);
+        const prefPortEnd = ref(65535);
+        const prefLogLevel = ref('INFO');
+        const prefRegions = ref([]);
 
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
@@ -146,20 +152,77 @@ const app = createApp({
             regionsAll.value = data;
             console.log('All regions fetched:', regionsAll.value);
           })
-          .catch((error) => console.error("Error fetching regions:", error));
+          .catch((error) => console.error("Error fetching all regions:", error));
         };
 
         const getRegionsSelected = async () => {
-          console.log('Fetching regions...');
+          console.log('Fetching selected regions...');
           await fetch("/api/regions", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
             regionsSelected.value = data;
-            console.log('Regions fetched:', regionsSelected.value);
+            console.log('Selected regions fetched:', regionsSelected.value);
           })
-          .catch((error) => console.error("Error fetching regions:", error));
+          .catch((error) => console.error("Error fetching selected regions:", error));
+        };
+
+        const getPreferences = async () => {
+          console.log('Fetching preferences...');
+          await fetch("/api/preferences", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            preferences.value = data;
+            console.log('Preferences fetched:', preferences.value);
+
+            const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
+            const logging = preferences.value.logging || { level: 'INFO' };
+            const regions = preferences.value.regions || [];
+            prefPortStart.value = portRange.start;
+            prefPortEnd.value = portRange.end;
+            prefLogLevel.value = logging.level;
+            prefRegions.value = regions;
+          })
+          .catch((error) => console.error("Error fetching preferences:", error));
+        };
+
+        const savePreferences = async () => {
+          console.log('Saving preferences...');
+          console.log('Port Start:', prefPortStart.value);
+          console.log('Port End:', prefPortEnd.value);
+          console.log('Log Level:', prefLogLevel.value);
+          console.log('Selected Regions:', prefRegions.value);
+
+          const newPreferences = {
+            port_range: {
+              start: prefPortStart.value,
+              end: prefPortEnd.value
+            },
+            logging: {
+              level: prefLogLevel.value
+            },
+            regions: prefRegions.value
+          };
+
+          await fetch("/api/preferences", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newPreferences)
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error('Failed to save preferences');
+            };
+            console.log('Preferences saved:', data);
+            dataRefresh();
+          })
+          .catch((error) => console.error("Error fetching preferences:", error));
         };
 
         const dataRefresh = async () => {
@@ -168,9 +231,10 @@ const app = createApp({
           await getProfiles();
           await getRegionsAll();
           await getRegionsSelected();
+          await getPreferences();
         };
 
-				const themeToggle = async () => {
+		const themeToggle = async () => {
           const body = document.body;
           const currentTheme = body.getAttribute('data-bs-theme');
           const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -216,6 +280,7 @@ const app = createApp({
         return {
           title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle,
           profiles, profilesTableColumns, regionsSelected, regionsAll,
+          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions,
           tooltipTriggerList, tooltipList
         };
     }
