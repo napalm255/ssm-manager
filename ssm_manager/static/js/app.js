@@ -1,4 +1,4 @@
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, onUnmounted, watch } = Vue;
 
 const app = createApp({
     setup() {
@@ -8,20 +8,38 @@ const app = createApp({
 
         const currentPage = ref("Start");
         const currentHash = ref('#/start');
+        const currentProfile = ref("Select Profile");
+        const currentRegion = ref("Select Region");
         const health = ref("");
 
         const profiles = ref([]);
+
         const regionsAll = ref([]);
         const regionsSelected = ref([]);
-        const preferences = ref({});
 
+        const preferences = ref({});
         const prefPortStart = ref(60000);
         const prefPortEnd = ref(65535);
         const prefLogLevel = ref('INFO');
         const prefRegions = ref([]);
+        const prefPortCount = computed(() => {
+          return prefPortEnd.value - prefPortStart.value + 1;
+        });
+        const prefRegionsCount = computed(() => {
+          return prefRegions.value.length;
+        });
 
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
+
+        const isConnecting = ref(false);
+
+        const instances = ref([]);
+        const instancesCount = ref(0);
+
+        const activeConnections = ref([]);
+        const activeConnectionsCount = ref(0);
+        const intervalActiveConnections = ref(null);
 
         const navBar = ref([
           {'name': 'Home', 'icon': 'fa-solid fa-house fa-lg', 'hash': '#/home'},
@@ -107,7 +125,7 @@ const app = createApp({
         }
 
         const getVersion = async () => {
-          console.log('Fetching version...');
+          console.debug('Fetching version...');
           await fetch("/api/version", {
             method: 'GET'
           })
@@ -115,9 +133,9 @@ const app = createApp({
           .then((data) => {
             version.value = data.version;
             title.value = data.name;
-            console.log('Version fetched:', version.value);
+            console.log('Version:', version.value);
           })
-          .catch((error) => console.error("Error fetching version:", error));
+          .catch((error) => console.error('Error fetching version:', error));
         };
 
         const profilesTableColumns = ref([
@@ -130,53 +148,50 @@ const app = createApp({
         ]);
 
         const getProfiles = async () => {
-          console.log('Fetching profiles...');
+          console.debug('Fetching profiles...');
           await fetch("/api/profiles", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
             profiles.value = data;
-            console.log('Profiles fetched:', profiles.value);
           })
-          .catch((error) => console.error("Error fetching profiles:", error));
+          .catch((error) => console.error('Error fetching profiles:', error));
         };
 
         const getRegionsAll = async () => {
-          console.log('Fetching all regions...');
+          console.debug('Fetching all regions...');
           await fetch("/api/regions/all", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
             regionsAll.value = data;
-            console.log('All regions fetched:', regionsAll.value);
           })
-          .catch((error) => console.error("Error fetching all regions:", error));
+          .catch((error) => console.error('Error fetching all regions:', error));
         };
 
         const getRegionsSelected = async () => {
-          console.log('Fetching selected regions...');
+          console.debug('Fetching selected regions...');
           await fetch("/api/regions", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
             regionsSelected.value = data;
-            console.log('Selected regions fetched:', regionsSelected.value);
           })
-          .catch((error) => console.error("Error fetching selected regions:", error));
+          .catch((error) => console.error('Error fetching selected regions:', error));
         };
 
         const getPreferences = async () => {
-          console.log('Fetching preferences...');
+          console.debug('Fetching preferences...');
           await fetch("/api/preferences", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
             preferences.value = data;
-            console.log('Preferences fetched:', preferences.value);
+            console.debug('Loaded Preferences:', preferences.value);
 
             const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
             const logging = preferences.value.logging || { level: 'INFO' };
@@ -186,15 +201,16 @@ const app = createApp({
             prefLogLevel.value = logging.level;
             prefRegions.value = regions;
           })
-          .catch((error) => console.error("Error fetching preferences:", error));
+          .catch((error) => console.error('Error fetching preferences:', error));
         };
 
         const savePreferences = async () => {
-          console.log('Saving preferences...');
-          console.log('Port Start:', prefPortStart.value);
-          console.log('Port End:', prefPortEnd.value);
-          console.log('Log Level:', prefLogLevel.value);
-          console.log('Selected Regions:', prefRegions.value);
+          console.debug('Saving preferences...');
+
+          if (!validatePortRange(prefPortStart.value, prefPortEnd.value)) {
+            console.error('Invalid port range:', prefPortStart.value, prefPortEnd.value);
+            return;
+          }
 
           const newPreferences = {
             port_range: {
@@ -217,16 +233,114 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error('Failed to save preferences');
+              throw new Error(data.status || 'Unknown error');
             };
-            console.log('Preferences saved:', data);
+            console.log('Preferences saved successfully:', data);
+            toast('Preferences saved successfully', 'success');
             dataRefresh();
           })
-          .catch((error) => console.error("Error fetching preferences:", error));
+          .catch((error) => {
+            console.error('Error saving preferences:', error)
+            toast('Error saving preferences', 'danger');
+          });
         };
 
+        const validatePortRange = (start, end) => {
+          const validPortStart = start >= 1024 && start <= 65535;
+          const validPortEnd = end >= 1024 && end <= 65535;
+          const validPortRange = start < end;
+          if (!validPortStart) {
+            toast('Starting port must be between 1024 and 65535', 'danger');
+          }
+          if (!validPortEnd) {
+            toast('Ending port must be between 1024 and 65535', 'danger');
+          }
+          if (!validPortRange) {
+            toast('Starting port must be less than the ending port', 'danger');
+          }
+          if (validPortStart && validPortEnd && validPortRange) {
+            return true;
+          }
+          return false;
+        };
+
+      // -----------------------------------------------
+
+        const connect = async () => {
+          console.debug('Connecting to AWS...');
+          isConnecting.value = true;
+          await fetch("/api/connect", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              profile: currentProfile.value,
+              region: currentRegion.value
+            })
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('Connection response:', data);
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast('Connected to AWS successfully', 'success');
+            getInstances();
+            isConnecting.value = false;
+          })
+          .catch((error) => {
+            console.error('Failed connecting to AWS:', error);
+            toast('Failed connecting to AWS', 'danger');
+          });
+        };
+
+        const getActiveConnections = async () => {
+          console.debug('Fetching active connections...');
+          await fetch("/api/active-connections", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Active Connections:', data);
+            activeConnectionsCount.value = data.length;
+            activeConnections.value = data;
+          })
+          .catch((error) => console.error('Error fetching active connections:', error));
+        };
+
+        const getInstances = async () => {
+          console.debug('Fetching instances...');
+          await fetch("/api/instances", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Instances:', data);
+            instances.value = data;
+            instancesCount.value = instances.value.length;
+            toast(`Loaded ${instancesCount.value} instances`, 'success');
+          })
+          .catch((error) => {
+            console.error('Error fetching instances:', error);
+            toast('Error fetching instances', 'danger');
+          });
+        };
+
+      // -----------------------------------------------
+
+        watch(currentProfile, (newProfile) => {
+          localStorage.setItem('lastProfile', newProfile);
+        });
+
+        watch(currentRegion, (newRegion) => {
+          localStorage.setItem('lastRegion', newRegion);
+        });
+
+      // -----------------------------------------------
+
         const dataRefresh = async () => {
-          console.log('Refreshing data...');
+          console.debug('Refreshing data...');
           await getVersion();
           await getProfiles();
           await getRegionsAll();
@@ -234,7 +348,30 @@ const app = createApp({
           await getPreferences();
         };
 
-		const themeToggle = async () => {
+        const toast = (message, type = 'info') => {
+          const toastContainer = document.getElementById('toast-container');
+          const toastElement = document.createElement('div');
+          toastElement.className = `toast align-items-center text-bg-${type} border-0`;
+          toastElement.setAttribute('role', 'alert');
+          toastElement.setAttribute('aria-live', 'assertive');
+          toastElement.setAttribute('aria-atomic', 'true');
+          toastElement.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                ${message}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          `;
+          toastContainer.appendChild(toastElement);
+          const toastInstance = new bootstrap.Toast(toastElement, {
+            delay: 3000,
+            autohide: true
+          });
+          toastInstance.show();
+        };
+
+		    const themeToggle = async () => {
           const body = document.body;
           const currentTheme = body.getAttribute('data-bs-theme');
           const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -265,8 +402,15 @@ const app = createApp({
             await switchPage('Start');
           }
 
-          // Refresh the data
-          await dataRefresh();
+          // Set profile and region
+          const lastProfile = localStorage.getItem('lastProfile');
+          if (lastProfile) {
+            currentProfile.value = lastProfile;
+          }
+          const lastRegion = localStorage.getItem('lastRegion');
+          if (lastRegion) {
+            currentRegion.value = lastRegion;
+          }
 
           // Initialize tooltips
           tooltipTriggerList.value = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -275,13 +419,34 @@ const app = createApp({
           // Watch for hash changes
           window.addEventListener('hashchange', updateHash);
 
+          // Load data from the server
+          await dataRefresh();
+
+          // Query active connections every 2 seconds
+          setInterval(getActiveConnections, 2500);
+
+        });
+
+        onUnmounted(async () => {
+          // Clean up event listeners
+          window.removeEventListener('hashchange', updateHash);
+
+          // Dispose of tooltips
+          tooltipList.value.forEach(tooltip => tooltip.dispose());
+
+          // Clear the interval for active connections
+          clearInterval(intervalActiveConnections);
         });
 
         return {
           title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle,
           profiles, profilesTableColumns, regionsSelected, regionsAll,
-          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions,
-          tooltipTriggerList, tooltipList
+          currentProfile, currentRegion,
+          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
+          connect, isConnecting,
+          getInstances, instances, instancesCount,
+          activeConnections, activeConnectionsCount,
+          tooltipTriggerList, tooltipList, toast
         };
     }
 });

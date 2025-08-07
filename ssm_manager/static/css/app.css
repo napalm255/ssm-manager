@@ -13,7 +13,7 @@ main {
   min-height: -webkit-fill-available;
   max-height: 100vh;
   overflow-x: auto;
-  overflow-y: hidden;
+  /*overflow-y: hidden;*/
 }
 
 .page {
