@@ -144,9 +144,8 @@ const app = createApp({
 
         const profilesTableColumns = ref([
           { title: 'Profile Name', field: 'name' },
-          { title: 'Output Format', field: 'output' },
-          { title: 'Region', field: 'region' },
           { title: 'Account ID', field: 'sso_account_id' },
+          { title: 'Region', field: 'region' },
           { title: 'Role Name', field: 'sso_role_name' },
           { title: 'Session Name', field: 'sso_session' }
         ]);
@@ -376,13 +375,21 @@ const app = createApp({
           toastInstance.show();
         };
 
-		    const themeToggle = async () => {
+	const themeToggle = async () => {
           const body = document.body;
           const currentTheme = body.getAttribute('data-bs-theme');
           const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
           body.setAttribute('data-bs-theme', newTheme);
           localStorage.setItem('lastTheme', newTheme);
         };
+
+	const hideTooltip = async (event) => {
+	  const element = event.currentTarget;
+	  const tooltip = bootstrap.Tooltip.getInstance(element);
+          if (tooltip) {
+            tooltip.hide();
+          }
+	}
 
         const serverPort = async () => {
           return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
@@ -444,7 +451,7 @@ const app = createApp({
         });
 
         return {
-          title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle,
+          title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle, hideTooltip,
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,

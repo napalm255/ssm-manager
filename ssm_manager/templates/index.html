@@ -26,7 +26,7 @@
       </a>
       <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
         <li class="nav-item" v-for="navItem in navBar">
-          <a :href="navItem.hash" class="nav-link py-3 border-bottom rounded-0" :class="{ active: currentPage === navItem.name }" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="navItem.name" :data-bs-original-title="navItem.name">
+          <a :href="navItem.hash" class="nav-link py-3 border-bottom rounded-0" :class="{ active: currentPage === navItem.name }" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="navItem.name" :data-bs-original-title="navItem.name" @click="hideTooltip($event)">
             <i :class="navItem.icon"></i>
           </a>
         </li>
@@ -39,7 +39,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub">
+            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub" @mouseup="hideTooltip($event)">
               <i class="fa-brands fa-github fa-xl"></i>
             </a>
           </li>
