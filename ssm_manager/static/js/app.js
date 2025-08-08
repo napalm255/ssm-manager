@@ -296,6 +296,7 @@ const app = createApp({
           .catch((error) => {
             console.error('Failed connecting to AWS:', error);
             toast('Failed connecting to AWS', 'danger');
+            isConnecting.value = false
           });
         };
 
@@ -369,7 +370,7 @@ const app = createApp({
           `;
           toastContainer.appendChild(toastElement);
           const toastInstance = new bootstrap.Toast(toastElement, {
-            delay: 3000,
+            delay: 5000,
             autohide: true
           });
           toastInstance.show();

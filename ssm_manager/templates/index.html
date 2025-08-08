@@ -120,42 +120,80 @@
           </div>
         </div>
       </div>
-      <div class="d-flex flex-column" style="max-height: 95dvh; height: 90dvh;">
-        <!-- Port Range card-->
-        <div class="card shadow-sm" style="max-height: 25dvh; height: 25dvh;">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fa-solid fa-diagram-project"></i>
-              <div class="m-0">Active Connections</div>
+      <div class="row">
+        <div class="col-md-8" style="max-height:90vh;">
+          <!-- Instances card-->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-server"></i>
+                <div class="m-0">Instances</div>
+              </div>
+              <div>
+                <span class="badge bg-info" v-if="currentAccountId != ''" v-html="'AWS Account Id: ' + currentAccountId"></span>
+                <span class="m-1"></span>
+                <span class="badge" :class="instancesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
+              </div>
             </div>
-            <span class="badge" :class="activeConnectionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="activeConnectionsCount + ' active'"></span>
-          </div>
-          <div class="card-body">
-            <!-- Active Connections Table -->
-            <div class="text-center text-muted p-4 h-100" v-if="activeConnectionsCount == 0">
-              <i class="fa-solid fa-diagram-project"></i>
-              <p class="mt-2">No active connections</p>
+            <div class="card-body overflow-y-auto" style="max-height:80vh;height:80vh;">
+              <!-- Instances Table -->
+              <div class="col-md-12" v-for="instance in instances" :key="instance.name">
+                <div class="card instance-card h-100">
+                  <div class="card-header d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mt-2">
+                            <ul class="list-unstyled">
+                              <li><b v-html="instance.name"></b></li>
+                              <li><small class="text-muted" v-html="instance.id"></small></li>
+                              <li>
+                                <span class="badge bg-success status-badge">running</span>
+                                <span class="badge bg-warning status-badge">c6i.2xlarge</span>
+                                <span class="badge bg-info status-badge">Windows</span>
+                                <span class="badge badge-fucsia status-badge ms-1">SSM</span>
+                              </li>
+                            <ul>
+                        </ul></ul></div>
+                    </div>
+                    <div>
+		      <div class="d-flex justify-content-between mt-3 gap-2">
+                        <button class="btn btn-sm btn-warning" @click="startShell(instance.id)">
+			  <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" @click="startRDP(instance.id)">
+			  <i class="fa-solid fa-display" title="RDP"></i>
+                        </button>
+                        <button class="btn btn-sm btn-purple text-white" @click="showCustomPortModal(instance.id)">
+			  <i class="fa-solid fa-left-right" title="Port Forwarding"></i>
+                        </button>
+                        <button class="btn btn-sm btn-ottanio text-white" @click="showInstanceDetails(instance.id)">
+			  <i class="fa-solid fa-circle-info" title="Instance Details"></i>
+                        </button>
+                        <button class="btn btn-sm btn-darkseagreen text-white" @click="showInstancePortMappings(instance.id, instance.name)">
+			  <i class="fa-solid fa-sliders" title="Instance Preferences"></i>
+                        </button>
+		      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <p></p>
-        <div class="card shadow-sm" style="max-height: 70dvh; height: 70dvh;">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fa-solid fa-server"></i>
-              <div class="m-0">Instances</div>
+	</div>
+        <div class="col-md-4">
+          <!-- Active Connections card-->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-diagram-project"></i>
+                <div class="m-0">Active Connections</div>
+              </div>
+              <span class="badge" :class="activeConnectionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="activeConnectionsCount + ' active'"></span>
             </div>
-            <div>
-              <span class="badge bg-info" v-if="currentAccountId != ''" v-html="'AWS Account Id: ' + currentAccountId"></span>
-              <span class="m-1"></span>
-              <span class="badge" :class="instancesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
+            <div class="card-body">
+              <!-- Active Connections Table -->
             </div>
           </div>
-          <div class="card-body overflow-auto h-25">
-            <!-- Instances Table -->
-            <div v-for="instance in instances"><span v-html="instance.name"></span></div>
-          </div>
-        </div>
+	</div>
       </div>
     </div>
 
@@ -291,7 +329,7 @@
         </div>
       </div>
       <div class="d-flex flex-column">
-        <!-- Port Range card-->
+        <!-- Profiles card-->
         <div class="card shadow-sm">
           <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">

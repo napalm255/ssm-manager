@@ -41,3 +41,11 @@ main {
   border-left: 7px solid var(--bs-primary);
   padding-left: 15px;
 }
+
+.instance-card {
+  border: 1px solid #000;
+}
+
+.active-connection-card {
+  border: 1px solid #000;
+}
