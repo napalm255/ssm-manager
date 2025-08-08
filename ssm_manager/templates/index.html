@@ -137,38 +137,37 @@
             </div>
             <div class="card-body overflow-y-auto" style="max-height:80vh;height:80vh;">
               <!-- Instances Table -->
-              <div class="col-md-12" v-for="instance in instances" :key="instance.name">
-                <div class="card instance-card h-100">
-                  <div class="card-header d-flex justify-content-between align-items-start">
+              <div class="col-md-12 pb-1 m-0" v-for="instance in instances" :key="instance.name">
+                <div class="card instance-card h-100 p-0 m-0" :class="instance.state == 'running' ? 'instance-running' : 'instance-stopped'">
+                  <div class="card-header d-flex justify-content-between align-items-start px-3 m-0">
                     <div class="flex-grow-1">
-                        <div class="mt-2">
-                            <ul class="list-unstyled">
-                              <li><b v-html="instance.name"></b></li>
-                              <li><small class="text-muted" v-html="instance.id"></small></li>
-                              <li>
-                                <span class="badge bg-success status-badge">running</span>
-                                <span class="badge bg-warning status-badge">c6i.2xlarge</span>
-                                <span class="badge bg-info status-badge">Windows</span>
-                                <span class="badge badge-fucsia status-badge ms-1">SSM</span>
-                              </li>
-                            <ul>
-                        </ul></ul></div>
+                      <div class="mt-2 lh-sm">
+  	                <div><b><span v-html="instance.name"></span></b></div>
+			<div><small v-html="instance.id"></small></div>
+		        <div>
+		          <small class="text-success" v-if="instance.state == 'running'" title="Running"><i class="fa-solid fa-person-running fa-sm"></i></small>
+		          <small class="text-danger" v-if="instance.state == 'stopped'" title="Stopped"><i class="fa-solid fa-ban fa-sm"></i></small>
+	                  <small class="text-muted ps-2" v-if="instance.os == 'Windows'"><i class="fa-brands fa-windows fa-sm"></i><span class="ps-1">Windows</span></small>
+		          <small class="text-muted ps-2" v-if="instance.os == 'Linux'"><i class="fa-brands fa-linux fa-sm"></i><span class="ps-1">Linux</span></small>
+		          <small class="text-muted ps-2" v-if="instance.type"><i class="fa-solid fa-server fa-sm"></i><span class="ps-1" v-html="instance.type"></span></small>
+		        </div>
+                      </div>
                     </div>
                     <div>
 		      <div class="d-flex justify-content-between mt-3 gap-2">
-                        <button class="btn btn-sm btn-warning" @click="startShell(instance.id)">
+                        <button class="btn btn-sm color-shell" @click="startShell(instance.id)">
 			  <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
                         </button>
-                        <button class="btn btn-sm btn-primary" @click="startRDP(instance.id)">
+                        <button class="btn btn-sm color-rdp" @click="startRDP(instance.id)">
 			  <i class="fa-solid fa-display" title="RDP"></i>
                         </button>
-                        <button class="btn btn-sm btn-purple text-white" @click="showCustomPortModal(instance.id)">
+                        <button class="btn btn-sm color-port-forward text-white" @click="showCustomPortModal(instance.id)">
 			  <i class="fa-solid fa-left-right" title="Port Forwarding"></i>
                         </button>
-                        <button class="btn btn-sm btn-ottanio text-white" @click="showInstanceDetails(instance.id)">
+                        <button class="btn btn-sm color-details text-white" @click="showInstanceDetails(instance.id)">
 			  <i class="fa-solid fa-circle-info" title="Instance Details"></i>
                         </button>
-                        <button class="btn btn-sm btn-darkseagreen text-white" @click="showInstancePortMappings(instance.id, instance.name)">
+                        <button class="btn btn-sm color-preferences text-white" @click="showInstancePortMappings(instance.id, instance.name)">
 			  <i class="fa-solid fa-sliders" title="Instance Preferences"></i>
                         </button>
 		      </div>

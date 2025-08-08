@@ -43,9 +43,62 @@ main {
 }
 
 .instance-card {
-  border: 1px solid #000;
+  border: 1px solid var(--bs-secondary);
+}
+
+.instance-running {
+}
+
+.instance-stopped {
 }
 
 .active-connection-card {
   border: 1px solid #000;
+}
+
+.color-shell {
+  background-color: #FF8C00;
+}
+
+.color-shell:hover {
+  background-color: #FF991A; /* A slightly lighter orange */
+  transform: scale(1.10);
+}
+
+.color-rdp {
+  background-color: #000080;
+  color: #FFFFFF;
+}
+
+.color-rdp:hover {
+  background-color: #0000A0; /* A slightly darker navy blue */
+  color: #FFFFFF;
+  transform: scale(1.10);
+}
+
+.color-port-forward {
+  background-color: #9932CC;
+}
+
+.color-port-forward:hover {
+  background-color: #A647D8; /* A slightly lighter purple */
+  transform: scale(1.10);
+}
+
+.color-details {
+  background-color: #3CB371;
+}
+
+.color-details:hover {
+  background-color: #4BD486; /* A slightly lighter medium sea green */
+  transform: scale(1.10);
+}
+
+.color-preferences {
+  background-color: #4B0082;
+}
+
+.color-preferences:hover {
+  background-color: #5A009C; /* A slightly lighter indigo */
+  transform: scale(1.10);
 }

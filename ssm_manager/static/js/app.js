@@ -300,6 +300,13 @@ const app = createApp({
           });
         };
 
+        const instancesTableColumns = ref([
+          { title: 'Name', field: 'name' },
+          { title: 'Instance ID', field: 'id' },
+          { title: 'OS', field: 'os' },
+          { title: 'Type', field: 'type' }
+        ]);
+
         const getInstances = async () => {
           console.debug('Fetching instances...');
           await fetch("/api/instances", {
@@ -457,7 +464,7 @@ const app = createApp({
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
           connect, isConnecting,
-          getInstances, instances, instancesCount,
+          getInstances, instances, instancesCount, instancesTableColumns,
           activeConnections, activeConnectionsCount,
           tooltipTriggerList, tooltipList, toast
         };
