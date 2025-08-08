@@ -10,9 +10,13 @@ const app = createApp({
         const currentHash = ref('#/start');
         const currentProfile = ref("Select Profile");
         const currentRegion = ref("Select Region");
+        const currentAccountId = ref("");
         const health = ref("");
 
         const profiles = ref([]);
+        const profilesCount = computed(() => {
+          return profiles.value.length;
+        });
 
         const regionsAll = ref([]);
         const regionsSelected = ref([]);
@@ -285,6 +289,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.error || 'Unknown error');
             }
+            currentAccountId.value = data.account_id;
             toast('Connected to AWS successfully', 'success');
             getInstances();
             isConnecting.value = false;
@@ -293,20 +298,6 @@ const app = createApp({
             console.error('Failed connecting to AWS:', error);
             toast('Failed connecting to AWS', 'danger');
           });
-        };
-
-        const getActiveConnections = async () => {
-          console.debug('Fetching active connections...');
-          await fetch("/api/active-connections", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log('Active Connections:', data);
-            activeConnectionsCount.value = data.length;
-            activeConnections.value = data;
-          })
-          .catch((error) => console.error('Error fetching active connections:', error));
         };
 
         const getInstances = async () => {
@@ -325,6 +316,20 @@ const app = createApp({
             console.error('Error fetching instances:', error);
             toast('Error fetching instances', 'danger');
           });
+        };
+
+        const getActiveConnections = async () => {
+          // console.debug('Fetching active connections...');
+          await fetch("/api/active-connections", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            // console.debug('Active Connections:', data);
+            activeConnectionsCount.value = data.length;
+            activeConnections.value = data;
+          })
+          .catch((error) => console.error('Error fetching active connections:', error));
         };
 
       // -----------------------------------------------
@@ -440,8 +445,8 @@ const app = createApp({
 
         return {
           title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle,
-          profiles, profilesTableColumns, regionsSelected, regionsAll,
-          currentProfile, currentRegion,
+          profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
+          currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
           connect, isConnecting,
           getInstances, instances, instancesCount,

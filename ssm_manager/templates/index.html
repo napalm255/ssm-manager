@@ -21,7 +21,7 @@
 <!-- navbar -->
 
     <div class="d-flex flex-column flex-shrink-0 bg-body-tertiary" style="width: 4.5rem;">
-      <a href="#/start" class="d-block p-3 link-body-emphasis text-decoration-none" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="SSM Manager">
+      <a href="#/start" class="d-block p-3 link-body-emphasis text-decoration-none">
         <img width="40" src="/favicon.ico" alt="SSM Manager" class="d-block mx-auto mb-2">
       </a>
       <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
@@ -34,12 +34,12 @@
       <div class="border-top">
         <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
           <li class="nav-item">
-            <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="Theme" :data-bs-original-title="Theme" @click="themeToggle()">
+            <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Theme" data-bs-original-title="Theme" @click="themeToggle()">
               <i class="fa-solid fa-circle-half-stroke fa-xl"></i>
             </a>
           </li>
           <li class="nav-item">
-            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="GitHub" :data-bs-original-title="GitHub">
+            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub">
               <i class="fa-brands fa-github fa-xl"></i>
             </a>
           </li>
@@ -128,7 +128,7 @@
               <i class="fa-solid fa-diagram-project"></i>
               <div class="m-0">Active Connections</div>
             </div>
-            <span class="badge" :class="activeConnectionsCount > 0 ? 'bg-success' : 'bg-secondary'" v-html="activeConnectionsCount + ' active'"></span>
+            <span class="badge" :class="activeConnectionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="activeConnectionsCount + ' active'"></span>
           </div>
           <div class="card-body">
             <!-- Active Connections Table -->
@@ -145,7 +145,11 @@
               <i class="fa-solid fa-server"></i>
               <div class="m-0">Instances</div>
             </div>
-            <span class="badge" :class="instancesCount > 0 ? 'bg-success' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
+            <div>
+              <span class="badge bg-info" v-if="currentAccountId != ''" v-html="'AWS Account Id: ' + currentAccountId"></span>
+              <span class="m-1"></span>
+              <span class="badge" :class="instancesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
+            </div>
           </div>
           <div class="card-body overflow-auto h-25">
             <!-- Instances Table -->
@@ -163,8 +167,8 @@
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <!-- Buttons -->
-            <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()">
-              <i class="fa-solid fa-floppy-disk"></i>&nbsp;&nbsp;Save
+            <button type="button" class="btn btn-outline-success" @click="savePreferences()">
+              <i class="fa-solid fa-floppy-disk fa-lg"></i>&nbsp;&nbsp;Save
             </button>
           </div>
         </div>
@@ -178,7 +182,7 @@
                 <i class="fa-solid fa-network-wired"></i>
                 <div class="m-0">Ports</div>
               </div>
-              <span class="badge" :class="prefPortCount > 0 ? 'bg-success' : 'bg-danger'" v-html="prefPortCount + ' ports in range'"></span>
+              <span class="badge" :class="prefPortCount > 0 ? 'bg-primary' : 'bg-danger'" v-html="prefPortCount + ' ports in range'"></span>
             </div>
             <div class="card-body">
               <h5 class="mb-1">Dynamic Port Range</h5>
@@ -234,7 +238,7 @@
                 <i class="fa-solid fa-location-dot"></i>
                 <div class="m-0">Regions</div>
               </div>
-              <span class="badge bg-secondary" v-html="prefRegionsCount + ' selected regions'"></span>
+              <span class="badge" :class="prefRegionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="prefRegionsCount + ' selected regions'"></span>
             </div>
             <div class="card-body">
               <h5 class="mb-1">Visible Regions</h5>
@@ -286,10 +290,22 @@
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-12 mb-3 mb-lg-5">
-          <div class="overflow-hidden card table-nowrap table-card shadow-sm">
-            <table class="table table-striped table-hover">
+      <div class="d-flex flex-column">
+        <!-- Port Range card-->
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-solid fa-users"></i>
+              <div class="m-0">AWS Profiles</div>
+            </div>
+            <span class="badge" :class="profilesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="profilesCount + ' profiles'"></span>
+          </div>
+          <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
+            <div class="text-center text-muted p-4 h-100" v-if="profilesCount == 0">
+              <i class="fa-solid fa-users"></i>
+              <p class="mt-2">No profiles</p>
+            </div>
+            <table class="table table-striped table-hover w-100" v-if="profilesCount > 0">
               <thead class="small text-uppercase">
                 <tr>
                   <th v-for="column in profilesTableColumns" v-html="column.title"></th>
@@ -303,6 +319,12 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 mb-3 mb-lg-5">
+          <div class="overflow-hidden card table-nowrap table-card shadow-sm">
           </div>
         </div>
       </div>
