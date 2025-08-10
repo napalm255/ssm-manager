@@ -102,3 +102,24 @@ main {
   background-color: #5A009C; /* A slightly lighter indigo */
   transform: scale(1.10);
 }
+
+.accordion-button::after {
+  margin-left: 0 !important;
+  margin-right: 20px !important;
+  order: -1 !important;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  outline: 0;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: inherit; /* Use the parent background color */
+  color: var(--bs-primary);
+  box-shadow: none;         /* Optional: Remove the default box shadow */
+}
+
+.accordion-button {
+  user-select: text;
+}

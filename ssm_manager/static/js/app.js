@@ -40,6 +40,7 @@ const app = createApp({
 
         const instances = ref([]);
         const instancesCount = ref(0);
+        const instancesDetails = ref({});
 
         const activeConnections = ref([]);
         const activeConnectionsCount = ref(0);
@@ -316,12 +317,42 @@ const app = createApp({
           .then((data) => {
             console.log('Instances:', data);
             instances.value = data;
+            instancesDetails[instances.value.id] = {};
             instancesCount.value = instances.value.length;
             toast(`Loaded ${instancesCount.value} instances`, 'success');
           })
           .catch((error) => {
             console.error('Error fetching instances:', error);
             toast('Error fetching instances', 'danger');
+          });
+        };
+
+        const instanceDetailsColumns = ref([
+          { title: 'Name', field: 'name' },
+          { title: 'Instance ID', field: 'id' },
+          { title: 'AMI ID', field: 'ami_id' },
+          { title: 'VPC ID', field: 'vpc_id' },
+          { title: 'Subnet ID', field: 'subnet_id' },
+          { title: 'IAM Role', field: 'iam_role' },
+          { title: 'SSH Key', field: 'ssh_key' },
+          { title: 'Private IP', field: 'private_ip' },
+          { title: 'Public IP', field: 'public_ip' },
+          { title: 'Security Groups', field: 'security_groups' }
+        ]);
+
+        const getInstanceDetails = async (instanceId) => {
+          console.debug('Fetching instance details...');
+          await fetch(`/api/instance-details/${instanceId}`, {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Instance details:', data);
+			instancesDetails.value[instanceId] = data;
+          })
+          .catch((error) => {
+            console.error('Error fetching instance details:', error);
+            toast('Error fetching instance details', 'danger');
           });
         };
 
@@ -360,6 +391,12 @@ const app = createApp({
           await getPreferences();
         };
 
+        const copyToClipboard = async (text) => {
+          console.debug('Copying to clipboard:', text);
+          await navigator.clipboard.writeText(text)
+          toast('Copied to clipboard', 'success');
+        };
+
         const toast = (message, type = 'info') => {
           const toastContainer = document.getElementById('toast-container');
           const toastElement = document.createElement('div');
@@ -383,7 +420,7 @@ const app = createApp({
           toastInstance.show();
         };
 
-	const themeToggle = async () => {
+        const themeToggle = async () => {
           const body = document.body;
           const currentTheme = body.getAttribute('data-bs-theme');
           const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -391,13 +428,13 @@ const app = createApp({
           localStorage.setItem('lastTheme', newTheme);
         };
 
-	const hideTooltip = async (event) => {
-	  const element = event.currentTarget;
-	  const tooltip = bootstrap.Tooltip.getInstance(element);
+        const hideTooltip = async (event) => {
+          const element = event.currentTarget;
+          const tooltip = bootstrap.Tooltip.getInstance(element);
           if (tooltip) {
             tooltip.hide();
           }
-	}
+        }
 
         const serverPort = async () => {
           return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
@@ -464,9 +501,9 @@ const app = createApp({
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
           connect, isConnecting,
-          getInstances, instances, instancesCount, instancesTableColumns,
+          getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
-          tooltipTriggerList, tooltipList, toast
+          tooltipTriggerList, tooltipList, toast, copyToClipboard
         };
     }
 });
