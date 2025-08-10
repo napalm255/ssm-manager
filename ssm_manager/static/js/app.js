@@ -348,7 +348,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             console.log('Instance details:', data);
-			instancesDetails.value[instanceId] = data;
+            instancesDetails.value[instanceId] = data;
           })
           .catch((error) => {
             console.error('Error fetching instance details:', error);
@@ -363,12 +363,41 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            // console.debug('Active Connections:', data);
+            console.debug('Active Connections:', data);
             activeConnectionsCount.value = data.length;
             activeConnections.value = data;
           })
           .catch((error) => console.error('Error fetching active connections:', error));
         };
+
+        const startShell = async (instanceId, name) => {
+          console.debug('Starting shell for instance:', instanceId);
+          await fetch(`/api/shell/${instanceId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              profile: currentProfile.value,
+              region: currentRegion.value,
+              name: name ? name : instanceId
+            })
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('Shell started:', data);
+            if (!data.status || data.status !== 'active') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast(`Shell started for instance ${instanceId}`, 'success');
+            getActiveConnections();
+          })
+          .catch((error) => {
+            console.error('Error starting shell:', error);
+            toast('Error starting shell', 'danger');
+          });
+        };
+
 
       // -----------------------------------------------
 
@@ -500,7 +529,7 @@ const app = createApp({
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
-          connect, isConnecting,
+          connect, isConnecting, startShell,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
           tooltipTriggerList, tooltipList, toast, copyToClipboard

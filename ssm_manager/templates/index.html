@@ -121,7 +121,7 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8" style="max-height:90vh;">
+        <div class="col-md-7" style="max-height:90vh;">
           <!-- Instances card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -187,9 +187,8 @@
                         </div>
                       </div>
                     </button>
-
                     <div class="d-flex mx-2">
-                      <button class="btn btn-sm color-shell mx-2" @click="startShell(instance.id)">
+                      <button class="btn btn-sm color-shell mx-2" @click="startShell(instance.id, instance.name)">
                         <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
                       </button>
                       <button class="btn btn-sm color-rdp mx-2" @click="startRDP(instance.id)">
@@ -228,7 +227,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-5">
           <!-- Active Connections card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
