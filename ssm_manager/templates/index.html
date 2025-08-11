@@ -8,6 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>SSM Manager</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/fontawesome.min.css">
     <link rel="stylesheet" href="css/all.min.css">
     <link rel="stylesheet" href="css/app.css">
@@ -113,7 +114,7 @@
                 <button id="connectBtn" class="btn btn-success" @click="connect()">
                   <span v-if="isConnecting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                   <span v-if="isConnecting" class="visually-hidden">Connecting...</span>
-                  <i v-if="!isConnecting" class="fa-solid fa-search"></i>
+                  <i v-if="!isConnecting" class="bi bi-search"></i>
                 </button>
               </div>
             </div>
@@ -152,9 +153,9 @@
                       <div class="text-start d-flex w-100">
                         <div class="row d-flex w-100">
                           <div class="col-2 align-middle text-center" style="width:25px;">
-                            <span class="text-success align-middle" v-if="instance.state == 'running'" title="Running"><i class="fa-solid fa-circle-check fa-sm"></i></span>
-		                        <span class="text-danger align-middle" v-if="instance.state == 'stopped'" title="Stopped"><i class="fa-solid fa-circle-stop fa-sm"></i></span>
-		                        <span class="text-danger align-middle" v-if="instance.state == 'terminated'" title="Terminated"><i class="fa-solid fa-circle-xmark fa-sm"></i></span>
+                            <span class="text-success align-middle" v-if="instance.state == 'running'" title="Running"><i class="bi bi-check-circle-fill"></i></span>
+		                        <span class="text-danger align-middle" v-if="instance.state == 'stopped'" title="Stopped"><i class="bi bi-stop-circle-fill"></i></span>
+		                        <span class="text-danger align-middle" v-if="instance.state == 'terminated'" title="Terminated"><i class="bi bi-x-circle"></i></span>
                           </div>
                           <div class="col-10">
                             <div><b><span v-html="instance.name"></span></b></div>
@@ -165,13 +166,13 @@
                     </button>
                     <div class="d-flex mx-2">
                       <button class="btn btn-sm color-shell mx-2" title="Shell" @click="startShell(instance.id, instance.name)">
-                        <i class="fa-solid fa-terminal fa-sm"></i>
+                        <i class="bi bi-terminal"></i>
                       </button>
                       <button class="btn btn-sm color-rdp mx-2" title="RDP" @click="startRdp(instance.id, instance.name)">
-                        <i class="fa-solid fa-display"></i>
+                        <i class="bi bi-display"></i>
                       </button>
                       <button class="btn btn-sm color-port-forward text-white mx-2" title="Port Forwarding" @click="showCustomPortModal(instance.id)">
-                        <i class="fa-solid fa-left-right"></i>
+                        <i class="bi bi-arrow-left-right"></i>
                       </button>
                     </div>
                   </h2>
@@ -179,14 +180,16 @@
                     <div class="accordion-body m-0 pt-0 pb-2 px-4">
                       <div class="row">
                         <div class="col">
-                          <small class="text-success ps-2" v-if="instance.state == 'running'" title="Running"><i class="fa-solid fa-circle-check fa-sm"></i><span class="ps-1">Running</span></small>
-                          <small class="text-danger ps-2" v-if="instance.state == 'stopped'" title="Stopped"><i class="fa-solid fa-circle-stop fa-sm"></i><span class="ps-1">Stopped</span></small>
-                          <small class="text-danger ps-2" v-if="instance.state == 'terminated'" title="Terminated"><i class="fa-solid fa-circle-xmark fa-sm"></i><span class="ps-1">Terminated</span></small>
+                          <small class="text-success ps-2" v-if="instance.state == 'running'" title="Running"><i class="bi bi-check-circle-fill"></i><span class="ps-1">Running</span></small>
+                          <small class="text-danger ps-2" v-if="instance.state == 'stopped'" title="Stopped"><i class="bi bi-stop-circle-fill"></i><span class="ps-1">Stopped</span></small>
+                          <small class="text-danger ps-2" v-if="instance.state == 'terminated'" title="Terminated"><i class="bi bi-x-circle"></i><span class="ps-1">Terminated</span></small>
                         </div>
                         <div class="col">
-	                        <small class="text-muted ps-2" v-if="instance.os == 'Windows'"><i class="fa-brands fa-windows fa-sm"></i><span class="ps-1">Windows</span></small>
-		                      <small class="text-muted ps-2" v-if="instance.os == 'Linux'"><i class="fa-brands fa-linux fa-sm"></i><span class="ps-1">Linux</span></small>
-		                      <small class="text-muted ps-2" v-if="instance.os != 'Linux' && instance.os != 'Windows'"><i class="fa-solid fa-computer fa-sm"></i><span class="ps-1" v-html="instance.os"></span></small>
+	                        <small class="text-muted ps-2" v-if="instance.os == 'Windows'"><i class="bi bi-windows"></i><span class="ps-1">Windows</span></small>
+		                      <small class="text-muted ps-2" v-if="instance.os == 'Linux' || instance.os == 'Linux/UNIX'"><i class="bi bi-tux"></i><span class="ps-1">Linux</span></small>
+		                      <small class="text-muted ps-2" v-if="instance.os != 'Linux' && instance.os != 'Linux/UNIX' && instance.os != 'Windows'">
+                            <i class="fa-solid fa-computer fa-sm"></i><span class="ps-1" v-html="instance.os"></span>
+                          </small>
                         </div>
                         <div class="col">
 		                      <small class="text-muted ps-2" v-if="instance.type"><i class="fa-solid fa-server fa-sm"></i><span class="ps-1" v-html="instance.type" style="cursor: pointer;" @click="copyToClipboard(instance.type)"></span></small>
@@ -223,10 +226,10 @@
                     <div class="row d-flex w-100">
                       <div class="col-3 align-middle text-center" style="width:50px;">
                         <button class="btn btn-sm connection-shell mx-2" title="Shell" v-if="connection.type == 'Shell'">
-                          <i class="fa-solid fa-terminal fa-sm"></i>
+                          <i class="bi bi-terminal"></i>
                         </button>
                         <button class="btn btn-sm connection-rdp mx-2" title="RDP" v-if="connection.type == 'RDP'" @click="openRdpClient(connection.instance.id, connection.name, connection.local_port)">
-                          <i class="fa-solid fa-display fa-sm"></i>
+                          <i class="bi bi-display"></i>
                         </button>
                       </div>
                       <div class="col-9">
