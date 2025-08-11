@@ -139,31 +139,6 @@
               <!-- Instances Table -->
               <div class="accordion accordion-flush" id="accordionInstances">
                 <div class="accordion-item" v-for="instance in instances" :key="instance.name">
-                  <!--
-                  <h2 class="accordion-header">
-                    <div class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="'#' + instance.id" aria-expanded="false" :aria-controls="instance.id" @click.once="getInstanceDetails(instance.id)">
-                      <div class="row w-100 d-flex align-items-center">
-                        <div class="col-sm-6 text-start">
-                          <div><b><span v-html="instance.name"></span></b></div>
-                          <small class="text-muted" ><span v-html="instance.id"></span></small>
-                        </div>
-                        <div class="col-sm-6 text-end">
-                          <div class="">
-                            <button class="btn btn-sm color-shell mx-2">
-                              <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
-                            </button>
-                            <button class="btn btn-sm color-rdp mx-2" @click.stop="startRDP(instance.id)">
-                              <i class="fa-solid fa-display" title="RDP"></i>
-                            </button>
-                            <button class="btn btn-sm color-port-forward text-white mx-2" @click.stop="showCustomPortModal(instance.id)">
-                              <i class="fa-solid fa-left-right" title="Port Forwarding"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </h2>
-                  -->
                   <h2 class="accordion-header d-flex justify-content-between align-items-center">
                     <button
                       class="accordion-button collapsed flex-grow-1"
@@ -176,11 +151,11 @@
                     >
                       <div class="text-start d-flex w-100">
                         <div class="row d-flex w-100">
-                          <div class="col-1 align-middle">
-                            <span class="text-success" v-if="instance.state == 'running'" title="Running"><i class="fa-solid fa-circle-check fa-sm"></i></span>
-		                        <span class="text-danger" v-if="instance.state == 'stopped'" title="Stopped"><i class="fa-solid fa-circle-xmark fa-sm"></i></span>
+                          <div class="col-2 align-middle text-center" style="width:1vh;">
+                            <span class="text-success align-middle" v-if="instance.state == 'running'" title="Running"><i class="fa-solid fa-circle-check fa-sm"></i></span>
+		                        <span class="text-danger align-middle" v-if="instance.state == 'stopped'" title="Stopped"><i class="fa-solid fa-circle-xmark fa-sm"></i></span>
                           </div>
-                          <div class="col-11">
+                          <div class="col-10">
                             <div><b><span v-html="instance.name"></span></b></div>
                             <small class="text-muted"><span v-html="instance.id"></span></small>
                           </div>
@@ -191,7 +166,7 @@
                       <button class="btn btn-sm color-shell mx-2" @click="startShell(instance.id, instance.name)">
                         <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
                       </button>
-                      <button class="btn btn-sm color-rdp mx-2" @click="startRDP(instance.id)">
+                      <button class="btn btn-sm color-rdp mx-2" @click="startRdp(instance.id, instance.name)">
                         <i class="fa-solid fa-display" title="RDP"></i>
                       </button>
                       <button class="btn btn-sm color-port-forward text-white mx-2" @click="showCustomPortModal(instance.id)">
@@ -239,6 +214,29 @@
             </div>
             <div class="card-body">
               <!-- Active Connections Table -->
+              <ol class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-start p-2" v-for="connection in activeConnections">
+                  <div class="text-start d-flex w-100">
+                    <div class="row d-flex w-100">
+                      <div class="col-3 align-middle text-center" style="width:3.5vh;">
+                        <button class="btn btn-sm connection-shell mx-2" v-if="connection.type == 'Shell'">
+                          <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
+                        </button>
+                        <button class="btn btn-sm connection-rdp mx-2" v-if="connection.type == 'RDP'">
+                          <i class="fa-solid fa-display fa-sm" title="RDP"></i>
+                        </button>
+                      </div>
+                      <div class="col-9">
+                        <div><b><span v-html="connection.name"></span></b></div>
+                        <small class="text-muted"><span v-html="connection.instance.id"></span></small>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-danger" @click="disconnect(connection.connection_id)">
+                    <i class="fa-solid fa-xmark fa-lg"></i>
+                  </button>
+                </li>
+              </ol>
             </div>
           </div>
         </div>

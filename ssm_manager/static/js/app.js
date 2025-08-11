@@ -301,6 +301,29 @@ const app = createApp({
           });
         };
 
+        const disconnect = async (connection_id) => {
+          console.debug('Terminating connection:', connection_id);
+          await fetch(`/api/terminate-connection/${connection_id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('Connection response:', data);
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            getActiveConnections();
+          })
+          .catch((error) => {
+            console.error('Failed to terminate connection:', error);
+            toast('Failed to terminate connection', 'danger');
+            isConnecting.value = false
+          });
+        };
+
         const instancesTableColumns = ref([
           { title: 'Name', field: 'name' },
           { title: 'Instance ID', field: 'id' },
@@ -371,7 +394,8 @@ const app = createApp({
         };
 
         const startShell = async (instanceId, name) => {
-          console.debug('Starting shell for instance:', instanceId);
+          console.debug('Starting shell for:', instanceId);
+          instanceName = name || instanceId;
           await fetch(`/api/shell/${instanceId}`, {
             method: 'POST',
             headers: {
@@ -380,7 +404,7 @@ const app = createApp({
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
-              name: name ? name : instanceId
+              name: instanceName,
             })
           })
           .then((response) => response.json())
@@ -389,12 +413,41 @@ const app = createApp({
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
-            toast(`Shell started for instance ${instanceId}`, 'success');
+            toast(`Shell started for '${instanceName}'`, 'success');
             getActiveConnections();
           })
           .catch((error) => {
             console.error('Error starting shell:', error);
             toast('Error starting shell', 'danger');
+          });
+        };
+
+        const startRdp = async (instanceId, name) => {
+          console.debug('Starting RDP for:', instanceId);
+          instanceName = name || instanceId;
+          await fetch(`/api/rdp/${instanceId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              profile: currentProfile.value,
+              region: currentRegion.value,
+              name: instanceName,
+            })
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('RDP started:', data);
+            if (!data.status || data.status !== 'active') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast(`RDP started for '${instanceName}'`, 'success');
+            getActiveConnections();
+          })
+          .catch((error) => {
+            console.error('Error starting RDP:', error);
+            toast('Error starting RDP', 'danger');
           });
         };
 
@@ -529,7 +582,7 @@ const app = createApp({
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
-          connect, isConnecting, startShell,
+          connect, disconnect, isConnecting, startShell, startRdp,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
           tooltipTriggerList, tooltipList, toast, copyToClipboard

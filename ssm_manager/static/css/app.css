@@ -1,3 +1,12 @@
+:root {
+  --color-ssh: #FF8C00; /* Dark Orange */
+  --color-ssh-hover: #FF991A; /* Lighter Orange */
+  --color-rdp: #000080; /* Navy Blue */
+  --color-rdp-hover: #0000A0; /* Darker Navy Blue */
+  --color-port-forward: #9932CC; /* Dark Orchid */
+  --color-port-forward-hover: #A647D8; /* Lighter Purple */
+}
+
 html {
   height: -webkit-fill-available;
 }
@@ -57,50 +66,63 @@ main {
 }
 
 .color-shell {
-  background-color: #FF8C00;
+  background-color: var(--color-ssh);
 }
 
 .color-shell:hover {
-  background-color: #FF991A; /* A slightly lighter orange */
+  background-color: var(--color-ssh-hover);
   transform: scale(1.10);
 }
 
+.connection-shell {
+  background-color: var(--color-ssh);
+}
+
+.connection-shell:hover {
+  background-color: var(--color-ssh);
+  color: initial;
+  cursor: initial;
+}
+
 .color-rdp {
-  background-color: #000080;
+  background-color: var(--color-rdp);
   color: #FFFFFF;
 }
 
 .color-rdp:hover {
-  background-color: #0000A0; /* A slightly darker navy blue */
+  background-color: var(--color-rdp-hover);
+  color: #FFFFFF;
+  transform: scale(1.10);
+}
+
+.connection-rdp {
+  background-color: var(--color-rdp);
+  color: #FFFFFF;
+}
+
+.connection-rdp:hover {
+  background-color: var(--color-rdp-hover);
   color: #FFFFFF;
   transform: scale(1.10);
 }
 
 .color-port-forward {
-  background-color: #9932CC;
+  background-color: var(--color-port-forward);
 }
 
 .color-port-forward:hover {
-  background-color: #A647D8; /* A slightly lighter purple */
+  background-color: var(--color-port-forward-hover);
   transform: scale(1.10);
 }
 
-.color-details {
-  background-color: #3CB371;
+.connection-port-forward {
+  background-color: var(--color-port-forward);
 }
 
-.color-details:hover {
-  background-color: #4BD486; /* A slightly lighter medium sea green */
-  transform: scale(1.10);
-}
-
-.color-preferences {
-  background-color: #4B0082;
-}
-
-.color-preferences:hover {
-  background-color: #5A009C; /* A slightly lighter indigo */
-  transform: scale(1.10);
+.connection-port-forward:hover {
+  background-color: var(--color-port-forward);
+  color: initial;
+  cursor: initial;
 }
 
 .accordion-button::after {
@@ -122,4 +144,14 @@ main {
 
 .accordion-button {
   user-select: text;
+}
+
+.btn-disconnect {
+  cursor: pointer;
+  border: 1px solid #ff0000;
+}
+
+.btn-disconnect:hover {
+  background-color: #ffcccc;
+  transform: scale(1.10);
 }
