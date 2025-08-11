@@ -47,6 +47,10 @@ const app = createApp({
         const activeConnectionsCount = ref(0);
         const intervalActiveConnections = ref(null);
 
+        const portForwardingModal = ref(null);
+        const portForwardingModalProperties = ref({});
+        const portForwardingStarting = ref(false);
+
         const navBar = ref([
           {'name': 'Home', 'icon': 'fa-solid fa-house fa-lg', 'hash': '#/home'},
           {'name': 'Instances', 'icon': 'fa-solid fa-server fa-lg', 'hash': '#/instances'},
@@ -454,8 +458,8 @@ const app = createApp({
         };
 
         const openRdpClient = async (instanceId, name, local_port) => {
-          console.debug(`Opening RDP to ${name} via port ${local_port}`);
           instanceName = name || instanceId;
+          console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
           await fetch(`/api/rdp/${local_port}`, {
             method: 'GET'
           })
@@ -471,6 +475,58 @@ const app = createApp({
             console.error('Error opening RDP client:', error);
             toast('Error opening RDP client', 'danger');
           });
+        };
+
+        const showPortForwardingModal = async (instanceId, name) => {
+          instanceName = name || instanceId;
+          console.debug('Showing port forwarding modal for:', instanceName);
+          portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
+            keyboard: true
+          });
+          portForwardingModalProperties.value = {
+            instanceId: instanceId,
+            instanceName: name,
+            mode: 'local',
+            remotePort: 1433,
+            remoteHost: ''
+          };
+          console.log(portForwardingModalProperties);
+          portForwardingModal.value.show();
+        };
+
+        const startPortForwarding = async () => {
+          console.debug('Starting port forwarding...');
+          portForwardingStarting.value = true;
+
+          await fetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              profile: currentProfile.value,
+              region: currentRegion.value,
+              name: portForwardingModalProperties.value.instanceName,
+              mode: portForwardingModalProperties.value.mode,
+              remote_port: portForwardingModalProperties.value.remotePort,
+              remote_host: portForwardingModalProperties.value.remoteHost
+            })
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('Port forwarding started:', data);
+            if (!data.status || data.status !== 'active') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast(`Port forwarding started for '${portForwardingModalProperties.value.instanceName}'`, 'success');
+            getActiveConnections();
+            portForwardingModal.value.hide();
+          })
+          .catch((error) => {
+            console.error('Error starting port forwarding:', error);
+            toast('Error starting port forwarding', 'danger');
+          });
+          portForwardingStarting.value = false;
         };
 
 
@@ -493,6 +549,31 @@ const app = createApp({
           await getRegionsAll();
           await getRegionsSelected();
           await getPreferences();
+        };
+
+        const timeAgo = (timestamp) => {
+          const now = Date.now();
+          const seconds = Math.floor((now - timestamp * 1000) / 1000);
+
+          const intervals = {
+            year: 31536000,
+            month: 2592000,
+            day: 86400,
+            hour: 3600,
+            minute: 60,
+            second: 1,
+          };
+
+          for (const unit in intervals) {
+            const interval = intervals[unit];
+            const count = Math.floor(seconds / interval);
+
+            if (count >= 1) {
+              const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+              return rtf.format(-count, unit);
+            }
+          }
+          return 'just now';
         };
 
         const copyToClipboard = async (text) => {
@@ -604,9 +685,10 @@ const app = createApp({
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
-          connect, disconnect, isConnecting, startShell, startRdp, openRdpClient,
+          showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
+          connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
-          activeConnections, activeConnectionsCount,
+          activeConnections, activeConnectionsCount, timeAgo,
           tooltipTriggerList, tooltipList, toast, copyToClipboard
         };
     }
