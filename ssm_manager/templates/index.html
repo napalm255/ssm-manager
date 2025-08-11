@@ -121,7 +121,7 @@
         </div>
       </div>
       <div class="row page-body">
-        <div class="col-md-7">
+        <div class="col-md-7 order-2 order-md-1">
           <!-- Instances card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -186,9 +186,10 @@
                         <div class="col">
 	                        <small class="text-muted ps-2" v-if="instance.os == 'Windows'"><i class="fa-brands fa-windows fa-sm"></i><span class="ps-1">Windows</span></small>
 		                      <small class="text-muted ps-2" v-if="instance.os == 'Linux'"><i class="fa-brands fa-linux fa-sm"></i><span class="ps-1">Linux</span></small>
+		                      <small class="text-muted ps-2" v-if="instance.os != 'Linux' && instance.os != 'Windows'"><i class="fa-solid fa-computer fa-sm"></i><span class="ps-1" v-html="instance.os"></span></small>
                         </div>
                         <div class="col">
-		                      <small class="text-muted ps-2" v-if="instance.type"><i class="fa-solid fa-server fa-sm"></i><span class="ps-1" v-html="instance.type"></span></small>
+		                      <small class="text-muted ps-2" v-if="instance.type"><i class="fa-solid fa-server fa-sm"></i><span class="ps-1" v-html="instance.type" style="cursor: pointer;" @click="copyToClipboard(instance.type)"></span></small>
                         </div>
                       </div>
                       <div class="row border-top" v-for="column in instanceDetailsColumns">
@@ -204,7 +205,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-5 order-1 order-md-2">
           <!-- Active Connections card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
