@@ -28,6 +28,7 @@ class AWSManager:
         Returns:
             List of profile names or empty list if no profiles found
         """
+        # pylint: disable=protected-access
         profiles = []
         try:
             _profiles = boto3.Session().available_profiles

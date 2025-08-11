@@ -158,20 +158,20 @@
                           </div>
                           <div class="col-10">
                             <div><b><span v-html="instance.name"></span></b></div>
-                            <small class="text-muted"><span v-html="instance.id"></span></small>
+                            <small class="text-muted" v-html="instance.id"></small>
                           </div>
                         </div>
                       </div>
                     </button>
                     <div class="d-flex mx-2">
-                      <button class="btn btn-sm color-shell mx-2" @click="startShell(instance.id, instance.name)">
-                        <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
+                      <button class="btn btn-sm color-shell mx-2" title="Shell" @click="startShell(instance.id, instance.name)">
+                        <i class="fa-solid fa-terminal fa-sm"></i>
                       </button>
-                      <button class="btn btn-sm color-rdp mx-2" @click="startRdp(instance.id, instance.name)">
-                        <i class="fa-solid fa-display" title="RDP"></i>
+                      <button class="btn btn-sm color-rdp mx-2" title="RDP" @click="startRdp(instance.id, instance.name)">
+                        <i class="fa-solid fa-display"></i>
                       </button>
-                      <button class="btn btn-sm color-port-forward text-white mx-2" @click="showCustomPortModal(instance.id)">
-                        <i class="fa-solid fa-left-right" title="Port Forwarding"></i>
+                      <button class="btn btn-sm color-port-forward text-white mx-2" title="Port Forwarding" @click="showCustomPortModal(instance.id)">
+                        <i class="fa-solid fa-left-right"></i>
                       </button>
                     </div>
                   </h2>
@@ -222,11 +222,11 @@
                   <div class="text-start d-flex w-100">
                     <div class="row d-flex w-100">
                       <div class="col-3 align-middle text-center" style="width:50px;">
-                        <button class="btn btn-sm connection-shell mx-2" v-if="connection.type == 'Shell'">
-                          <i class="fa-solid fa-terminal fa-sm" title="Shell"></i>
+                        <button class="btn btn-sm connection-shell mx-2" title="Shell" v-if="connection.type == 'Shell'">
+                          <i class="fa-solid fa-terminal fa-sm"></i>
                         </button>
-                        <button class="btn btn-sm connection-rdp mx-2" v-if="connection.type == 'RDP'">
-                          <i class="fa-solid fa-display fa-sm" title="RDP"></i>
+                        <button class="btn btn-sm connection-rdp mx-2" title="RDP" v-if="connection.type == 'RDP'" @click="openRdpClient(connection.instance.id, connection.name, connection.local_port)">
+                          <i class="fa-solid fa-display fa-sm"></i>
                         </button>
                       </div>
                       <div class="col-9">
@@ -341,7 +341,7 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-6" v-if="operating_system == 'Windows' || 'Linux'">
           <!-- Credentials card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -352,11 +352,11 @@
             </div>
             <div class="card-body">
               <p class="small text-muted">These credentials will be stored in a key ring on your system.</p>
-              <p class="small text-muted">
+              <p class="small text-muted" v-if="operating_system == 'Windows'">
                 On Windows, these will be stored as generic credentials in the Windows Credential Manager.
                 They can be used to dynamically create Windows Credentials for tools such as SQL Server Management Studio (SSMS) or other applications that support Windows Authentication.
               </p>
-              <p class="small text-muted">
+              <p class="small text-muted" v-if="operating_system == 'Linux'">
                 On Linux, there is currently no supported use for these credentials, but they can be used to store credentials for other applications that support key rings.
               </p>
             </div>

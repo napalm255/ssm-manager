@@ -68,7 +68,8 @@ def get_version():
         with open(version_file, 'r', encoding='utf-8') as vfile:
             version = {
                 'version': vfile.read().strip(),
-                'name': APP_NAME
+                'name': APP_NAME,
+                'operating_system': system,
             }
         logger.debug(f"Version: {version}")
         return jsonify(version)

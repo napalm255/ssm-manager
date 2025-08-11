@@ -4,6 +4,7 @@ const app = createApp({
     setup() {
         const title = ref("SSM Manager");
         const version = ref("");
+        const operating_system = ref("");
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
         const currentPage = ref("Start");
@@ -138,6 +139,7 @@ const app = createApp({
           .then((data) => {
             version.value = data.version;
             title.value = data.name;
+            operating_system.value = data.operating_system;
             console.log('Version:', version.value);
           })
           .catch((error) => console.error('Error fetching version:', error));
@@ -342,7 +344,7 @@ const app = createApp({
             instances.value = data;
             instancesDetails[instances.value.id] = {};
             instancesCount.value = instances.value.length;
-            toast(`Loaded ${instancesCount.value} instances`, 'success');
+            toast(`Discovered ${instancesCount.value} instances`, 'success');
           })
           .catch((error) => {
             console.error('Error fetching instances:', error);
@@ -448,6 +450,26 @@ const app = createApp({
           .catch((error) => {
             console.error('Error starting RDP:', error);
             toast('Error starting RDP', 'danger');
+          });
+        };
+
+        const openRdpClient = async (instanceId, name, local_port) => {
+          console.debug(`Opening RDP to ${name} via port ${local_port}`);
+          instanceName = name || instanceId;
+          await fetch(`/api/rdp/${local_port}`, {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast(`RDP client opened for '${instanceName}' via '${local_port}'`, 'success');
+            getActiveConnections();
+          })
+          .catch((error) => {
+            console.error('Error opening RDP client:', error);
+            toast('Error opening RDP client', 'danger');
           });
         };
 
@@ -578,11 +600,11 @@ const app = createApp({
         });
 
         return {
-          title, version, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle, hideTooltip,
+          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle, hideTooltip,
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
           preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
-          connect, disconnect, isConnecting, startShell, startRdp,
+          connect, disconnect, isConnecting, startShell, startRdp, openRdpClient,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
           tooltipTriggerList, tooltipList, toast, copyToClipboard
