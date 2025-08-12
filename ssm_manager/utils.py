@@ -393,6 +393,37 @@ class SSMCommand(AWSCommand):
         return str(' '.join(cmd))
 
 
+class CredCommand(BaseModel):
+    """
+    Model representing the credential command.
+    """
+    instance: Instance
+    local_port: int = Field(ge=1024, le=65535)
+    system: Literal["Linux", "Windows"]
+    username: Optional[str] = ''
+    password: Optional[str] = ''
+    hide: Optional[bool] = True
+    wait: Optional[bool] = False
+
+    @property
+    def cmd(self) -> str | list:
+        """
+        Build the command to run based on the system type.
+        """
+        if not self.username or not self.password:
+            raise ValueError("Username and password must be provided")
+
+        domain = ""
+        if '\\' in self.username:
+            domain, _ = self.username.split('\\', 1)
+        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
+        hostname = f'{hostname}:{self.local_port}'
+
+        if self.system in ('Windows', 'Linux'):
+            return f'cmdkey /add:{hostname} /user:{self.username} /pass:"{self.password}"'
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+
 class FreePort(BaseModel):
     """
     Class to find a free port

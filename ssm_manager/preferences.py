@@ -5,6 +5,7 @@ Application preferences handler
 import logging
 import json
 from pathlib import Path
+import keyring
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,8 @@ class PreferencesHandler:
             "level": "INFO"
         },
         "regions": [],
-        "instances": []
+        "instances": [],
+        "credentials": []
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -77,12 +79,63 @@ class PreferencesHandler:
             prefs['logging'] = new_preferences.get('logging', prefs['logging'])
             prefs['regions'] = new_preferences.get('regions', prefs['regions'])
             prefs['instances'] = new_preferences.get('instances', prefs['instances'])
+            prefs['credentials'] = [{'username': cred.get('username')} for cred in
+                                    new_preferences.get('credentials', prefs['credentials'])
+                                    if cred.get('username')]
+            credentials_to_delete = [cred.get('username') for cred in
+                                     new_preferences.get('credentials_to_delete', [])]
+
+            if not self.delete_credentials(credentials_to_delete):
+                logger.warning("Failed to delete one or more credentials")
+                return False
+            if not self.save_credentials(new_preferences.get('credentials', prefs['credentials'])):
+                logger.warning("Failed to update credentials")
+                return False
             if self.save_preferences(prefs):
                 logger.info("Preferences updated successfully")
                 return True
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error updating preferences: {str(e)}")
         return False
+
+    def delete_credentials(self, usernames):
+        """Delete credentials for given usernames"""
+        if not isinstance(usernames, list):
+            usernames = [usernames]
+        for username in usernames:
+            if not username:
+                logger.debug("Skipping empty username")
+                continue
+            try:
+                keyring.delete_password('ssm_manager', username)
+                logger.info(f"Deleted credentials for {username}")
+            except keyring.errors.PasswordDeleteError as e:
+                logger.error(f"Error deleting credentials for {username}: {str(e)}")
+                return False
+        return True
+
+    def save_credentials(self, credentials):
+        """Save credentials to keyring"""
+        for cred in credentials:
+            username = cred.get('username', '')
+            if username == '':
+                logger.debug("Skipping credential with no username")
+                continue
+            password = cred.get('password', '')
+            if password == '':
+                logger.debug("Skipping credential with no password")
+                continue
+            logger.debug(f"Saving credentials for {username}")
+            try:
+                keyring.delete_password('ssm_manager', username)
+            except keyring.errors.PasswordDeleteError:
+                logger.debug(f"No existing credentials for {username} to delete")
+            try:
+                keyring.set_password('ssm_manager', username, password)
+            except keyring.errors.PasswordSetError as e:
+                logger.error(f"Error setting password for {username}: {str(e)}")
+                return False
+        return True
 
     def save_preferences(self, preferences):
         """Save preferences to file"""

@@ -131,15 +131,15 @@ main {
   cursor: initial;
 }
 
-.edit-port-forward {
+.edit-port-mapping {
   color: var(--color-port-forward);
 }
 
-.edit-port-forward.bi-pencil-square {
+.edit-port-mapping.bi-pencil-square {
   font-size: 1.3rem;
 }
 
-.edit-port-forward:hover {
+.edit-port-mapping:hover {
   color: var(--color-port-forward-hover);
   transform: scale(1.10);
   cursor: pointer;

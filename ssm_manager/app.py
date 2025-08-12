@@ -9,6 +9,7 @@ import platform
 import time
 import subprocess
 import psutil
+import keyring
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
@@ -17,7 +18,7 @@ from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand,
     run_cmd, FreePort, open_browser
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
@@ -358,6 +359,19 @@ def start_custom_port(instance_id):
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
 
+        try:
+            command = CredCommand(
+                instance=instance,
+                local_port=local_port,
+                system=system,
+                username=data.get('credentials', None),
+                password=keyring.get_password('ssm_manager', data.get('credentials', None))
+            )
+            run_cmd(command)
+        except ValueError as e:
+            logger.error(f"Failed to configure credentials: {str(e)}")
+            command = None
+
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
             instance=instance,
@@ -440,7 +454,7 @@ def update_preferences():
     Returns: JSON response with status
     """
     try:
-        preferences.update_preferences(request.json)
+        assert preferences.update_preferences(request.json)
         logger.info("Preferences updated successfully")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating preferences: {str(e)}")
@@ -457,8 +471,8 @@ def update_instance_preferences(instance_name):
     Returns: JSON response with status
     """
     try:
-        preferences.update_instance_preferences(instance_name, request.json)
-        logger.info(f"*******Preferences updated for instance: {instance_name}")
+        assert preferences.update_instance_preferences(instance_name, request.json)
+        logger.info(f"Preferences updated for instance: {instance_name}")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating instance preferences: {str(e)}")
         return jsonify({'error': f'Error updating preferences for instance: {instance_name}'}), 500

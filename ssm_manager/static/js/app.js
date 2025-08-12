@@ -32,6 +32,11 @@ const app = createApp({
         const prefRegionsCount = computed(() => {
           return prefRegions.value.length;
         });
+        const prefCredentials = ref([]);
+        const prefCredentialsToDelete = ref([]);
+        const prefCredentialsCount = computed(() => {
+          return prefCredentials.value.length;
+        });
 
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
@@ -219,10 +224,13 @@ const app = createApp({
             const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
             const logging = preferences.value.logging || { level: 'INFO' };
             const regions = preferences.value.regions || [];
+            const credentials = preferences.value.credentials || [];
             prefPortStart.value = portRange.start;
             prefPortEnd.value = portRange.end;
             prefLogLevel.value = logging.level;
             prefRegions.value = regions;
+            prefCredentials.value = credentials;
+            prefCredentialsToDelete.value = [];
           })
           .catch((error) => console.error('Error fetching preferences:', error));
         };
@@ -243,8 +251,11 @@ const app = createApp({
             logging: {
               level: prefLogLevel.value
             },
-            regions: prefRegions.value
+            regions: prefRegions.value,
+            credentials: prefCredentials.value,
+            credentials_to_delete: prefCredentialsToDelete.value,
           };
+          console.debug('New Preferences:', newPreferences);
 
           await fetch("/api/preferences", {
             method: 'POST',
@@ -286,6 +297,21 @@ const app = createApp({
           }
           return false;
         };
+
+        const addCredential = () => {
+          console.debug('Adding new credential...');
+          prefCredentials.value.push({
+            'username': '',
+            'password': ''
+          });
+        };
+
+        const removeCredential = (index) => {
+          console.debug('Removing credential at index:', index);
+          prefCredentialsToDelete.value.push(prefCredentials.value[index]);
+          prefCredentials.value.splice(index, 1);
+        }
+
 
       // -----------------------------------------------
 
@@ -361,6 +387,9 @@ const app = createApp({
           console.debug('Showing port mappings modal for:', instanceName);
           portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
             keyboard: true
+          });
+          document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
+            getPreferences();
           });
           portMappingsModalInstance.value = { id: instanceId, name: name };
           portMappingsModalProperties.value = portMappings.value[instanceName] || [];
@@ -558,7 +587,8 @@ const app = createApp({
             instanceName: name,
             mode: 'local',
             remotePort: 1433,
-            remoteHost: ''
+            remoteHost: '',
+            credentials: ''
           };
           portForwardingModal.value.show();
         };
@@ -578,7 +608,8 @@ const app = createApp({
               name: portForwardingModalProperties.value.instanceName,
               mode: portForwardingModalProperties.value.mode,
               remote_port: portForwardingModalProperties.value.remotePort,
-              remote_host: portForwardingModalProperties.value.remoteHost
+              remote_host: portForwardingModalProperties.value.remoteHost,
+              credentials: portForwardingModalProperties.value.credentials
             })
           })
           .then((response) => response.json())
@@ -753,7 +784,8 @@ const app = createApp({
           title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, hideTooltip,
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
-          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount, portMappings,
+          preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, portMappings, prefCredentials, prefCredentialsCount,
+          addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping,
           connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
