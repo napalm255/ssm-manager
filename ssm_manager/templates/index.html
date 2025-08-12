@@ -483,7 +483,7 @@
             </div>
             <div class="input-group mb-3">
               <span class="input-group-text" id="portForwardingPortLabel">Remote Port</span>
-              <input type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" v-model="portForwardingModalProperties.remotePort">
+              <input type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
             </div>
           </div>
           <div class="modal-footer">
@@ -510,14 +510,20 @@
           <div class="modal-body">
             <div v-for="(mapping, index) in portMappingsModalProperties" :key="index" class="row mb-3 align-items-center">
               <div class="col">
-                <input type="number" class="form-control" v-model="mapping.local_port" placeholder="Local Port">
+                <div class="input-group">
+                  <span class="input-group-text" :id="'portMappingLocal' + index">Local</span>
+                  <input type="number" class="form-control" v-model="mapping.local_port" aria-label="Local" aria-describedby="'portMappingLocal' + index" max="65535">
+                </div>
               </div>
               <div class="col">
-                <input type="number" class="form-control" v-model="mapping.remote_port" placeholder="Remote Port">
+                <div class="input-group">
+                  <span class="input-group-text" :id="'portMappingRemote' + index">Remote</span>
+                  <input type="number" class="form-control" v-model="mapping.remote_port" aria-label="Remote" aria-describedby="'portMappingRemote' + index" max="65535">
+                </div>
               </div>
               <div class="col-auto">
                 <button type="button" class="btn btn-danger" @click="removePortMapping(index)" :disabled="portMappings.length === 1">
-                  &times;
+                  <i class="bi bi-trash"></i>
                 </button>
               </div>
             </div>

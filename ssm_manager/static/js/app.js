@@ -311,13 +311,12 @@ const app = createApp({
             currentAccountId.value = data.account_id;
             toast('Connected to AWS successfully', 'success');
             getInstances();
-            isConnecting.value = false;
           })
           .catch((error) => {
             console.error('Failed connecting to AWS:', error);
             toast('Failed connecting to AWS', 'danger');
-            isConnecting.value = false
           });
+          isConnecting.value = false;
         };
 
         const disconnect = async (connection_id) => {
@@ -335,11 +334,11 @@ const app = createApp({
               throw new Error(data.error || 'Unknown error');
             }
             getActiveConnections();
+            toast('Connection terminated successfully', 'warning');
           })
           .catch((error) => {
             console.error('Failed to terminate connection:', error);
             toast('Failed to terminate connection', 'danger');
-            isConnecting.value = false
           });
         };
 
@@ -434,7 +433,7 @@ const app = createApp({
             instances.value = data;
             instancesDetails[instances.value.id] = {};
             instancesCount.value = instances.value.length;
-            toast(`Discovered ${instancesCount.value} instances`, 'success');
+            toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
           })
           .catch((error) => {
             console.error('Error fetching instances:', error);
@@ -490,8 +489,8 @@ const app = createApp({
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
-            toast(`Shell started for '${instanceName}'`, 'success');
             getActiveConnections();
+            toast('Successfully started shell', 'success');
           })
           .catch((error) => {
             console.error('Error starting shell:', error);
@@ -519,7 +518,7 @@ const app = createApp({
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
-            toast(`RDP started for '${instanceName}'`, 'success');
+            toast('Successfully started RDP', 'success');
             getActiveConnections();
           })
           .catch((error) => {
@@ -539,7 +538,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.error || 'Unknown error');
             }
-            toast(`RDP client opened for '${instanceName}' via '${local_port}'`, 'success');
+            toast('Successfully opened RDP client', 'success');
             getActiveConnections();
           })
           .catch((error) => {
@@ -588,7 +587,7 @@ const app = createApp({
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
-            toast(`Port forwarding started for '${portForwardingModalProperties.value.instanceName}'`, 'success');
+            toast('Successfully started port forwarding', 'success');
             getActiveConnections();
           })
           .catch((error) => {
