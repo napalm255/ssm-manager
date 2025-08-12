@@ -82,12 +82,19 @@ class PreferencesHandler:
             prefs['credentials'] = [{'username': cred.get('username')} for cred in
                                     new_preferences.get('credentials', prefs['credentials'])
                                     if cred.get('username')]
+            usernames = [cred.get('username') for cred in prefs['credentials']]
             credentials_to_delete = [cred.get('username') for cred in
                                      new_preferences.get('credentials_to_delete', [])]
+
+            for cred in self.preferences.get('credentials', []):
+                if cred.get('username') not in usernames:
+                    credentials_to_delete.append(cred.get('username'))
 
             if not self.delete_credentials(credentials_to_delete):
                 logger.warning("Failed to delete one or more credentials")
                 return False
+            print(f"Deleting credentials for: {credentials_to_delete}")
+            print(f"Saving credentials for: {prefs['credentials']}")
             if not self.save_credentials(new_preferences.get('credentials', prefs['credentials'])):
                 logger.warning("Failed to update credentials")
                 return False
@@ -111,7 +118,6 @@ class PreferencesHandler:
                 logger.info(f"Deleted credentials for {username}")
             except keyring.errors.PasswordDeleteError as e:
                 logger.error(f"Error deleting credentials for {username}: {str(e)}")
-                return False
         return True
 
     def save_credentials(self, credentials):
