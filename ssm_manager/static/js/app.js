@@ -70,10 +70,10 @@ const app = createApp({
         const portMappingsModalProperties = ref([]);
 
         const navBar = ref([
-          {'name': 'Home', 'icon': 'fa-solid fa-house fa-lg', 'hash': '#/home'},
-          {'name': 'Instances', 'icon': 'fa-solid fa-server fa-lg', 'hash': '#/instances'},
-          {'name': 'Preferences', 'icon': 'fa-solid fa-gear fa-lg', 'hash': '#/preferences'},
-          {'name': 'Profiles', 'icon': 'fa-solid fa-users fa-lg', 'hash': '#/profiles'}
+          {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
+          {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
+          {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
+          {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'}
         ]);
 
         const updateHash = async () => {

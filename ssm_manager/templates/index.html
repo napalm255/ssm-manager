@@ -36,12 +36,12 @@
         <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
           <li class="nav-item">
             <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Theme" data-bs-original-title="Theme" @click="themeToggle()">
-              <i class="fa-solid fa-circle-half-stroke fa-xl"></i>
+              <i class="bi bi-circle-half"></i>
             </a>
           </li>
           <li class="nav-item">
             <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub" @mouseup="hideTooltip($event)">
-              <i class="fa-brands fa-github fa-xl"></i>
+              <i class="bi bi-github"></i>
             </a>
           </li>
         </ul>
@@ -127,7 +127,7 @@
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
-                <i class="fa-solid fa-server"></i>
+                <i class="bi bi-hdd-rack-fill"></i>
                 <div class="m-0">Instances</div>
               </div>
               <div>
@@ -139,7 +139,7 @@
             <div class="card-body-flush overflow-y-auto w-100">
               <!-- Instances Table -->
               <div class="text-center text-muted p-4 h-100" v-if="instancesCount == 0">
-                <i class="fa-solid fa-server"></i>
+                <i class="bi bi-hdd-rack-fill"></i>
                 <p class="mt-2">No instances found</p>
               </div>
               <div class="accordion accordion-flush" id="accordionInstances">
@@ -446,7 +446,7 @@
         <div class="card shadow-sm">
           <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-              <i class="fa-solid fa-users"></i>
+              <i class="bi bi-person-lines-fill"></i>
               <div class="m-0">AWS Profiles</div>
             </div>
             <span class="badge" :class="profilesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="profilesCount + ' profiles'"></span>
@@ -505,15 +505,15 @@
             </div>
             <div class="input-group mb-2" v-if="portForwardingModalProperties.mode == 'other'">
               <span class="input-group-text" id="portForwardingHostLabel">Remote Host</span>
-              <input type="text" class="form-control" placeholder="google.com" aria-label="Host" aria-describedby="portForwardingHostLabel" v-model="portForwardingModalProperties.remoteHost">
+              <input id="portForwardingHost" type="text" class="form-control" placeholder="google.com" aria-label="Host" aria-describedby="portForwardingHostLabel" v-model="portForwardingModalProperties.remoteHost">
             </div>
             <div class="input-group mb-2">
               <span class="input-group-text" id="portForwardingPortLabel">Remote Port</span>
-              <input type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
+              <input id="portForwardingPort" type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
             </div>
             <div class="input-group mb-2" v-if="operating_system == 'Windows' || operating_system == 'Linux'">
-              <label class="input-group-text" for="portForwardingMode">Credential</label>
-              <select class="form-select" id="portForwardingMode" v-model="portForwardingModalProperties.credentials">
+              <label class="input-group-text" for="portForwardingCredential">Credential</label>
+              <select class="form-select" id="portForwardingCredential" v-model="portForwardingModalProperties.credentials">
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>
               </select>
             </div>

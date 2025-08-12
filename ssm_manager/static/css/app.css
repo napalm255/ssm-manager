@@ -51,6 +51,10 @@ main {
   cursor: pointer;
 }
 
+.nav-link i {
+  font-size: 20px;
+}
+
 .h2 {
   border-left: 7px solid var(--bs-primary);
   padding-left: 15px;
