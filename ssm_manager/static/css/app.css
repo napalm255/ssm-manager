@@ -70,11 +70,11 @@ main {
   border: 1px solid #000;
 }
 
-.color-shell {
+.start-shell {
   background-color: var(--color-ssh);
 }
 
-.color-shell:hover {
+.start-shell:hover {
   background-color: var(--color-ssh-hover);
   transform: scale(1.10);
 }
@@ -89,12 +89,12 @@ main {
   cursor: initial;
 }
 
-.color-rdp {
+.start-rdp {
   background-color: var(--color-rdp);
   color: #FFFFFF;
 }
 
-.color-rdp:hover {
+.start-rdp:hover {
   background-color: var(--color-rdp-hover);
   color: #FFFFFF;
   transform: scale(1.10);
@@ -109,13 +109,14 @@ main {
   background-color: var(--color-rdp-hover);
   color: #FFFFFF;
   transform: scale(1.10);
+  cursor: pointer;
 }
 
-.color-port-forward {
+.start-port-forward {
   background-color: var(--color-port-forward);
 }
 
-.color-port-forward:hover {
+.start-port-forward:hover {
   background-color: var(--color-port-forward-hover);
   transform: scale(1.10);
 }
@@ -128,6 +129,20 @@ main {
   background-color: var(--color-port-forward);
   color: initial;
   cursor: initial;
+}
+
+.edit-port-forward {
+  color: var(--color-port-forward);
+}
+
+.edit-port-forward.bi-pencil-square {
+  font-size: 1.3rem;
+}
+
+.edit-port-forward:hover {
+  color: var(--color-port-forward-hover);
+  transform: scale(1.10);
+  cursor: pointer;
 }
 
 .accordion-button::after {

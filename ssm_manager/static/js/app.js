@@ -12,7 +12,6 @@ const app = createApp({
         const currentProfile = ref("Select Profile");
         const currentRegion = ref("Select Region");
         const currentAccountId = ref("");
-        const health = ref("");
 
         const profiles = ref([]);
         const profilesCount = computed(() => {
@@ -50,6 +49,20 @@ const app = createApp({
         const portForwardingModal = ref(null);
         const portForwardingModalProperties = ref({});
         const portForwardingStarting = ref(false);
+
+        const portMappings = computed(() => {
+          const mappings = {};
+          if (!preferences.value.instances) {
+            return mappings;
+          }
+          for (const instance of preferences.value.instances) {
+            mappings[instance.name] = instance.ports;
+          }
+          return mappings;
+        });
+        const portMappingsModal = ref(null);
+        const portMappingsModalInstance = ref(null);
+        const portMappingsModalProperties = ref([]);
 
         const navBar = ref([
           {'name': 'Home', 'icon': 'fa-solid fa-house fa-lg', 'hash': '#/home'},
@@ -245,7 +258,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.status || 'Unknown error');
             };
-            console.log('Preferences saved successfully:', data);
+            console.debug('Preferences saved successfully:', data);
             toast('Preferences saved successfully', 'success');
             dataRefresh();
           })
@@ -330,6 +343,80 @@ const app = createApp({
           });
         };
 
+        const getActiveConnections = async () => {
+          // console.debug('Fetching active connections...');
+          await fetch("/api/active-connections", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            console.debug('Active Connections:', data);
+            activeConnectionsCount.value = data.length;
+            activeConnections.value = data;
+          })
+          .catch((error) => console.error('Error fetching active connections:', error));
+        };
+
+        const showPortMappingsModal = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          console.debug('Showing port mappings modal for:', instanceName);
+          portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
+            keyboard: true
+          });
+          portMappingsModalInstance.value = { id: instanceId, name: name };
+          portMappingsModalProperties.value = portMappings.value[instanceName] || [];
+          portMappingsModal.value.show();
+        };
+
+        const savePortMappings = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          console.debug('Saving port mappings for:', instanceName);
+
+          const validPorts = portMappingsModalProperties.value.filter((mapping) =>
+            mapping.local_port && mapping.remote_port
+          );
+
+          const newMappings = {
+            name: instanceName,
+            ports: validPorts
+          };
+
+          await fetch(`/api/preferences/${instanceName}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newMappings)
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.status || 'Unknown error');
+            };
+            console.debug('Port mappings saved successfully:', data);
+            toast('Port mappings saved successfully', 'success');
+            dataRefresh();
+          })
+          .catch((error) => {
+            console.error('Error saving port mappings:', error)
+            toast('Error saving port mappings', 'danger');
+          });
+          portMappingsModal.value.hide();
+        };
+
+        const addPortMapping = () => {
+          console.debug('Adding new port mapping...');
+          portMappingsModalProperties.value.push({
+            local_port: '',
+            remote_port: ''
+          });
+        };
+
+        const removePortMapping = (index) => {
+          console.debug('Removing port mapping at index:', index);
+          portMappingsModalProperties.value.splice(index, 1);
+        };
+
         const instancesTableColumns = ref([
           { title: 'Name', field: 'name' },
           { title: 'Instance ID', field: 'id' },
@@ -344,7 +431,6 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.log('Instances:', data);
             instances.value = data;
             instancesDetails[instances.value.id] = {};
             instancesCount.value = instances.value.length;
@@ -376,7 +462,6 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.log('Instance details:', data);
             instancesDetails.value[instanceId] = data;
           })
           .catch((error) => {
@@ -385,23 +470,9 @@ const app = createApp({
           });
         };
 
-        const getActiveConnections = async () => {
-          // console.debug('Fetching active connections...');
-          await fetch("/api/active-connections", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            console.debug('Active Connections:', data);
-            activeConnectionsCount.value = data.length;
-            activeConnections.value = data;
-          })
-          .catch((error) => console.error('Error fetching active connections:', error));
-        };
-
         const startShell = async (instanceId, name) => {
-          console.debug('Starting shell for:', instanceId);
-          instanceName = name || instanceId;
+          const instanceName = name || instanceId;
+          console.debug('Starting shell for:', instanceName);
           await fetch(`/api/shell/${instanceId}`, {
             method: 'POST',
             headers: {
@@ -429,8 +500,8 @@ const app = createApp({
         };
 
         const startRdp = async (instanceId, name) => {
-          console.debug('Starting RDP for:', instanceId);
-          instanceName = name || instanceId;
+          const instanceName = name || instanceId;
+          console.debug('Starting RDP for:', instanceName);
           await fetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
             headers: {
@@ -458,7 +529,7 @@ const app = createApp({
         };
 
         const openRdpClient = async (instanceId, name, local_port) => {
-          instanceName = name || instanceId;
+          const instanceName = name || instanceId;
           console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
           await fetch(`/api/rdp/${local_port}`, {
             method: 'GET'
@@ -478,7 +549,7 @@ const app = createApp({
         };
 
         const showPortForwardingModal = async (instanceId, name) => {
-          instanceName = name || instanceId;
+          const instanceName = name || instanceId;
           console.debug('Showing port forwarding modal for:', instanceName);
           portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
             keyboard: true
@@ -490,7 +561,6 @@ const app = createApp({
             remotePort: 1433,
             remoteHost: ''
           };
-          console.log(portForwardingModalProperties);
           portForwardingModal.value.show();
         };
 
@@ -520,12 +590,12 @@ const app = createApp({
             }
             toast(`Port forwarding started for '${portForwardingModalProperties.value.instanceName}'`, 'success');
             getActiveConnections();
-            portForwardingModal.value.hide();
           })
           .catch((error) => {
             console.error('Error starting port forwarding:', error);
             toast('Error starting port forwarding', 'danger');
           });
+          portForwardingModal.value.hide();
           portForwardingStarting.value = false;
         };
 
@@ -681,11 +751,12 @@ const app = createApp({
         });
 
         return {
-          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, health, themeToggle, hideTooltip,
+          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, hideTooltip,
           profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
           currentProfile, currentRegion, currentAccountId,
-          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount,
+          preferences, savePreferences, prefPortStart, prefPortEnd, prefLogLevel, prefRegions, prefPortCount, prefRegionsCount, portMappings,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
+          showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping,
           connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount, timeAgo,
