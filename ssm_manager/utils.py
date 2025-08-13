@@ -417,9 +417,9 @@ class CredCommand(BaseModel):
         hostname = f'{hostname}:{self.local_port}'
 
         cmd = [self.exec,
-               f'/add:""{hostname}""',
-               f'/user:""{self.username}""',
-               f'/pass:""{self.password}""']
+               f'/add:"{hostname}"',
+               f'/user:"{self.username}"',
+               f'/pass:"{self.password}"']
         return str(' '.join(cmd))
 
     @property
