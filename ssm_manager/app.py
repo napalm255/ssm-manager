@@ -377,7 +377,7 @@ def start_custom_port(instance_id):
                 username=username,
                 password=password
             )
-            logger.warning(f'Command {command}')
+            logger.warning(f'Command {command}, cmd: {command.cmd}')
             run_cmd(command)
         except ValueError as e:
             logger.error(f"Failed to configure credentials: {str(e)}")
