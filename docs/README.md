@@ -65,13 +65,14 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
   - Automated RDP port forwarding setup
   - Dynamic local port allocation
   - Session monitoring and management
-  - Integration with Windows Remote Desktop
+  - Integration with Windows Remote Desktop on Windows and Remmina on Linux
 
 - **Port Forwarding**
-  - User-defined port forwarding
+  - User-defined port mappings
   - Dynamic local port allocation
   - Session monitoring and management
   - Remote host connection through instances
+  - Configure Windows Credentials upon connection
   
 
 ### Active Connection Management
@@ -79,6 +80,7 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 - Active session termination
 
 ### Additional Features
+- Responsive layout using Bootstrap and Vue.js
 - Logging system with configurable levels
 - Light and dark mode themes for the UI
 - Customizable preferences (e.g., port range, log level, regions)
@@ -109,11 +111,11 @@ A pre-built version is currently only available for Windows and comes in either 
 
 1. Launch the application
 2. Select your AWS profile and region
-3. Click "Connect" to view available instances
+3. Click the magnifier icon to view discover available instances
 4. Use the action buttons to establish connections:
    - Shell: Direct terminal access
    - RDP: Remote desktop connection
-   - PORT: Custom port forwarding
+   - Port Forward: Custom port forwarding
 
 ## Development
 
@@ -126,6 +128,7 @@ A pre-built version is currently only available for Windows and comes in either 
 - cachelib
 - pystray
 - colorama
+- keyring
 
 ### Setup Development Environment
 ```powershell
