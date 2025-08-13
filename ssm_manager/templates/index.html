@@ -506,6 +506,7 @@
                   <td v-for="column in profilesTableColumns" :key="column.field">
                     <span v-html="profile[column.field]"></span>
                   </td>
+                  <td><i class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteProfile(profile.name)"></i></td>
                 </tr>
               </tbody>
             </table>

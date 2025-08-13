@@ -766,20 +766,58 @@ const app = createApp({
           });
           addProfileModalProperties.value = {
             name: '',
-            sso_start_url: '',
-            sso_region: '',
-            sso_registration_scopes: ''
+            region: '',
+            sso_account_id: '',
+            sso_role_name: '',
+            sso_session: '',
+            output: 'json'
           };
           addProfileModal.value.show();
         };
 
         const addProfile = async () => {
           console.debug('Adding new profile...');
+          await fetch("/api/config/profile", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(addProfileModalProperties.value)
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            console.debug('Profile added successfully:', data);
+            toast('Profile added successfully', 'success');
+            getProfiles();
+          })
+          .catch((error) => {
+            console.error('Error adding profile:', error);
+            toast('Error adding profile', 'danger');
+          });
           addProfileModal.value.hide();
         };
 
         const deleteProfile = async (profileName) => {
           console.debug('Deleting profile:', profileName);
+          await fetch(`/api/config/profile/${profileName}`, {
+            method: 'DELETE'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            console.debug('Profile deleted successfully:', data);
+            toast('Profile deleted successfully', 'warning');
+            getProfiles();
+          })
+          .catch((error) => {
+            console.error('Error deleting profile:', error);
+            toast('Error deleting profile', 'danger');
+          });
         };
 
       // -----------------------------------------------

@@ -172,7 +172,7 @@ def add_config_session():
         )
         logger.info(f"Session added successfully: {session_name}")
         return jsonify({'status': 'success'})
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to add session: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to add session'}), 500
 
@@ -189,7 +189,7 @@ def delete_config_session(session_name):
         config.delete_session(session_name)
         logger.info(f"Session deleted successfully: {session_name}")
         return jsonify({'status': 'success'})
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to delete session: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to delete session'}), 500
 
@@ -207,6 +207,52 @@ def get_config_profiles():
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to fetch AWS configuration profiles: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to fetch AWS configuration profiles'}), 500
+
+@app.route('/api/config/profile', methods=['POST'])
+def add_config_profile():
+    """
+    Endpoint to add a new AWS configuration profile
+    Returns: JSON response with status
+    """
+    try:
+        data = request.json
+        profile_name = data.get('name', None)
+
+        if not profile_name:
+            logger.error("Failed to add profile. Profile name is required.")
+            return jsonify({'error': 'Failed to add profile'}), 400
+
+        config = AwsConfigManager()
+        config.add_profile(
+            name=profile_name,
+            region = data.get('region', None),
+            sso_account_id = data.get('sso_account_id', None),
+            sso_role_name = data.get('sso_role_name', None),
+            sso_session = data.get('sso_session', None),
+            output = data.get('output', None)
+        )
+        logger.info(f"Profile added successfully: {profile_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to add profile: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to add profile'}), 500
+
+@app.route('/api/config/profile/<profile_name>', methods=['DELETE'])
+def delete_config_profile(profile_name):
+    """
+    Endpoint to delete an AWS configuration profile
+    Args:
+        profile_name (str): Name of the profile to delete
+    Returns: JSON response with status
+    """
+    try:
+        config = AwsConfigManager()
+        config.delete_profile(profile_name)
+        logger.info(f"Profile deleted successfully: {profile_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to delete profile: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to delete profile'}), 500
 
 @app.route('/api/connect', methods=['POST'])
 def connect():
