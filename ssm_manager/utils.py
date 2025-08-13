@@ -453,9 +453,7 @@ class CredCommand(BaseModel):
 
 
         if self.system == 'Windows':
-            if self.hide:
-                return shlex.split(f'powershell -Command "{self._build_cmd()}"')
-            return f'start cmd /k {self._build_cmd()}'
+            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
