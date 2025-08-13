@@ -406,6 +406,18 @@ class CredCommand(BaseModel):
     wait: Optional[bool] = False
 
     @property
+    def startupinfo(self):
+        """
+        Return startupinfo for Windows.
+        """
+        if self.system == 'Windows':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            return startupinfo
+        return None
+
+    @property
     def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
