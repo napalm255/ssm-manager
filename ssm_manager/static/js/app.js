@@ -747,7 +747,7 @@ const app = createApp({
               throw new Error(data.error || 'Unknown error');
             }
             console.debug('Session deleted successfully:', data);
-            toast('Session deleted successfully', 'warning');
+            toast('Session deleted successfully', 'success');
             getSessions();
           })
           .catch((error) => {
@@ -811,7 +811,7 @@ const app = createApp({
               throw new Error(data.error || 'Unknown error');
             }
             console.debug('Profile deleted successfully:', data);
-            toast('Profile deleted successfully', 'warning');
+            toast('Profile deleted successfully', 'success');
             getProfiles();
           })
           .catch((error) => {
