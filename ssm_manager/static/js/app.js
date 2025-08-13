@@ -85,6 +85,10 @@ const app = createApp({
           return false;
         });
 
+      // -----------------------------------------------
+      // Navigation and Page Switching
+      // -----------------------------------------------
+
         const navBar = ref([
           {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
           {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
@@ -168,6 +172,10 @@ const app = createApp({
           }
         }
 
+      // -----------------------------------------------
+      // Version, Profiles, and Regions Management
+      // -----------------------------------------------
+
         const getVersion = async () => {
           console.debug('Fetching version...');
           await fetch("/api/version", {
@@ -227,6 +235,10 @@ const app = createApp({
           .catch((error) => console.error('Error fetching selected regions:', error));
         };
 
+      // -----------------------------------------------
+      // Preferences Management
+      // -----------------------------------------------
+
         const getPreferences = async () => {
           console.debug('Fetching preferences...');
           await fetch("/api/preferences", {
@@ -235,7 +247,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             preferences.value = data;
-            console.debug('Loaded Preferences:', preferences.value);
+            // console.debug('Loaded Preferences:', preferences.value);
 
             const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
             const logging = preferences.value.logging || { level: 'INFO' };
@@ -271,7 +283,6 @@ const app = createApp({
             credentials: prefCredentials.value,
             credentials_to_delete: prefCredentialsToDelete.value,
           };
-          console.debug('New Preferences:', newPreferences);
 
           await fetch("/api/preferences", {
             method: 'POST',
@@ -330,6 +341,8 @@ const app = createApp({
 
 
       // -----------------------------------------------
+      // Instance scanning and connection management
+      // -----------------------------------------------
 
         const connect = async () => {
           console.debug('Connecting to AWS...');
@@ -346,7 +359,6 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('Connection response:', data);
             if (!data.status || data.status !== 'success') {
               throw new Error(data.error || 'Unknown error');
             }
@@ -395,71 +407,6 @@ const app = createApp({
             activeConnections.value = data;
           })
           .catch((error) => console.error('Error fetching active connections:', error));
-        };
-
-        const showPortMappingsModal = async (instanceId, name) => {
-          const instanceName = name || instanceId;
-          console.debug('Showing port mappings modal for:', instanceName);
-          portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
-            keyboard: true
-          });
-          document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
-            portMappingsModalInstance.value = null;
-            portMappingsModalProperties.value = [];
-            getPreferences();
-          });
-          portMappingsModalInstance.value = { id: instanceId, name: name };
-          portMappingsModalProperties.value = portMappings.value[instanceName] || [];
-          portMappingsModal.value.show();
-        };
-
-        const savePortMappings = async (instanceId, name) => {
-          const instanceName = name || instanceId;
-          console.debug('Saving port mappings for:', instanceName);
-
-          const validPorts = portMappingsModalProperties.value.filter((mapping) =>
-            mapping.local_port && mapping.remote_port
-          );
-
-          const newMappings = {
-            name: instanceName,
-            ports: validPorts
-          };
-
-          await fetch(`/api/preferences/${instanceName}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newMappings)
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.status || 'Unknown error');
-            };
-            console.debug('Port mappings saved successfully:', data);
-            toast('Port mappings saved successfully', 'success');
-            dataRefresh();
-          })
-          .catch((error) => {
-            console.error('Error saving port mappings:', error)
-            toast('Error saving port mappings', 'danger');
-          });
-          portMappingsModal.value.hide();
-        };
-
-        const addPortMapping = () => {
-          console.debug('Adding new port mapping...');
-          portMappingsModalProperties.value.push({
-            local_port: '',
-            remote_port: ''
-          });
-        };
-
-        const removePortMapping = (index) => {
-          console.debug('Removing port mapping at index:', index);
-          portMappingsModalProperties.value.splice(index, 1);
         };
 
         const instancesTableColumns = ref([
@@ -515,6 +462,10 @@ const app = createApp({
           });
         };
 
+      // -----------------------------------------------
+      // Connection Actions
+      // -----------------------------------------------
+
         const startShell = async (instanceId, name) => {
           const instanceName = name || instanceId;
           console.debug('Starting shell for:', instanceName);
@@ -531,10 +482,10 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('Shell started:', data);
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
+            console.debug('Shell started:', data);
             getActiveConnections();
             toast('Successfully started shell', 'success');
           })
@@ -560,10 +511,10 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('RDP started:', data);
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
+            console.debug('RDP started:', data);
             toast('Successfully started RDP', 'success');
             getActiveConnections();
           })
@@ -571,47 +522,6 @@ const app = createApp({
             console.error('Error starting RDP:', error);
             toast('Error starting RDP', 'danger');
           });
-        };
-
-        const openRdpClient = async (instanceId, name, local_port) => {
-          const instanceName = name || instanceId;
-          console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
-          await fetch(`/api/rdp/${local_port}`, {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            toast('Successfully opened RDP client', 'success');
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error opening RDP client:', error);
-            toast('Error opening RDP client', 'danger');
-          });
-        };
-
-        const showPortForwardingModal = async (instanceId, name) => {
-          const instanceName = name || instanceId;
-          console.debug('Showing port forwarding modal for:', instanceName);
-          portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
-            keyboard: true
-          });
-          document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
-            portForwardingModalProperties.value = {};
-            portForwardingStarting.value = false;
-          });
-          portForwardingModalProperties.value = {
-            instanceId: instanceId,
-            instanceName: name,
-            mode: 'local',
-            remotePort: 1433,
-            remoteHost: '',
-            credentials: ''
-          };
-          portForwardingModal.value.show();
         };
 
         const startPortForwarding = async () => {
@@ -650,7 +560,111 @@ const app = createApp({
           portForwardingStarting.value = false;
         };
 
+        const openRdpClient = async (instanceId, name, local_port) => {
+          const instanceName = name || instanceId;
+          console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
+          await fetch(`/api/rdp/${local_port}`, {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            toast('Successfully opened RDP client', 'success');
+            getActiveConnections();
+          })
+          .catch((error) => {
+            console.error('Error opening RDP client:', error);
+            toast('Error opening RDP client', 'danger');
+          });
+        };
 
+      // -----------------------------------------------
+      // Modals
+      // -----------------------------------------------
+
+        const showPortForwardingModal = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
+            keyboard: true
+          });
+          document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
+            portForwardingModalProperties.value = {};
+            portForwardingStarting.value = false;
+          });
+          portForwardingModalProperties.value = {
+            instanceId: instanceId,
+            instanceName: name,
+            mode: 'local',
+            remotePort: 1433,
+            remoteHost: '',
+            credentials: ''
+          };
+          portForwardingModal.value.show();
+        };
+
+        const showPortMappingsModal = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
+            keyboard: true
+          });
+          document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
+            portMappingsModalInstance.value = null;
+            portMappingsModalProperties.value = [];
+            getPreferences();
+          });
+          portMappingsModalInstance.value = { id: instanceId, name: name };
+          portMappingsModalProperties.value = portMappings.value[instanceName] || [];
+          portMappingsModal.value.show();
+        };
+
+        const savePortMappings = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          const validPorts = portMappingsModalProperties.value.filter((mapping) =>
+            mapping.local_port && mapping.remote_port
+          );
+          const newMappings = {
+            name: instanceName,
+            ports: validPorts
+          };
+
+          await fetch(`/api/preferences/${instanceName}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newMappings)
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.status || 'Unknown error');
+            };
+            console.debug('Port mappings saved successfully:', data);
+            toast('Port mappings saved successfully', 'success');
+            dataRefresh();
+          })
+          .catch((error) => {
+            console.error('Error saving port mappings:', error)
+            toast('Error saving port mappings', 'danger');
+          });
+          portMappingsModal.value.hide();
+        };
+
+        const addPortMapping = () => {
+          portMappingsModalProperties.value.push({
+            local_port: '',
+            remote_port: ''
+          });
+        };
+
+        const removePortMapping = (index) => {
+          portMappingsModalProperties.value.splice(index, 1);
+        };
+
+      // -----------------------------------------------
+      // Event Listeners
       // -----------------------------------------------
 
         watch(currentProfile, (newProfile) => {
@@ -662,14 +676,30 @@ const app = createApp({
         });
 
       // -----------------------------------------------
+      // Utility Functions
+      // -----------------------------------------------
 
-        const dataRefresh = async () => {
-          console.debug('Refreshing data...');
-          await getVersion();
-          await getProfiles();
-          await getRegionsAll();
-          await getRegionsSelected();
-          await getPreferences();
+        const toast = (message, type = 'info') => {
+          const toastContainer = document.getElementById('toast-container');
+          const toastElement = document.createElement('div');
+          toastElement.className = `toast align-items-center text-bg-${type} border-0`;
+          toastElement.setAttribute('role', 'alert');
+          toastElement.setAttribute('aria-live', 'assertive');
+          toastElement.setAttribute('aria-atomic', 'true');
+          toastElement.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                ${message}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          `;
+          toastContainer.appendChild(toastElement);
+          const toastInstance = new bootstrap.Toast(toastElement, {
+            delay: 5000,
+            autohide: true
+          });
+          toastInstance.show();
         };
 
         const timeAgo = (timestamp) => {
@@ -703,29 +733,6 @@ const app = createApp({
           toast('Copied to clipboard', 'success');
         };
 
-        const toast = (message, type = 'info') => {
-          const toastContainer = document.getElementById('toast-container');
-          const toastElement = document.createElement('div');
-          toastElement.className = `toast align-items-center text-bg-${type} border-0`;
-          toastElement.setAttribute('role', 'alert');
-          toastElement.setAttribute('aria-live', 'assertive');
-          toastElement.setAttribute('aria-atomic', 'true');
-          toastElement.innerHTML = `
-            <div class="d-flex">
-              <div class="toast-body">
-                ${message}
-              </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-          `;
-          toastContainer.appendChild(toastElement);
-          const toastInstance = new bootstrap.Toast(toastElement, {
-            delay: 5000,
-            autohide: true
-          });
-          toastInstance.show();
-        };
-
         const themeToggle = async () => {
           const body = document.body;
           const currentTheme = body.getAttribute('data-bs-theme');
@@ -749,6 +756,23 @@ const app = createApp({
         const serverHost = async () => {
           return window.location.hostname;
         }
+
+      // -----------------------------------------------
+      // Data Refresh
+      // -----------------------------------------------
+
+        const dataRefresh = async () => {
+          console.debug('Refreshing data...');
+          await getVersion();
+          await getProfiles();
+          await getRegionsAll();
+          await getRegionsSelected();
+          await getPreferences();
+        };
+
+      // -----------------------------------------------
+      // Lifecycle Hooks
+      // -----------------------------------------------
 
         onMounted(async () => {
           // Set the initial theme
