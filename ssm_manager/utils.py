@@ -405,6 +405,22 @@ class CredCommand(BaseModel):
     hide: Optional[bool] = True
     wait: Optional[bool] = False
 
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+
+        domain = ""
+        if '\\' in self.username:
+            domain, _ = self.username.split('\\', 1)
+        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
+        hostname = f'{hostname}:{self.local_port}'
+
+        cmd = [self.exec, f'/add:{hostname}',
+               f'/user:{self.username}',
+               f'/pass:"{self.password}"']
+        return str(' '.join(cmd))
+
     @property
     def startupinfo(self):
         """
@@ -418,6 +434,15 @@ class CredCommand(BaseModel):
         return None
 
     @property
+    def exec(self) -> str:
+        """
+        Determine the executable based on the system type.
+        """
+        if self.system == 'Windows':
+            return 'cmdkey.exe'
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+    @property
     def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
@@ -425,14 +450,11 @@ class CredCommand(BaseModel):
         if not self.username or not self.password:
             raise ValueError("Username and password must be provided")
 
-        domain = ""
-        if '\\' in self.username:
-            domain, _ = self.username.split('\\', 1)
-        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
-        hostname = f'{hostname}:{self.local_port}'
 
-        if self.system in ('Windows', 'Linux'):
-            return f'cmdkey /add:{hostname} /user:{self.username} /pass:"{self.password}"'
+        if self.system == 'Windows':
+            if self.hide:
+                return shlex.split(f'powershell -Command "{self._build_cmd()}"')
+            return f'start cmd /k {self._build_cmd()}'
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
