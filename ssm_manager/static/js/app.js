@@ -68,6 +68,22 @@ const app = createApp({
         const portMappingsModal = ref(null);
         const portMappingsModalInstance = ref(null);
         const portMappingsModalProperties = ref([]);
+        const portMappingsModalDuplicatePort = computed(() => {
+          const allPorts = preferences.value.instances?.flatMap(instance => {
+            if (instance.name !== portMappingsModalInstance.value?.name) {
+              return instance.ports.map(port => port.local_port);
+            }
+            return [];
+          });
+          const modalPorts = portMappingsModalProperties.value
+            .filter(port => Number.isFinite(port.local_port))
+            .map(port => port.local_port);
+          if (modalPorts.length > 0) {
+            const duplicates = modalPorts.some(port => allPorts.includes(port));
+            return duplicates;
+          }
+          return false;
+        });
 
         const navBar = ref([
           {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
@@ -355,7 +371,6 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('Connection response:', data);
             if (!data.status || data.status !== 'success') {
               throw new Error(data.error || 'Unknown error');
             }
@@ -375,7 +390,7 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('Active Connections:', data);
+            // console.debug('Active Connections:', data);
             activeConnectionsCount.value = data.length;
             activeConnections.value = data;
           })
@@ -389,6 +404,8 @@ const app = createApp({
             keyboard: true
           });
           document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
+            portMappingsModalInstance.value = null;
+            portMappingsModalProperties.value = [];
             getPreferences();
           });
           portMappingsModalInstance.value = { id: instanceId, name: name };
@@ -581,6 +598,10 @@ const app = createApp({
           console.debug('Showing port forwarding modal for:', instanceName);
           portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
             keyboard: true
+          });
+          document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
+            portForwardingModalProperties.value = {};
+            portForwardingStarting.value = false;
           });
           portForwardingModalProperties.value = {
             instanceId: instanceId,
@@ -787,7 +808,7 @@ const app = createApp({
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, portMappings, prefCredentials, prefCredentialsCount,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
-          showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping,
+          showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
           connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount, timeAgo,
