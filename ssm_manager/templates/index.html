@@ -381,7 +381,7 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-6" v-if="operating_system == 'Windows' || operating_system == 'Linux'">
+        <div class="col-lg-6">
           <!-- Credentials card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -409,19 +409,19 @@
                 <div class="col-5 fw-bold">Username</div>
                 <div class="col-7 fw-bold">Password</div>
               </div>
-              <div v-for="(cred, index) in prefCredentials" :key="index" class="row mb-2 align-items-center">
+              <form><div v-for="(cred, index) in prefCredentials" :key="index" class="row mb-2 align-items-center">
                 <div class="col-5">
-                  <input type="text" class="form-control" v-model="cred.username" placeholder="domain\username" aria-label="Username" aria-describedby="'credUsername' + index">
+                  <input type="text" class="form-control" v-model="cred.username" placeholder="domain\username" aria-label="Username" aria-describedby="'credUsername' + index" autocomplete="username">
                 </div>
                 <div class="col-5">
-                  <input type="password" class="form-control" v-model="cred.password" placeholder="new password" aria-label="Password" aria-describedby="'credPassword' + index">
+                  <input type="password" class="form-control" v-model="cred.password" placeholder="new password" aria-label="Password" aria-describedby="'credPassword' + index" autocomplete="new-password">
                 </div>
                 <div class="col-2 align-items-end text-align-end">
                   <button type="button" class="btn btn-danger" @click="removeCredential(index)" :disabled="prefCredentials.length === 0">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
-              </div>
+              </div></form>
               <button type="button" class="btn btn-primary w-100" @click="addCredential">
                 Add Credential
               </button>
@@ -513,8 +513,8 @@
               <span class="input-group-text" id="portForwardingPortLabel">Remote Port</span>
               <input id="portForwardingPort" type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
             </div>
-            <div class="input-group mb-2" v-if="operating_system == 'Windows' || operating_system == 'Linux'">
-              <label class="input-group-text" for="portForwardingCredential">Credential</label>
+            <div class="input-group mb-2" v-if="operating_system == 'Linux'">
+              <label class="input-group-text" for="portForwardingUsername">Username</label>
               <select class="form-select" id="portForwardingUsername" v-model="portForwardingModalProperties.username">
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>
               </select>
