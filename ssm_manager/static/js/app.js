@@ -13,10 +13,19 @@ const app = createApp({
         const currentRegion = ref("Select Region");
         const currentAccountId = ref("");
 
+        const sessions = ref([]);
+        const sessionsCount = computed(() => {
+          return sessions.value.length;
+        });
+        const addSessionModal = ref(null);
+        const addSessionModalProperties = ref({});
+
         const profiles = ref([]);
         const profilesCount = computed(() => {
           return profiles.value.length;
         });
+        const addProfileModal = ref(null);
+        const addProfileModalProperties = ref({});
 
         const regionsAll = ref([]);
         const regionsSelected = ref([]);
@@ -189,6 +198,25 @@ const app = createApp({
             console.log('Version:', version.value);
           })
           .catch((error) => console.error('Error fetching version:', error));
+        };
+
+        const sessionsTableColumns = ref([
+          { title: 'Session Name', field: 'name' },
+          { title: 'SSO Start URL', field: 'sso_start_url' },
+          { title: 'SSO Region', field: 'sso_region' },
+          { title: 'SSO Registration Scopes', field: 'sso_registration_scopes' }
+        ]);
+
+        const getSessions = async () => {
+          console.debug('Fetching sessions...');
+          await fetch("/api/config/sessions", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            sessions.value = data;
+          })
+          .catch((error) => console.error('Error fetching sessions:', error));
         };
 
         const profilesTableColumns = ref([
@@ -664,6 +692,96 @@ const app = createApp({
           portMappingsModalProperties.value.splice(index, 1);
         };
 
+        const showAddSessionModal = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          addSessionModal.value = new bootstrap.Modal(document.getElementById('addSessionModal'), {
+            keyboard: true
+          });
+          document.getElementById('addSessionModal').addEventListener('hidden.bs.modal', () => {
+            addSessionModalProperties.value = {};
+          });
+          addSessionModalProperties.value = {
+            name: '',
+            sso_start_url: '',
+            sso_region: '',
+            sso_registration_scopes: ''
+          };
+          addSessionModal.value.show();
+        };
+
+        const addSession = async () => {
+          console.debug('Adding new session...');
+          console.log(addSessionModalProperties.value);
+          await fetch("/api/config/session", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(addSessionModalProperties.value)
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            console.debug('Session added successfully:', data);
+            toast('Session added successfully', 'success');
+            getSessions();
+          })
+          .catch((error) => {
+            console.error('Error adding session:', error);
+            toast('Error adding session', 'danger');
+          });
+
+          addSessionModal.value.hide();
+        };
+
+        const deleteSession = async (sessionName) => {
+          console.debug('Deleting session:', sessionName);
+          await fetch(`/api/config/session/${sessionName}`, {
+            method: 'DELETE'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            console.debug('Session deleted successfully:', data);
+            toast('Session deleted successfully', 'warning');
+            getSessions();
+          })
+          .catch((error) => {
+            console.error('Error deleting session:', error);
+            toast('Error deleting session', 'danger');
+          });
+        };
+
+        const showAddProfileModal = async (instanceId, name) => {
+          const instanceName = name || instanceId;
+          addProfileModal.value = new bootstrap.Modal(document.getElementById('addProfileModal'), {
+            keyboard: true
+          });
+          document.getElementById('addProfileModal').addEventListener('hidden.bs.modal', () => {
+            addProfileModalProperties.value = {};
+          });
+          addProfileModalProperties.value = {
+            name: '',
+            sso_start_url: '',
+            sso_region: '',
+            sso_registration_scopes: ''
+          };
+          addProfileModal.value.show();
+        };
+
+        const addProfile = async () => {
+          console.debug('Adding new profile...');
+          addProfileModal.value.hide();
+        };
+
+        const deleteProfile = async (profileName) => {
+          console.debug('Deleting profile:', profileName);
+        };
+
       // -----------------------------------------------
       // Event Listeners
       // -----------------------------------------------
@@ -765,6 +883,7 @@ const app = createApp({
         const dataRefresh = async () => {
           console.debug('Refreshing data...');
           await getVersion();
+          await getSessions();
           await getProfiles();
           await getRegionsAll();
           await getRegionsSelected();
@@ -827,17 +946,18 @@ const app = createApp({
         });
 
         return {
-          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, hideTooltip,
-          profiles, profilesCount, profilesTableColumns, regionsSelected, regionsAll,
-          currentProfile, currentRegion, currentAccountId,
-          preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, portMappings, prefCredentials, prefCredentialsCount,
+          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+          hideTooltip, tooltipTriggerList, tooltipList,
+          preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
+          regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
+          sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
+          profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
           connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
           getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
-          activeConnections, activeConnectionsCount, timeAgo,
-          tooltipTriggerList, tooltipList, toast, copyToClipboard
+          activeConnections, activeConnectionsCount,
         };
     }
 });
