@@ -571,8 +571,6 @@ def run_cmd(cmd, skip_pid_wait=False, pid_max_retries=10, pid_retry_delay=2):
         )
     else:
         process = subprocess.Popen(cmd.cmd, shell=True)
-        logger.info(f"Process started: {process}")
-        logger.info(f"Process started: {process.pid}")
 
     pid = None
     if not skip_pid_wait:

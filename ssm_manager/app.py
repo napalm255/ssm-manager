@@ -368,8 +368,6 @@ def start_custom_port(instance_id):
             if not password:
                 raise ValueError("Password not found in keyring for the provided username")
 
-            logger.warning(f"Username: {username}, Password: {password}")
-
             command = CredCommand(
                 instance=instance,
                 local_port=local_port,
@@ -377,7 +375,6 @@ def start_custom_port(instance_id):
                 username=username,
                 password=password
             )
-            logger.warning(f'Command {command}, cmd: {command.cmd}')
             run_cmd(command, skip_pid_wait=True)
         except ValueError as e:
             logger.error(f"Failed to configure credentials: {str(e)}")
