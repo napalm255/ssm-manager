@@ -378,7 +378,7 @@ def start_custom_port(instance_id):
                 password=password
             )
             logger.warning(f'Command {command}, cmd: {command.cmd}')
-            run_cmd(command)
+            run_cmd(command, pid_max_retries=1, pid_retry_delay=0.5)
         except ValueError as e:
             logger.error(f"Failed to configure credentials: {str(e)}")
 

@@ -403,7 +403,7 @@ class CredCommand(BaseModel):
     username: Optional[str] = ''
     password: Optional[str] = ''
     hide: Optional[bool] = True
-    wait: Optional[bool] = False
+    wait: Optional[bool] = True
 
     def _build_cmd(self) -> str:
         """
@@ -552,7 +552,7 @@ def open_browser(url: str) -> None:
     webbrowser.open(url)
 
 
-def run_cmd(cmd):
+def run_cmd(cmd, pid_max_retries=10, pid_retry_delay=2):
     """
     Run a shell command and return the pid
     Args:
@@ -574,10 +574,9 @@ def run_cmd(cmd):
         process = subprocess.Popen(cmd.cmd, shell=True)
 
     pid = None
-    max_retries = 10
     retries = 0
-    while not pid and retries < max_retries:
-        sleep(2)
+    while not pid and retries < pid_max_retries:
+        sleep(pid_retry_delay)
         pid = get_pid(str(cmd.exec), str(cmd))
         retries += 1
 
