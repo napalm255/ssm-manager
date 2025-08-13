@@ -574,8 +574,8 @@ def run_cmd(cmd, skip_pid_wait=False, pid_max_retries=10, pid_retry_delay=2):
         logger.info(f"Process started: {process}")
         logger.info(f"Process started: {process.pid}")
 
+    pid = None
     if not skip_pid_wait:
-        pid = None
         retries = 0
         while not pid and retries < pid_max_retries:
             sleep(pid_retry_delay)
