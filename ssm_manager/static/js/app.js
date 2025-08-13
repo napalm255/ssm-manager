@@ -527,6 +527,7 @@ const app = createApp({
         const startPortForwarding = async () => {
           console.debug('Starting port forwarding...');
           portForwardingStarting.value = true;
+          console.log(portForwardingModalProperties.value.username);
 
           await fetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
@@ -540,7 +541,7 @@ const app = createApp({
               mode: portForwardingModalProperties.value.mode,
               remote_port: portForwardingModalProperties.value.remotePort,
               remote_host: portForwardingModalProperties.value.remoteHost,
-              credentials: portForwardingModalProperties.value.credentials
+              username: portForwardingModalProperties.value.username
             })
           })
           .then((response) => response.json())
@@ -599,7 +600,7 @@ const app = createApp({
             mode: 'local',
             remotePort: 1433,
             remoteHost: '',
-            credentials: ''
+            username: ''
           };
           portForwardingModal.value.show();
         };

@@ -416,9 +416,10 @@ class CredCommand(BaseModel):
         hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
         hostname = f'{hostname}:{self.local_port}'
 
-        cmd = [self.exec, f'/add:{hostname}',
-               f'/user:{self.username}',
-               f'/pass:"{self.password}"']
+        cmd = [self.exec,
+               f'/add:""{hostname}""',
+               f'/user:""{self.username}""',
+               f'/pass:""{self.password}""']
         return str(' '.join(cmd))
 
     @property

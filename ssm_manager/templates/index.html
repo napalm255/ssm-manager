@@ -513,7 +513,7 @@
             </div>
             <div class="input-group mb-2" v-if="operating_system == 'Windows' || operating_system == 'Linux'">
               <label class="input-group-text" for="portForwardingCredential">Credential</label>
-              <select class="form-select" id="portForwardingCredential" v-model="portForwardingModalProperties.credentials">
+              <select class="form-select" id="portForwardingUsername" v-model="portForwardingModalProperties.username">
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>
               </select>
             </div>

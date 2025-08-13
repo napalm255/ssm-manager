@@ -360,17 +360,27 @@ def start_custom_port(instance_id):
             return jsonify({'error': 'No available ports'}), 503
 
         try:
+            username = data.get('username', None)
+            if not username:
+                raise ValueError("Username is required for credential configuration")
+
+            password = keyring.get_password('ssm_manager', username)
+            if not password:
+                raise ValueError("Password not found in keyring for the provided username")
+
+            logger.warning(f"Username: {username}, Password: {password}")
+
             command = CredCommand(
                 instance=instance,
                 local_port=local_port,
                 system=system,
-                username=data.get('credentials', None),
-                password=keyring.get_password('ssm_manager', data.get('credentials', None))
+                username=username,
+                password=password
             )
+            logger.warning(f'Command {command}')
             run_cmd(command)
         except ValueError as e:
             logger.error(f"Failed to configure credentials: {str(e)}")
-            command = None
 
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
