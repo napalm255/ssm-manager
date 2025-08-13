@@ -404,6 +404,7 @@ class CredCommand(BaseModel):
     password: Optional[str] = ''
     hide: Optional[bool] = True
     wait: Optional[bool] = True
+    timeout: int | None = Field(default=None, ge=0)
 
     def _build_cmd(self) -> str:
         """
