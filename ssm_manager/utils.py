@@ -572,6 +572,8 @@ def run_cmd(cmd, pid_max_retries=10, pid_retry_delay=2):
         )
     else:
         process = subprocess.Popen(cmd.cmd, shell=True)
+        logger.info(f"Process started: {process}")
+        logger.info(f"Process started: {process.pid}")
 
     pid = None
     retries = 0
