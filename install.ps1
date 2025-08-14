@@ -83,17 +83,17 @@ if (-not (Test-Path $destinationBaseDir)) {
 # Backup the 'preferences.json' file if it exists
 # ==============================================================================
 if (Test-Path $preferencesFile) {
-    Write-Host "Backing up preferences.json..." -ForegroundColor Yellow
+    Write-Host "Backing up preferences.json..." -ForegroundColor Cyan
     try {
         Copy-Item -Path $preferencesFile -Destination $backupPreferencesPath -Force -ErrorAction Stop
-        Write-Host "preferences.json backed up to $backupPreferencesPath"
+        Write-Host "preferences.json backed up to $backupPreferencesPath" -ForegroundColor Green
     } catch {
         Write-Host "Failed to back up preferences.json. Aborting update." -ForegroundColor Red
         exit
     }
 }
 else {
-    Write-Host "preferences.json not found. No backup needed." -ForegroundColor Yellow
+    Write-Host "preferences.json not found. No backup needed." -ForegroundColor Cyan
 }
 
 # ==============================================================================
