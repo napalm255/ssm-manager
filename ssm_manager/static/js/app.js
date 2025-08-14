@@ -549,7 +549,6 @@ const app = createApp({
         const startPortForwarding = async () => {
           console.debug('Starting port forwarding...');
           portForwardingStarting.value = true;
-          console.log(portForwardingModalProperties.value.username);
 
           await fetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
@@ -703,7 +702,6 @@ const app = createApp({
 
         const addSession = async () => {
           console.debug('Adding new session...');
-          console.log(addSessionModalProperties.value);
           await fetch("/api/config/session", {
             method: 'POST',
             headers: {
