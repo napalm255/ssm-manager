@@ -108,7 +108,7 @@ A single line command can be used to download and install the latest version of 
 The following command will download the latest version of the installer script and execute it, installing SSM Manager to `C:\Program Files (x86)\ssm_manager\ssm_manager.exe`:
 
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; "$env:TEMP\ssm-manager-install.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1"
 ```
 
 #### Custom Installation Directory
@@ -116,7 +116,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/
 If you want to install SSM Manager to a custom directory, you can specify the `-destinationBaseDir` parameter in the command. For example, to install it to `C:\Utils\ssm_manager`, you would use:
 
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; "$env:TEMP\ssm-manager-install.ps1" -destinationBaseDir "C:\Utils"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1" -destinationBaseDir "C:\Utils"
 ```
 
 ### Self Extracting Zip Installation
