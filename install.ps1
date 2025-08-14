@@ -42,6 +42,12 @@ $backupPreferencesPath = "$tempDir\preferences.json.bak"
 # ==============================================================================
 Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Cyan
 try {
+    # Ensure the temporary directory exists and is clean
+    if (Test-Path $tempDir) {
+        Remove-Item $tempDir -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
+
     # Use Invoke-RestMethod for easier JSON parsing from the GitHub API
     $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$gitHubRepo/releases/latest" -ErrorAction Stop
 
@@ -64,15 +70,11 @@ catch {
     Write-Host "Error fetching release info. Please check the repository URL and your internet connection." -ForegroundColor Red
     exit
 }
+exit
 
 # ==============================================================================
 # Create necessary directories
 # ==============================================================================
-# Ensure the temporary directory exists and is clean
-if (Test-Path $tempDir) {
-    Remove-Item $tempDir -Recurse -Force
-}
-New-Item -ItemType Directory -Path $tempDir | Out-Null
 
 # Ensure the destination directory exists
 if (-not (Test-Path $destinationBaseDir)) {
