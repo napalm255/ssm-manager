@@ -19,6 +19,8 @@ class AwsConfigManager:
         Initializes the manager by finding the AWS config file path.
         """
         self._config_path = self._get_aws_config_path()
+        self.session_prefix = 'sso-session '
+        self.profile_prefix = 'profile '
 
     def _get_aws_config_path(self):
         """
@@ -116,11 +118,11 @@ class AwsConfigManager:
 
             config.read(self._config_path)
             for section in config.sections():
-                if section.startswith('sso-session '):
-                    session_names.append(section[len('sso-session '):])
+                if section.startswith(self.session_prefix):
+                    session_names.append(section[len(self.session_prefix):])
 
             for name in session_names:
-                section_name = 'sso-session ' + name
+                section_name = self.session_prefix + name
                 session = {'name': name}
                 for prop in ['sso_start_url', 'sso_region', 'sso_registration_scopes']:
                     if not config.has_option(section_name, prop):
@@ -145,7 +147,7 @@ class AwsConfigManager:
             region (str): The AWS region for the session.
             registration_scopes (str): The registration scopes for the session.
         """
-        section_name = 'sso-session ' + name
+        section_name = self.session_prefix + name
         self.write_value(section_name, 'sso_start_url', start_url)
         self.write_value(section_name, 'sso_region', region)
         self.write_value(section_name, 'sso_registration_scopes', registration_scopes)
@@ -163,7 +165,7 @@ class AwsConfigManager:
                 raise ValueError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
-            section_name = 'sso-session ' + name
+            section_name = self.session_prefix + name
             assert config.has_section(section_name), f"Session '{name}' does not exist"
 
             config.remove_section(section_name)
@@ -196,13 +198,13 @@ class AwsConfigManager:
 
             config.read(self._config_path)
             for section in config.sections():
-                if section.startswith('profile '):
-                    profile_names.append(section[len('profile '):])
+                if section.startswith(self.profile_prefix):
+                    profile_names.append(section[len(self.profile_prefix):])
                 elif section == 'default':
                     profile_names.append('default')
 
             for name in profile_names:
-                section_name = 'profile ' + name if name != 'default' else 'default'
+                section_name = self.profile_prefix + name if name != 'default' else 'default'
                 profile = {'name': name}
                 for prop in ['region', 'output', 'sso_session', 'sso_account_id', 'sso_role_name']:
                     if not config.has_option(section_name, prop):
@@ -250,7 +252,7 @@ class AwsConfigManager:
                 raise ValueError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
-            section_name = 'profile ' + name if name != 'default' else 'default'
+            section_name = self.profile_prefix + name if name != 'default' else 'default'
             assert config.has_section(section_name), f"Profile '{name}' does not exist"
 
             config.remove_section(section_name)
@@ -258,7 +260,7 @@ class AwsConfigManager:
                 config.write(configfile)
             logger.info(f"Successfully deleted profile '{name}'")
         except configparser.Error as e:
-            logger.error(f"Error deleting profile '{name}': {e}")
+            logger.error(f"Error deleting profile: {e}")
         except ValueError as e:
             logger.error(f"Error deleting profile: {e}")
         except AssertionError as e:

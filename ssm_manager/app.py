@@ -247,7 +247,7 @@ def delete_config_profile(profile_name):
     """
     try:
         config = AwsConfigManager()
-        config.delete_profile(profile_name)
+        config.delete_profile(str(profile_name))
         logger.info(f"Profile deleted successfully: {profile_name}")
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
