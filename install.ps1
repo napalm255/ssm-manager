@@ -98,8 +98,6 @@ else {
     Write-Host "preferences.json not found. No backup needed." -ForegroundColor Yellow
 }
 
-exit
-
 # ==============================================================================
 # Delete the old application folder
 # ==============================================================================
@@ -107,6 +105,8 @@ if (Test-Path $appDir) {
     Write-Host "Deleting existing application folder: $appDir" -ForegroundColor Yellow
     Remove-Item -Path $appDir -Recurse -Force
 }
+
+exit
 
 # ==============================================================================
 # Download and extract the new release
