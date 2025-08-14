@@ -9,15 +9,17 @@ import platform
 import time
 import subprocess
 import psutil
+import keyring
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
+from ssm_manager.config import AwsConfigManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand,
     run_cmd, FreePort, open_browser
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
@@ -50,7 +52,7 @@ preferences = PreferencesHandler()
 cache = Cache()
 
 # Setup Flask
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/', template_folder='templates')
 
 aws_manager = AWSManager()
 
@@ -68,7 +70,8 @@ def get_version():
         with open(version_file, 'r', encoding='utf-8') as vfile:
             version = {
                 'version': vfile.read().strip(),
-                'name': APP_NAME
+                'name': APP_NAME,
+                'operating_system': system,
             }
         logger.debug(f"Version: {version}")
         return jsonify(version)
@@ -127,6 +130,129 @@ def get_all_regions():
         logger.error(f"Failed to load all AWS regions: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to load all regions'}), 500
 
+
+@app.route('/api/config/sessions', methods=['GET'])
+def get_config_sessions():
+    """
+    Endpoint to get AWS configuration sessions
+    Returns: JSON list of AWS profiles from the configuration
+    """
+    try:
+        config = AwsConfigManager()
+        sessions = config.get_sessions()
+        logger.debug(f"Configuration sessions: {len(sessions)} found.")
+        return jsonify(sessions)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to fetch AWS configuration sessions: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to fetch AWS configuration sessions'}), 500
+
+@app.route('/api/config/session', methods=['POST'])
+def add_config_session():
+    """
+    Endpoint to add a new AWS configuration session
+    Returns: JSON response with status
+    """
+    try:
+        data = request.json
+        session_name = data.get('name', None)
+        sso_start_url = data.get('sso_start_url', None)
+        sso_region = data.get('sso_region', None)
+        sso_registration_scopes = data.get('sso_registration_scopes', None)
+
+        if not (session_name and sso_start_url and sso_region and sso_registration_scopes):
+            logger.error("Failed to add session. All fields are required.")
+            return jsonify({'error': 'Failed to add session'}), 400
+
+        config = AwsConfigManager()
+        config.add_session(
+            name=session_name,
+            start_url=sso_start_url,
+            region=sso_region,
+            registration_scopes=sso_registration_scopes
+        )
+        logger.info(f"Session added successfully: {session_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to add session: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to add session'}), 500
+
+@app.route('/api/config/session/<session_name>', methods=['DELETE'])
+def delete_config_session(session_name):
+    """
+    Endpoint to delete an AWS configuration session
+    Args:
+        session_name (str): Name of the session to delete
+    Returns: JSON response with status
+    """
+    try:
+        config = AwsConfigManager()
+        config.delete_session(session_name)
+        logger.info(f"Session deleted successfully: {session_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to delete session: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to delete session'}), 500
+
+@app.route('/api/config/profiles', methods=['GET'])
+def get_config_profiles():
+    """
+    Endpoint to get AWS configuration profiles
+    Returns: JSON list of AWS profiles from the configuration
+    """
+    try:
+        config = AwsConfigManager()
+        profiles = config.get_profiles()
+        logger.debug(f"Configuration profiles: {len(profiles)} found.")
+        return jsonify(profiles)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to fetch AWS configuration profiles: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to fetch AWS configuration profiles'}), 500
+
+@app.route('/api/config/profile', methods=['POST'])
+def add_config_profile():
+    """
+    Endpoint to add a new AWS configuration profile
+    Returns: JSON response with status
+    """
+    try:
+        data = request.json
+        profile_name = data.get('name', None)
+
+        if not profile_name:
+            logger.error("Failed to add profile. Profile name is required.")
+            return jsonify({'error': 'Failed to add profile'}), 400
+
+        config = AwsConfigManager()
+        config.add_profile(
+            name=profile_name,
+            region = data.get('region', None),
+            sso_account_id = data.get('sso_account_id', None),
+            sso_role_name = data.get('sso_role_name', None),
+            sso_session = data.get('sso_session', None),
+            output = data.get('output', None)
+        )
+        logger.info(f"Profile added successfully: {profile_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to add profile: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to add profile'}), 500
+
+@app.route('/api/config/profile/<profile_name>', methods=['DELETE'])
+def delete_config_profile(profile_name):
+    """
+    Endpoint to delete an AWS configuration profile
+    Args:
+        profile_name (str): Name of the profile to delete
+    Returns: JSON response with status
+    """
+    try:
+        config = AwsConfigManager()
+        config.delete_profile(str(profile_name))
+        logger.info(f"Profile deleted successfully: {profile_name}")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to delete profile: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to delete profile'}), 500
 
 @app.route('/api/connect', methods=['POST'])
 def connect():
@@ -357,6 +483,26 @@ def start_custom_port(instance_id):
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
 
+        try:
+            username = data.get('username', None)
+            if not username:
+                raise ValueError("Username is required for credential configuration")
+
+            password = keyring.get_password('ssm_manager', username)
+            if not password:
+                raise ValueError("Password not found in keyring for the provided username")
+
+            command = CredCommand(
+                instance=instance,
+                local_port=local_port,
+                system=system,
+                username=username,
+                password=password
+            )
+            run_cmd(command, skip_pid_wait=True)
+        except ValueError as e:
+            logger.error(f"Failed to configure credentials: {str(e)}")
+
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
             instance=instance,
@@ -439,7 +585,7 @@ def update_preferences():
     Returns: JSON response with status
     """
     try:
-        preferences.update_preferences(request.json)
+        assert preferences.update_preferences(request.json)
         logger.info("Preferences updated successfully")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating preferences: {str(e)}")
@@ -456,8 +602,8 @@ def update_instance_preferences(instance_name):
     Returns: JSON response with status
     """
     try:
-        preferences.update_instance_preferences(instance_name, request.json)
-        logger.info(f"*******Preferences updated for instance: {instance_name}")
+        assert preferences.update_instance_preferences(instance_name, request.json)
+        logger.info(f"Preferences updated for instance: {instance_name}")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating instance preferences: {str(e)}")
         return jsonify({'error': f'Error updating preferences for instance: {instance_name}'}), 500

@@ -15,6 +15,7 @@ colorama = "*"
 cachelib = "*"
 pystray = "*"
 pydantic = "*"
+keyring = "*"
 
 [dev-packages]
 pylint = "*"

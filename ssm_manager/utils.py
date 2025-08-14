@@ -393,6 +393,71 @@ class SSMCommand(AWSCommand):
         return str(' '.join(cmd))
 
 
+class CredCommand(BaseModel):
+    """
+    Model representing the credential command.
+    """
+    instance: Instance
+    local_port: int = Field(ge=1024, le=65535)
+    system: Literal["Linux", "Windows"]
+    username: Optional[str] = ''
+    password: Optional[str] = ''
+    hide: Optional[bool] = True
+    wait: Optional[bool] = True
+    timeout: int | None = Field(default=None, ge=0)
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+
+        domain = ""
+        if '\\' in self.username:
+            domain, _ = self.username.split('\\', 1)
+        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
+        hostname = f'{hostname}:{self.local_port}'
+
+        cmd = [self.exec,
+               f'/add:"{hostname}"',
+               f'/user:"{self.username}"',
+               f'/pass:"{self.password}"']
+        return str(' '.join(cmd))
+
+    @property
+    def startupinfo(self):
+        """
+        Return startupinfo for Windows.
+        """
+        if self.system == 'Windows':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            return startupinfo
+        return None
+
+    @property
+    def exec(self) -> str:
+        """
+        Determine the executable based on the system type.
+        """
+        if self.system == 'Windows':
+            return 'cmdkey.exe'
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+    @property
+    def cmd(self) -> str | list:
+        """
+        Build the command to run based on the system type.
+        """
+        if not self.username or not self.password:
+            raise ValueError("Username and password must be provided")
+
+
+        if self.system == 'Windows':
+            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+
 class FreePort(BaseModel):
     """
     Class to find a free port
@@ -486,7 +551,7 @@ def open_browser(url: str) -> None:
     webbrowser.open(url)
 
 
-def run_cmd(cmd):
+def run_cmd(cmd, skip_pid_wait=False, pid_max_retries=10, pid_retry_delay=2):
     """
     Run a shell command and return the pid
     Args:
@@ -508,14 +573,14 @@ def run_cmd(cmd):
         process = subprocess.Popen(cmd.cmd, shell=True)
 
     pid = None
-    max_retries = 10
-    retries = 0
-    while not pid and retries < max_retries:
-        sleep(2)
-        pid = get_pid(str(cmd.exec), str(cmd))
-        retries += 1
+    if not skip_pid_wait:
+        retries = 0
+        while not pid and retries < pid_max_retries:
+            sleep(pid_retry_delay)
+            pid = get_pid(str(cmd.exec), str(cmd))
+            retries += 1
 
-    if not pid:
+    if not skip_pid_wait and not pid:
         logger.error(f"Failed to get PID for command: {str(cmd)}")
         return None
 

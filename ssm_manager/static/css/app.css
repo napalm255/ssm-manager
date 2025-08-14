@@ -1,0 +1,189 @@
+:root {
+  --color-shell: #FF8C00; /* Dark Orange */
+  --color-shell-hover: #FF991A; /* Lighter Orange */
+  --color-rdp: #000080; /* Navy Blue */
+  --color-rdp-hover: #0000A0; /* Darker Navy Blue */
+  --color-port-forward: #9932CC; /* Dark Orchid */
+  --color-port-forward-hover: #A647D8; /* Lighter Purple */
+  --color-mssql: #FF4136; /* Red */
+  --color-mssql-hover: #FF6347; /* Lighter Red */
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: block;
+}
+
+main {
+  height: 100vh;
+  min-height: -webkit-fill-available;
+  max-height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.page {
+  margin-top: 20px;
+}
+
+.page-body {
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+[data-bs-theme="light"] .logo {
+  border-radius: 50%;
+  background: radial-gradient(circle, #888888, transparent 70%);
+}
+[data-bs-theme="dark"] .logo {
+  background: transparent;
+}
+
+#home {
+  display: none;
+}
+#instances {
+  display: none;
+}
+#preferences {
+  display: none;
+}
+#profiles {
+  display: none;
+}
+
+.nav-link {
+  cursor: pointer;
+}
+
+.nav-link i {
+  font-size: 20px;
+}
+
+.bi {
+  font-size: 18px;
+}
+
+.h2 {
+  border-left: 7px solid var(--bs-primary);
+  padding-left: 15px;
+}
+
+.instance-card {
+  border: 1px solid var(--bs-secondary);
+}
+
+.active-connection-card {
+  border: 1px solid #000;
+}
+
+.start-shell {
+  background-color: var(--color-shell);
+}
+
+.start-shell:hover {
+  background-color: var(--color-shell-hover);
+  transform: scale(1.10);
+}
+
+.connection-shell {
+  background-color: var(--color-shell);
+}
+
+.connection-shell:hover {
+  background-color: var(--color-shell);
+  color: initial;
+  cursor: initial;
+}
+
+.start-rdp {
+  background-color: var(--color-rdp);
+  color: #FFFFFF;
+}
+
+.start-rdp:hover {
+  background-color: var(--color-rdp-hover);
+  color: #FFFFFF;
+  transform: scale(1.10);
+}
+
+.connection-rdp {
+  background-color: var(--color-rdp);
+  color: #FFFFFF;
+}
+
+.connection-rdp:hover {
+  background-color: var(--color-rdp-hover);
+  color: #FFFFFF;
+  transform: scale(1.10);
+  cursor: pointer;
+}
+
+.start-port-forward {
+  background-color: var(--color-port-forward);
+}
+
+.start-port-forward:hover {
+  background-color: var(--color-port-forward-hover);
+  transform: scale(1.10);
+}
+
+.connection-port-forward {
+  background-color: var(--color-port-forward);
+}
+
+.connection-port-forward:hover {
+  background-color: var(--color-port-forward);
+  color: initial;
+  cursor: initial;
+}
+
+.edit-port-mapping {
+  color: var(--color-port-forward);
+}
+
+.edit-port-mapping.bi-pencil-square {
+  font-size: 1.3rem;
+}
+
+.edit-port-mapping:hover {
+  color: var(--color-port-forward-hover);
+  transform: scale(1.10);
+  cursor: pointer;
+}
+
+.accordion-button::after {
+  margin-left: 0 !important;
+  margin-right: 20px !important;
+  order: -1 !important;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  outline: 0;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: inherit; /* Use the parent background color */
+  color: var(--bs-primary);
+  box-shadow: none;         /* Optional: Remove the default box shadow */
+}
+
+.accordion-button {
+  user-select: text;
+}
+
+.btn-disconnect {
+  cursor: pointer;
+  border: 1px solid #ff0000;
+}
+
+.btn-disconnect:hover {
+  background-color: #ffcccc;
+  transform: scale(1.10);
+}

@@ -28,9 +28,15 @@ class AWSManager:
         Returns:
             List of profile names or empty list if no profiles found
         """
+        # pylint: disable=protected-access
         profiles = []
         try:
-            profiles = boto3.Session().available_profiles
+            _profiles = boto3.Session().available_profiles
+            for _profile in _profiles:
+                session = boto3.Session(profile_name=_profile)
+                config = session._session.full_config['profiles'].get(_profile, {})
+                profile = {'name': _profile, **config}
+                profiles.append(profile)
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
         except BotoCoreError as e:
             logger.warning(f"Error retrieving AWS profiles: {e}")
