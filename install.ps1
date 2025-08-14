@@ -101,9 +101,19 @@ else {
 # ==============================================================================
 # Delete the old application folder
 # ==============================================================================
-if (Test-Path $appDir) {
+while (Test-Path $appDir) {
     Write-Host "Deleting existing application folder: $appDir" -ForegroundColor Yellow
-    Remove-Item -Path $appDir -Recurse -Force
+    try {
+        Remove-Item -Path $appDir -Recurse -Force -ErrorAction Stop
+        Write-Host "Old application folder deleted successfully."
+    }
+    catch {
+        Write-Host "Failed to delete the old application folder. Please close any running instances of the application and try again." -ForegroundColor Red
+        Sleep -Seconds 5
+    }
+}
+if (-not (Test-Path $appDir)) {
+    Write-Host "No existing application folder found. Proceeding with update." -ForegroundColor Green
 }
 
 exit
