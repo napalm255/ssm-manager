@@ -57,8 +57,8 @@ try {
     $zipFileName = $zipAsset.name
     $zipFilePath = "$tempDir\$zipFileName"
 
-    Write-Host "Found latest release: $($releaseInfo.tag_name)"
-    Write-Host "Download URL: $zipDownloadUrl"
+    Write-Host "Found latest release: $($releaseInfo.tag_name)" -ForegroundColor Blue
+    Write-Host "Download URL: $zipDownloadUrl" -ForegroundColor Blue
 } catch {
     Write-Host "Error fetching release info. Please check the repository URL and your internet connection." -ForegroundColor Red
     exit
@@ -156,6 +156,6 @@ if (Test-Path $backupPreferencesPath) {
 # ==============================================================================
 # Clean up and finish
 # ==============================================================================
-Write-Host "Cleaning up temporary files..."
+Write-Host "Cleaning up temporary files..." -ForegroundColor Cyan
 Remove-Item -Path $tempDir -Recurse -Force
 Write-Host "Update finished successfully!" -ForegroundColor Green
