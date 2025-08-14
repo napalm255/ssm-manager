@@ -99,6 +99,28 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 
 A pre-built version is currently only available for Windows and comes in either a self extracting zip or a zip file.
 
+### PowerShell Installation
+
+A powershell script is provided to query github for the latest release and install the application.
+
+A single line command can be used to download and install the latest version of SSM Manager:
+
+The following command will download the latest version of the installer script and execute it, installing SSM Manager to `C:\Program Files (x86)\ssm_manager\ssm_manager.exe`:
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; "$env:TEMP\ssm-manager-install.ps1"
+```
+
+#### Custom Installation Directory
+
+If you want to install SSM Manager to a custom directory, you can specify the `-destinationBaseDir` parameter in the command. For example, to install it to `C:\Utils\ssm_manager`, you would use:
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; "$env:TEMP\ssm-manager-install.ps1" -destinationBaseDir "C:\Utils"
+```
+
+### Self Extracting Zip Installation
+
 1. Download the latest release from the releases page
 2. Run the self extracting zip, `ssm_manager.exe`.
 3. Ensure that AWS CLI and SSM Plugin are installed.
