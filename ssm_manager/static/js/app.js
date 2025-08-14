@@ -275,7 +275,6 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             preferences.value = data;
-            // console.debug('Loaded Preferences:', preferences.value);
 
             const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
             const logging = preferences.value.logging || { level: 'INFO' };
@@ -347,10 +346,7 @@ const app = createApp({
           if (!validPortRange) {
             toast('Starting port must be less than the ending port', 'danger');
           }
-          if (validPortStart && validPortEnd && validPortRange) {
-            return true;
-          }
-          return false;
+          return validPortStart && validPortEnd && validPortRange;
         };
 
         const addCredential = () => {
@@ -424,13 +420,11 @@ const app = createApp({
         };
 
         const getActiveConnections = async () => {
-          // console.debug('Fetching active connections...');
           await fetch("/api/active-connections", {
             method: 'GET'
           })
           .then((response) => response.json())
           .then((data) => {
-            // console.debug('Active Connections:', data);
             activeConnectionsCount.value = data.length;
             activeConnections.value = data;
           })
@@ -614,7 +608,6 @@ const app = createApp({
       // -----------------------------------------------
 
         const showPortForwardingModal = async (instanceId, name) => {
-          const instanceName = name || instanceId;
           portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
             keyboard: true
           });
@@ -693,7 +686,6 @@ const app = createApp({
         };
 
         const showAddSessionModal = async (instanceId, name) => {
-          const instanceName = name || instanceId;
           addSessionModal.value = new bootstrap.Modal(document.getElementById('addSessionModal'), {
             keyboard: true
           });
@@ -757,7 +749,6 @@ const app = createApp({
         };
 
         const showAddProfileModal = async (instanceId, name) => {
-          const instanceName = name || instanceId;
           addProfileModal.value = new bootstrap.Modal(document.getElementById('addProfileModal'), {
             keyboard: true
           });
@@ -904,14 +895,6 @@ const app = createApp({
           if (tooltip) {
             tooltip.hide();
           }
-        }
-
-        const serverPort = async () => {
-          return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        };
-
-        const serverHost = async () => {
-          return window.location.hostname;
         }
 
       // -----------------------------------------------
