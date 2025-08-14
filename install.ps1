@@ -118,8 +118,6 @@ else {
     }
 }
 
-exit
-
 # ==============================================================================
 # Download and extract the new release
 # ==============================================================================
@@ -133,15 +131,15 @@ try {
 
     # The zip file often extracts into a subfolder.
     # We need to move the contents of that subfolder to the root of the app directory.
-    $extractedFolder = Get-ChildItem -Path $appDir | Where-Object { $_.PSIsContainer } | Select-Object -First 1
+    # $extractedFolder = Get-ChildItem -Path $appDir | Where-Object { $_.PSIsContainer } | Select-Object -First 1
 
-    if ($null -ne $extractedFolder) {
-        Write-Host "Moving extracted content to root directory..."
-        $extractedContent = Get-ChildItem -Path $extractedFolder.FullName
-        Move-Item -Path $extractedContent.FullName -Destination $appDir -Force
-        # Remove the now empty subfolder
-        Remove-Item -Path $extractedFolder.FullName -Recurse -Force
-    }
+    # if ($null -ne $extractedFolder) {
+    #     Write-Host "Moving extracted content to root directory..."
+    #     $extractedContent = Get-ChildItem -Path $extractedFolder.FullName
+    #     Move-Item -Path $extractedContent.FullName -Destination $appDir -Force
+    #     # Remove the now empty subfolder
+    #     Remove-Item -Path $extractedFolder.FullName -Recurse -Force
+    # }
 
     Write-Host "Extraction complete."
 }
@@ -149,6 +147,7 @@ catch {
     Write-Host "An error occurred during download or extraction. Aborting." -ForegroundColor Red
     exit
 }
+exit
 
 # ==============================================================================
 # Restore 'preferences.json'
