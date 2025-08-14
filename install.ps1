@@ -127,7 +127,7 @@ try {
     Write-Host "Download complete. Extracting..."
 
     # Extract the zip file to the destination directory
-    Expand-Archive -Path $zipFilePath -DestinationPath $appDir -Force -ErrorAction Stop
+    Expand-Archive -Path $zipFilePath -DestinationPath $destinationBaseDir -Force -ErrorAction Stop
 
     # The zip file often extracts into a subfolder.
     # We need to move the contents of that subfolder to the root of the app directory.
