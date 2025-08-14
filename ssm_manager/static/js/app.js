@@ -896,6 +896,37 @@ const app = createApp({
         }
 
       // -----------------------------------------------
+      // Check GitHub for updates
+      // -----------------------------------------------
+        const checkForUpdates = async () => {
+          console.debug('Checking for updates...');
+          await fetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest", {
+            method: 'GET'
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            const currentVersion = `v${version.value}`;
+            const githubVersion = data.tag_name;
+            const githubUrl = data.html_url;
+
+            if (!githubVersion || !githubUrl) {
+              throw new Error('No version information found on GitHub');
+            } else if (githubVersion !== currentVersion) {
+              console.debug('New version available:', githubVersion);
+              toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
+            } else {
+              console.debug('No updates available');
+              toast('You are using the latest version', 'success');
+            }
+          })
+          .catch((error) => {
+            console.error('Error checking for updates:', error);
+            toast('Error checking for updates', 'danger');
+          });
+        };
+
+
+      // -----------------------------------------------
       // Data Refresh
       // -----------------------------------------------
 
@@ -947,6 +978,9 @@ const app = createApp({
 
           // Load data from the server
           await dataRefresh();
+
+          // Check for updates
+          await checkForUpdates();
 
           // Query active connections every 2 seconds
           setInterval(getActiveConnections, 2500);
