@@ -59,8 +59,7 @@ try {
 
     Write-Host "Found latest release: $($releaseInfo.tag_name)"
     Write-Host "Download URL: $zipDownloadUrl"
-}
-catch {
+} catch {
     Write-Host "Error fetching release info. Please check the repository URL and your internet connection." -ForegroundColor Red
     exit
 }
@@ -88,8 +87,7 @@ if (Test-Path $preferencesFile) {
     try {
         Copy-Item -Path $preferencesFile -Destination $backupPreferencesPath -Force -ErrorAction Stop
         Write-Host "preferences.json backed up to $backupPreferencesPath"
-    }
-    catch {
+    } catch {
         Write-Host "Failed to back up preferences.json. Aborting update." -ForegroundColor Red
         exit
     }
@@ -110,8 +108,7 @@ else {
         try {
             Remove-Item -Path $appDir -Recurse -Force -ErrorAction Stop
             Write-Host "Old application folder deleted successfully." -ForegroundColor Green
-        }
-        catch {
+        } catch {
             Write-Host "Failed to delete the old application folder. Please close any running instances of the application and try again." -ForegroundColor Red
             Sleep -Seconds 5
         }
@@ -119,35 +116,29 @@ else {
 }
 
 # ==============================================================================
-# Download and extract the new release
+# Download the latest release
 # ==============================================================================
-Write-Host "Downloading new release..." -ForegroundColor Cyan
 try {
+    Write-Host "Downloading new release..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $zipDownloadUrl -OutFile $zipFilePath -ErrorAction Stop
-    Write-Host "Download complete. Extracting..."
+    Write-Host "Download complete." -ForegroundColor Green
+} catch {
+    Write-Host "Failed to download the release." -ForegroundColor Red
+    exit 1
+}
 
-    # Extract the zip file to the destination directory
+# ==============================================================================
+# Extract the downloaded zip file
+# ==============================================================================
+
+try {
+    Write-Host "Extracting files to $destinationBaseDir..." -ForegroundColor Cyan
     Expand-Archive -Path $zipFilePath -DestinationPath $destinationBaseDir -Force -ErrorAction Stop
-
-    # The zip file often extracts into a subfolder.
-    # We need to move the contents of that subfolder to the root of the app directory.
-    # $extractedFolder = Get-ChildItem -Path $appDir | Where-Object { $_.PSIsContainer } | Select-Object -First 1
-
-    # if ($null -ne $extractedFolder) {
-    #     Write-Host "Moving extracted content to root directory..."
-    #     $extractedContent = Get-ChildItem -Path $extractedFolder.FullName
-    #     Move-Item -Path $extractedContent.FullName -Destination $appDir -Force
-    #     # Remove the now empty subfolder
-    #     Remove-Item -Path $extractedFolder.FullName -Recurse -Force
-    # }
-
-    Write-Host "Extraction complete."
-}
-catch {
+    Write-Host "Extraction complete." -ForegroundColor Green
+} catch {
     Write-Host "An error occurred during download or extraction. Aborting." -ForegroundColor Red
-    exit
+    exit 1
 }
-exit
 
 # ==============================================================================
 # Restore 'preferences.json'
@@ -157,8 +148,7 @@ if (Test-Path $backupPreferencesPath) {
     try {
         Copy-Item -Path $backupPreferencesPath -Destination $preferencesFile -Force -ErrorAction Stop
         Write-Host "preferences.json restored successfully."
-    }
-    catch {
+    } catch {
         Write-Host "Failed to restore preferences.json. Please check the backup file." -ForegroundColor Red
     }
 }
