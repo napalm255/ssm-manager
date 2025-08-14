@@ -545,7 +545,7 @@
               <span class="input-group-text" id="portForwardingPortLabel">Remote Port</span>
               <input id="portForwardingPort" type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
             </div>
-            <div class="input-group mb-2" v-if="operating_system == 'Linux'">
+            <div class="input-group mb-2" v-if="operating_system == 'Windows'">
               <label class="input-group-text" for="portForwardingUsername">Username</label>
               <select class="form-select" id="portForwardingUsername" v-model="portForwardingModalProperties.username">
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>

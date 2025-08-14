@@ -73,7 +73,10 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
   - Session monitoring and management
   - Remote host connection through instances
   - Configure Windows Credentials upon connection
-  
+
+### AWS Configuration
+ - Supports AWS SSO profiles
+ - Configure sessions and profiles via the UI
 
 ### Active Connection Management
 - Real-time connection status monitoring
