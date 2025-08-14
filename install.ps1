@@ -25,7 +25,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$destinationBaseDir = "C:\Program Files (x86)",
+    [string]$destinationBaseDir = "C:\Program Files (x86)"
 )
 
 # ==============================================================================
