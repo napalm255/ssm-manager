@@ -313,6 +313,10 @@ def update_config_hosts():
             if line.strip() and line.startswith('#'):
                 new_hosts_file.append(line)
                 continue
+            if line.strip() == '':
+                # Preserve empty lines
+                new_hosts_file.append(line)
+                continue
             ip, hostname = line.split()
             if hostname == data.get('hostname'):
                 found = True
