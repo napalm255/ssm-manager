@@ -41,11 +41,13 @@ preferences_file, cache_dir, log_file = '', '', ''
 if system == 'Linux':
     preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
+    temp_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'temp')
     log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
     hosts_file = '/etc/hosts'
 elif system == 'Windows':
     preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
+    temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
     hosts_file = 'C:\\Windows\\System32\\drivers\\etc\\hosts'
 
@@ -332,7 +334,7 @@ def update_config_hosts():
             new_hosts_file.append(new_host)
 
         # Write the updated hosts file
-        temp_hosts_file = os.path.join(DATA_DIR, 'hosts.tmp')
+        temp_hosts_file = os.path.join(temp_dir, 'hosts.tmp')
         with open(temp_hosts_file, 'w', encoding='utf-8') as file:
             file.writelines(new_hosts_file)
 
