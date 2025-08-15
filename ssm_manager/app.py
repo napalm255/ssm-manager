@@ -303,7 +303,6 @@ def update_config_hosts():
     """
     try:
         data = request.json
-
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
 
@@ -349,9 +348,9 @@ def update_config_hosts():
             run_cmd(command, skip_pid_wait=True)
 
         resolved = False
-        max_retries = 3
-        delay = 2  # seconds
+        delay = 2
         retries = 0
+        max_retries = 3
         while retries < max_retries and not resolved:
             retries += 1
             time.sleep(delay)
