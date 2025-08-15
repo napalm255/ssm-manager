@@ -478,6 +478,8 @@ class PSCommand(BaseModel):
                f'-ArgumentList',
                f'"{self.command}"'
         ]
+        if self.hide:
+            cmd.append('-WindowStyle Hidden')
         if self.runAs:
             cmd.append('-Verb RunAs')
         return str(' '.join(cmd))
