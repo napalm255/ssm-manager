@@ -504,9 +504,7 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        _cmd = shlex.split(f"powershell -Command '{self._build_cmd()}'")
-        print(f"PS Command: {_cmd}")
-        return _cmd
+        return shlex.split(f"powershell -Command '{self._build_cmd()}'")
 
 
 class FreePort(BaseModel):
