@@ -304,6 +304,7 @@ def update_config_hosts():
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
 
+        new_host = f"{data['ip']} {data['hostname']}\n"
         new_hosts_file = []
         found = False
         for line in current_hosts_file:
@@ -314,15 +315,20 @@ def update_config_hosts():
                 # Preserve empty lines
                 new_hosts_file.append(line)
                 continue
+
             ip, hostname = line.split()
             if hostname == data.get('hostname'):
+                if ip != data.get('ip'):
+                    logger.info(f"Updating host {hostname} from {ip} to {data['ip']}")
+                    new_hosts_file.append(new_host)
+                else:
+                    logger.debug(f"Host {hostname} already exists with IP {ip}, skipping update.")
                 found = True
-                new_hosts_file.append(f"{data['ip']} {data['hostname']}")
             else:
                 new_hosts_file.append(line)
 
         if not found:
-            new_hosts_file.append(f"{data['ip']} {data['hostname']}")
+            new_hosts_file.append(new_host)
         print(new_hosts_file)
 
 
