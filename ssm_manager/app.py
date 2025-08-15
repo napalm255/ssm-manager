@@ -351,8 +351,8 @@ def update_config_hosts():
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
-    except FileNotFoundError:
-        logger.error(f"Hosts file not found: {hosts_file}")
+    except FileNotFoundError as e:
+        logger.error(f"Hosts file not found: {str(e)}")
         return jsonify({'error': 'Hosts file not found'}), 404
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
