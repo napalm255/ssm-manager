@@ -514,12 +514,15 @@ def add_hosts_file_entry(hosts_file: str, hostname: str, ip: str) -> bool:
             raise ValueError("Hostname and IP address must be provided")
 
         with open(hosts_file, 'r', encoding='utf-8') as file:
-            if f' {hostname}' in file.read():
+            content = file.read()
+            if f' {hostname}' in content:
                 logger.info(f"Hostname {hostname} already exists in {hosts_file}")
                 return True
 
         with open(hosts_file, 'a', encoding='utf-8') as file:
-            file.write(f"\n{ip} {hostname}\n")
+            if not content.endswith('\n'):
+                file.write('\n')
+            file.write(f"{ip} {hostname}\n")
 
         logger.info(f"Updated {hosts_file} with {hostname} -> {ip}")
         return True
