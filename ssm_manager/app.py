@@ -20,7 +20,7 @@ from ssm_manager.config import AwsConfigManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand,
-    run_cmd, FreePort, open_browser
+    run_cmd, FreePort, open_browser, add_hosts_file_entry
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
@@ -37,15 +37,17 @@ if system not in ['Linux', 'Windows']:
     sys.exit(1)
 
 # Set file paths
-preferences_file, cache_dir, log_file = '', '', ''
+preferences_file, cache_dir, log_file, hosts_file = '', '', '', ''
 if system == 'Linux':
     preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
     log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
+    hosts_file = os.path.join('/etc', 'hosts')
 elif system == 'Windows':
     preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
+    hosts_file = os.path.join('C:', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
@@ -509,8 +511,7 @@ def start_custom_port(instance_id):
 
         try:
             username = data.get('username', None)
-            if not username:
-                raise ValueError("Username is required for credential configuration")
+            assert username, "Username not provided. Skipping credential configuration."
 
             password = keyring.get_password('ssm_manager', username)
             if not password:
@@ -524,8 +525,28 @@ def start_custom_port(instance_id):
                 password=password
             )
             run_cmd(command, skip_pid_wait=True)
+        except AssertionError as e:
+            logger.warning(str(e))
         except ValueError as e:
             logger.error(f"Failed to configure credentials: {str(e)}")
+
+        try:
+            update_hosts = data.get('update_hosts', True)
+            if system == 'Linux':
+                raise AssertionError("Hosts file update not supported on Linux. Skipping hosts file update.")
+            if not update_hosts:
+                raise AssertionError("Hosts file update not requested. Skipping hosts file update.")
+            add_entry = add_hosts_file_entry(
+                hosts_file=hosts_file,
+                hostname=instance.name,
+                ip='127.0.0.1'
+            )
+            if not add_entry:
+                raise ValueError("Failed to add entry to hosts file")
+        except AssertionError as e:
+            logger.warning(str(e))
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Failed to update hosts file: {str(e)}")
 
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(

@@ -500,6 +500,59 @@ class FreePort(BaseModel):
         logger.error(f"No free port found after {max_attempts} attempts")
         return None
 
+def add_hosts_file_entry(hosts_file: str, hostname: str, ip: str) -> bool:
+    """
+    Update the hosts file with a new hostname and IP address
+    Args:
+        hosts_file (str): Path to the hosts file
+        hostname (str): Hostname to add
+        ip (str): IP address to associate with the hostname
+    Returns: True if the update was successful, False otherwise
+    """
+    try:
+        if not hostname or not ip:
+            raise ValueError("Hostname and IP address must be provided")
+
+        with open(hosts_file, 'r', encoding='utf-8') as file:
+            if f' {hostname}' in file.read():
+                logger.info(f"Hostname {hostname} already exists in {hosts_file}")
+                return True
+
+        with open(hosts_file, 'a', encoding='utf-8') as file:
+            file.write(f"{ip} {hostname}\n")
+
+        logger.info(f"Updated {hosts_file} with {hostname} -> {ip}")
+        return True
+    except (ValueError, Exception) as e:  # pylint: disable=broad-except
+        logger.error(f"Error updating hosts file: {str(e)}")
+        return False
+
+def delete_hosts_file_entry(hosts_file: str, hostname: str) -> bool:
+    """
+    Delete a hostname entry from the hosts file
+    Args:
+        hosts_file (str): Path to the hosts file
+        hostname (str): Hostname to delete
+    Returns: True if the deletion was successful, False otherwise
+    """
+    temp_file = f"{hosts_file}.tmp"
+    try:
+        if not hostname:
+            raise ValueError("Hostname must be provided")
+
+        with open(hosts_file, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+
+        with open(temp_file, 'w', encoding='utf-8') as file:
+            for line in lines:
+                if f' {hostname}' not in line:
+                    file.write(line)
+
+        logger.info(f"Deleted {hostname} from {hosts_file}")
+        return True
+    except (ValueError, Exception) as e:  # pylint: disable=broad-except
+        logger.error(f"Error deleting hosts file entry: {str(e)}")
+        return False
 
 def socket_is_open(port):
     """

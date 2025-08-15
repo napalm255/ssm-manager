@@ -916,7 +916,6 @@ const app = createApp({
               toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
             } else {
               console.debug('No updates available');
-              toast('You are using the latest version', 'success');
             }
           })
           .catch((error) => {
