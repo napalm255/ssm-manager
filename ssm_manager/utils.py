@@ -508,10 +508,6 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        if not self.username or not self.password:
-            raise ValueError("Username and password must be provided")
-
-
         if self.system == 'Windows':
             return shlex.split(f"powershell -Command '{self._build_cmd()}'")
         raise ValueError(UNSUPPORTED_SYSTEM)
