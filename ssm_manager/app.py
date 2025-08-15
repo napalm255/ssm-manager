@@ -339,6 +339,7 @@ def update_config_hosts():
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
             command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{temp_hosts_file}' -Destination '{hosts_file}'\""
+            print(command)
             subprocess.run(command, shell=False, check=True)
 
         logger.info("Hosts file updated successfully.")
