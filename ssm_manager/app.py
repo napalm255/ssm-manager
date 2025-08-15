@@ -157,7 +157,7 @@ def get_all_regions():
         return jsonify({'error': 'Failed to load all regions'}), 500
 
 
-@app.route('/api/config/sessions', methods=['GET'])
+@app.route('/api/config/sessions')
 def get_config_sessions():
     """
     Endpoint to get AWS configuration sessions
@@ -219,7 +219,7 @@ def delete_config_session(session_name):
         logger.error(f"Failed to delete session: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to delete session'}), 500
 
-@app.route('/api/config/profiles', methods=['GET'])
+@app.route('/api/config/profiles')
 def get_config_profiles():
     """
     Endpoint to get AWS configuration profiles
@@ -280,7 +280,7 @@ def delete_config_profile(profile_name):
         logger.error(f"Failed to delete profile: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to delete profile'}), 500
 
-@app.route('/api/config/hosts', methods=['GET'])
+@app.route('/api/config/hosts')
 def get_config_hosts():
     """
     Endpoint to get system hosts file
