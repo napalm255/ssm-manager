@@ -331,9 +331,14 @@ def update_config_hosts():
         if not found:
             new_hosts_file.append(new_host)
 
+        # Write the updated hosts file
+        temp_hosts_file = os.path.join(DATA_DIR, 'hosts.tmp')
+        with open(temp_hosts_file, 'w', encoding='utf-8') as file:
+            file.writelines(new_hosts_file)
+
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{source_path}' -Destination '{destination_path}'\""
+            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{temp_hosts_file}' -Destination '{hosts_file}'\""
             subprocess.run(command, shell=False, check=True)
 
         logger.info("Hosts file updated successfully.")
