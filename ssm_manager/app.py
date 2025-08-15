@@ -510,6 +510,9 @@ def start_custom_port(instance_id):
             return jsonify({'error': 'No available ports'}), 503
 
         try:
+            if system == 'Linux':
+                raise AssertionError("Hosts file update not supported on Linux. Skipping hosts file update.")
+
             username = data.get('username', None)
             assert username, "Username not provided. Skipping credential configuration."
 
@@ -531,9 +534,10 @@ def start_custom_port(instance_id):
             logger.error(f"Failed to configure credentials: {str(e)}")
 
         try:
-            update_hosts = data.get('update_hosts', True)
             if system == 'Linux':
                 raise AssertionError("Hosts file update not supported on Linux. Skipping hosts file update.")
+
+            update_hosts = data.get('update_hosts', False)
             if not update_hosts:
                 raise AssertionError("Hosts file update not requested. Skipping hosts file update.")
             add_entry = add_hosts_file_entry(
