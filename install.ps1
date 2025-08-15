@@ -121,18 +121,6 @@ try {
 }
 
 # ==============================================================================
-# Set the compatibility setting to run as administrator
-# ==============================================================================
-try {
-    $exePath = "$appDir\ssm_manager.exe"
-    Write-Host "Setting compatibility for $exePath to run as administrator..." -ForegroundColor Cyan
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" -Name $exePath -Value "~ RUNASADMIN" -ErrorAction Stop
-} catch {
-    Write-Host "Failed to set compatibility settings. You may need to set this manually." -ForegroundColor Red
-}
-
-
-# ==============================================================================
 # Create desktop shortcut
 # ==============================================================================
 try {
