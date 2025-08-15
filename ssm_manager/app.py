@@ -20,7 +20,7 @@ from ssm_manager.config import AwsConfigManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand, PSCommand,
-    run_cmd, FreePort, open_browser
+    run_cmd, FreePort, open_browser, resolve_hostname
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
 
@@ -334,15 +334,11 @@ def update_config_hosts():
         if not found:
             new_hosts_file.append(new_host)
 
-        # Write the updated hosts file
         temp_hosts_file = os.path.join(temp_dir, 'hosts.tmp')
         with open(temp_hosts_file, 'w', encoding='utf-8') as file:
             file.writelines(new_hosts_file)
 
         if system == 'Windows':
-            # Windows requires admin privileges to modify hosts file
-            # pscmd = f"Get-Acl '{hosts_file}' | Set-Acl -Path '{temp_hosts_file}';"
-            # pscmd += f"Move-Item -Path '{temp_hosts_file}' -Destination 'c:\\hosts.txt' -Force;"
             pscmd = f"Get-Content -Path '{temp_hosts_file}' | Set-Content -Path '{hosts_file}' -Force;"
             pscmd = pscmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
             command = PSCommand(
@@ -350,11 +346,16 @@ def update_config_hosts():
                 runAs=True,
                 command=pscmd
             )
-            print(f"Running command: {command.cmd}")
             run_cmd(command, skip_pid_wait=True)
+
+        if resolve_hostname(data['hostname']) != data['ip']:
+            raise ValueError(f"Failed to resolve hostname {data['hostname']} to IP {data['ip']}")
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
+    except ValueError as e:
+        logger.error(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except FileNotFoundError as e:
         logger.error(f"Hosts file not found: {str(e)}")
         return jsonify({'error': 'Hosts file not found'}), 404

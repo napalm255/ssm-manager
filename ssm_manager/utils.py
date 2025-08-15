@@ -550,6 +550,22 @@ class FreePort(BaseModel):
         return None
 
 
+def resolve_hostname(hostname: str) -> str:
+    """
+    Resolve a hostname to an IP address
+    Args:
+        hostname (str): The hostname to resolve
+    Returns: The resolved IP address or the original hostname if resolution fails
+    """
+    try:
+        ip_address = socket.gethostbyname(hostname)
+        logger.debug(f"Resolved {hostname} to {ip_address}")
+        return ip_address
+    except socket.gaierror as e:
+        logger.error(f"Failed to resolve {hostname}: {str(e)}")
+        return hostname
+
+
 def socket_is_open(port):
     """
     Check if a socket is open
