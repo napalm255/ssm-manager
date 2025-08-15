@@ -563,7 +563,7 @@ def resolve_hostname(hostname: str) -> str:
         return ip_address
     except socket.gaierror as e:
         logger.error(f"Failed to resolve {hostname}: {str(e)}")
-        return hostname
+    return None
 
 
 def socket_is_open(port):
