@@ -458,6 +458,71 @@ class CredCommand(BaseModel):
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
+class PSCommand(BaseModel):
+    """
+    Model representing the powershell command
+    """
+    command: str
+    runAs: Optional[bool] = False
+    system: Literal["Linux", "Windows"]
+    hide: Optional[bool] = True
+    wait: Optional[bool] = True
+    timeout: int | None = Field(default=None, ge=0)
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+
+        domain = ""
+        if self.username and '\\' in self.username:
+            domain, _ = self.username.split('\\', 1)
+        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
+
+        cmd = [self.exec,
+               f'powershell.exe',
+               f'-ArgumentList',
+               f'"{self.command}"'
+        ]
+        if self.runAs:
+            cmd.append('-Verb RunAs')
+        return str(' '.join(cmd))
+
+    @property
+    def startupinfo(self):
+        """
+        Return startupinfo for Windows.
+        """
+        if self.system == 'Windows':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            return startupinfo
+        return None
+
+    @property
+    def exec(self) -> str:
+        """
+        Determine the executable based on the system type.
+        """
+        if self.system == 'Windows':
+            return 'Start-Process'
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+    @property
+    def cmd(self) -> str | list:
+        """
+        Build the command to run based on the system type.
+        """
+        if not self.username or not self.password:
+            raise ValueError("Username and password must be provided")
+
+
+        if self.system == 'Windows':
+            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
+        raise ValueError(UNSUPPORTED_SYSTEM)
+
+
 class FreePort(BaseModel):
     """
     Class to find a free port

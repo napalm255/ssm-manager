@@ -19,7 +19,7 @@ from ssm_manager.cache import Cache
 from ssm_manager.config import AwsConfigManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand,
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand, PSCommand,
     run_cmd, FreePort, open_browser
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
@@ -341,9 +341,15 @@ def update_config_hosts():
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{temp_hosts_file}' -Destination '{hosts_file}' -Force; sleep 2\""
-            print(command)
-            subprocess.run(command, shell=True, check=True)
+            command = CredCommand(
+                instance=instance,
+                local_port=local_port,
+                system=system,
+                username=username,
+                password=password
+            )
+            #run_cmd(command, skip_pid_wait=True)
+            print(command.cmd)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
