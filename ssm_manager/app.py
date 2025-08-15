@@ -330,6 +330,12 @@ def update_config_hosts():
 
         if not found:
             new_hosts_file.append(new_host)
+
+        if system == 'Windows':
+            # Windows requires admin privileges to modify hosts file
+            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{source_path}' -Destination '{destination_path}'\""
+            subprocess.run(command, shell=False, check=True)
+
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
     except FileNotFoundError:
