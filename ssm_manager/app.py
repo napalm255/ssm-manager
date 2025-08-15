@@ -358,10 +358,7 @@ def update_config_hosts():
             time.sleep(delay)
             retries += 1
 
-        print(f"Hostname {data['hostname']} with IP {data['ip']} updated in hosts file.")
-        resolved = resolve_hostname(data['hostname'])
-        print(f"Resolved hostname {data['hostname']} to IP {resolved}")
-        if resolve_hostname(data['hostname']) != data['ip']:
+        if not resolved:
             raise ValueError(f"Failed to resolve hostname {data['hostname']} to IP {data['ip']}")
 
         logger.info("Hosts file updated successfully.")
