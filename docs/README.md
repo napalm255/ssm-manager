@@ -105,6 +105,8 @@ A powershell script is provided to query github for the latest release and insta
 
 A single line command can be used to download and install the latest version of SSM Manager:
 
+**Note:** This command requires PowerShell to be run as an administrator.
+
 The following command will download the latest version of the installer script and execute it, installing SSM Manager to `C:\Program Files (x86)\ssm_manager\ssm_manager.exe`:
 
 ```powershell
