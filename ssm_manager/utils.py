@@ -473,12 +473,6 @@ class PSCommand(BaseModel):
         """
         Build the command string.
         """
-
-        domain = ""
-        if self.username and '\\' in self.username:
-            domain, _ = self.username.split('\\', 1)
-        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
-
         cmd = [self.exec,
                f'powershell.exe',
                f'-ArgumentList',
