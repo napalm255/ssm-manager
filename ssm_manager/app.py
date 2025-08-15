@@ -322,7 +322,7 @@ def update_config_hosts():
                     logger.info(f"Updating host {hostname} from {ip} to {data['ip']}")
                     new_hosts_file.append(new_host)
                 else:
-                    logger.debug(f"Host {hostname} already exists with IP {ip}, skipping update.")
+                    logger.info(f"Host {hostname} already exists with IP {ip}, skipping update.")
                 found = True
             else:
                 new_hosts_file.append(line)
