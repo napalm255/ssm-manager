@@ -509,9 +509,10 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        print(f"Building command: {self._build_cmd()}")
         if self.system == 'Windows':
-            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
+            _cmd = shlex.split(f"powershell -Command '{self._build_cmd()}'")
+            print(f"PS Command: {_cmd}")
+            return _cmd
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
