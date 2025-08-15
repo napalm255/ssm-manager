@@ -26,6 +26,10 @@ from ssm_manager.utils import (
 
 APP_NAME = 'SSM Manager'
 
+# Define home directory and app data directory
+HOME_DIR = os.path.expanduser('~')
+DATA_DIR = 'ssm_manager'
+
 # Check if the system is Linux or Windows
 system = platform.system()
 if system not in ['Linux', 'Windows']:
@@ -33,16 +37,15 @@ if system not in ['Linux', 'Windows']:
     sys.exit(1)
 
 # Set file paths
-home_dir = os.path.expanduser('~')
 preferences_file, cache_dir, log_file = '', '', ''
 if system == 'Linux':
-    preferences_file = os.path.join(home_dir, '.ssm_manager', 'preferences.json')
-    cache_dir = os.path.join(home_dir, '.ssm_manager', 'cache')
-    log_file = os.path.join(home_dir, '.ssm_manager', 'ssm_manager.log')
+    preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
+    cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
+    log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
 elif system == 'Windows':
-    preferences_file = os.path.join(home_dir, 'AppData', 'Local', 'ssm_manager', 'preferences.json')
-    cache_dir = os.path.join(home_dir, 'AppData', 'Local', 'ssm_manager', 'cache')
-    log_file = os.path.join(home_dir, 'AppData', 'Local', 'ssm_manager', 'ssm_manager.log')
+    preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
+    cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
+    log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
