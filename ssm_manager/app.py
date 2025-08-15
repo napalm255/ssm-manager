@@ -342,12 +342,12 @@ def update_config_hosts():
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
             command = PSCommand(
-                    hide=False,
+                hide=False,
                 command='notepad.exe',
                 system=system
             )
-            #run_cmd(command, skip_pid_wait=True)
             print(command.cmd)
+            run_cmd(command, skip_pid_wait=True)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
