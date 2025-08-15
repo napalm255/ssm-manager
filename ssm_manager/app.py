@@ -351,7 +351,7 @@ def update_config_hosts():
                 # command='notepad.exe',
             )
             print(f"Running command: {command.cmd}")
-            # run_cmd(command, skip_pid_wait=True)
+            run_cmd(command, skip_pid_wait=True)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
