@@ -42,10 +42,12 @@ if system == 'Linux':
     preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
     log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
+    hosts_file = '/etc/hosts'
 elif system == 'Windows':
     preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
+    hosts_file = 'C:\\Windows\\System32\\drivers\\etc\\hosts'
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
@@ -277,6 +279,58 @@ def delete_config_profile(profile_name):
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to delete profile: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to delete profile'}), 500
+
+@app.route('/api/config/hosts', methods=['GET'])
+def get_config_hosts():
+    """
+    Endpoint to get system hosts file
+    Returns: JSON list of hosts
+    """
+    try:
+        hosts = []
+        with open(hosts_file, 'r', encoding='utf-8') as hosts:
+            lines = hosts.readlines()
+        for line in lines:
+            if line.strip() and line.startswith('#'):
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                ip = parts[0]
+                hostname = parts[1]
+                hosts.append({'ip': ip, 'hostname': hostname})
+        logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
+        return jsonify(hosts)
+    except FileNotFoundError:
+        logger.error(f"Hosts file not found: {hosts_file}")
+        return jsonify({'error': 'Hosts file not found'}), 404
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to load hosts file: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to load hosts file'}), 500
+
+@app.route('/api/config/hosts', methods=['POST'])
+def update_config_hosts():
+    """
+    Endpoint to update system hosts file
+    Returns: JSON response with status
+    """
+    try:
+        data = request.json
+        if not isinstance(data, list):
+            logger.error("Invalid data format. Expected a list of hosts.")
+            return jsonify({'error': 'Invalid data format'}), 400
+
+        with open(hosts_file, 'w', encoding='utf-8') as hosts:
+            for entry in data:
+                if 'ip' in entry and 'hostname' in entry:
+                    hosts.write(f"{entry['ip']} {entry['hostname']}\n")
+                else:
+                    logger.warning("Invalid host entry, skipping: {}".format(entry))
+
+        logger.info("Hosts file updated successfully.")
+        return jsonify({'status': 'success'})
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to update hosts file'}), 500
 
 @app.route('/api/connect', methods=['POST'])
 def connect():
