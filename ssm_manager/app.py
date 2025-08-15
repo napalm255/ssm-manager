@@ -219,21 +219,6 @@ def delete_config_session(session_name):
         logger.error(f"Failed to delete session: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to delete session'}), 500
 
-@app.route('/api/config/profiles')
-def get_config_profiles():
-    """
-    Endpoint to get AWS configuration profiles
-    Returns: JSON list of AWS profiles from the configuration
-    """
-    try:
-        config = AwsConfigManager()
-        profiles = config.get_profiles()
-        logger.debug(f"Configuration profiles: {len(profiles)} found.")
-        return jsonify(profiles)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to fetch AWS configuration profiles: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to fetch AWS configuration profiles'}), 500
-
 @app.route('/api/config/profile', methods=['POST'])
 def add_config_profile():
     """
