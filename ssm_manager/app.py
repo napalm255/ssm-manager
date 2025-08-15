@@ -348,6 +348,16 @@ def update_config_hosts():
             )
             run_cmd(command, skip_pid_wait=True)
 
+        resolved = False
+        max_retries = 3
+        delay = 2  # seconds
+        retries = 0
+        while retries < max_retries and not resolved:
+            if resolve_hostname(data['hostname']) == data['ip']:
+                resolved = True
+            time.sleep(delay)
+            retries += 1
+
         print(f"Hostname {data['hostname']} with IP {data['ip']} updated in hosts file.")
         resolved = resolve_hostname(data['hostname'])
         print(f"Resolved hostname {data['hostname']} to IP {resolved}")
