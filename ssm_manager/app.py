@@ -288,8 +288,8 @@ def get_config_hosts():
     """
     try:
         hosts = []
-        with open(hosts_file, 'r', encoding='utf-8') as hosts:
-            lines = hosts.readlines()
+        with open(hosts_file, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
         for line in lines:
             if line.strip() and line.startswith('#'):
                 continue
