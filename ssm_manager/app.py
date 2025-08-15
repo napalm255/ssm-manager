@@ -342,12 +342,12 @@ def update_config_hosts():
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
             command = PSCommand(
-                hide=False,
+                hide=True,
                 runAs=True,
                 command='Move-Item -Path "{temp_hosts_file}" -Destination "{hosts_file}" -Force',
                 system=system
             )
-            run_cmd(command, skip_pid_wait=True)
+            run_cmd(command)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
