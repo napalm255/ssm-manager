@@ -341,7 +341,7 @@ def update_config_hosts():
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            command = CredCommand(
+            command = PSCommand(
                 command='notepad.exe',
                 system=system
             )
