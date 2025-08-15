@@ -348,6 +348,7 @@ def update_config_hosts():
             )
             run_cmd(command, skip_pid_wait=True)
 
+        print(f"Hostname {data['hostname']} with IP {data['ip']} updated in hosts file.")
         if resolve_hostname(data['hostname']) != data['ip']:
             raise ValueError(f"Failed to resolve hostname {data['hostname']} to IP {data['ip']}")
 
