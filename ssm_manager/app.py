@@ -345,11 +345,11 @@ def update_config_hosts():
             # pscmd += f"Move-Item -Path '{temp_hosts_file}' -Destination 'c:\\hosts.txt' -Force;"
             pscmd = f"Get-Content -Path '{temp_hosts_file}' | Set-Content -Path 'c:\\hosts.txt' -Force;"
             pscmd = pscmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
-            print(f"Running PowerShell command: {mvcmd}")
+            print(f"Running PowerShell command: {pscmd}")
             command = PSCommand(
                 hide=True,
                 runAs=True,
-                command=mvcmd,
+                command=pscmd,
                 # command='notepad.exe',
             )
             print(f"Running command: {command.cmd}")
