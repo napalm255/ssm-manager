@@ -307,10 +307,6 @@ def update_config_hosts():
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
 
-        if current_hosts_file.contains(f' {hostname}'):
-            logger.warning(f"Host {hostname} already exists in the hosts file, skipping update.")
-            return jsonify({'status': 'skipped', 'message': f'Host {hostname} already exists.'})
-
         new_hosts_file = []
         found = False
         for line in current_hosts_file:
