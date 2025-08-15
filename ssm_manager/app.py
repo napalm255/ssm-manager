@@ -342,11 +342,8 @@ def update_config_hosts():
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
             command = CredCommand(
-                instance=instance,
-                local_port=local_port,
-                system=system,
-                username=username,
-                password=password
+                command='notepad.exe',
+                system=system
             )
             #run_cmd(command, skip_pid_wait=True)
             print(command.cmd)
