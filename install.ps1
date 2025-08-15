@@ -7,11 +7,9 @@
     1.  Finds the latest release for the ssm-manager GitHub repository.
     2.  Downloads the latest version's zip file.
     3.  Creates a destination directory if it doesn't exist.
-    4.  Backs up the 'preferences.json' file if it exists.
-    5.  Deletes the existing ssm_manager application folder.
-    6.  Extracts the new application files from the downloaded zip.
-    7.  Restores the backed-up 'preferences.json' file.
-    8.  Cleans up temporary files.
+    4.  Deletes the existing ssm_manager application folder.
+    5.  Extracts the new application files from the downloaded zip.
+    6.  Cleans up temporary files.
 
 .NOTES
     This script requires an internet connection and is designed for a specific GitHub repository
@@ -33,9 +31,7 @@ param(
 # ==============================================================================
 $gitHubRepo = "napalm255/ssm-manager"
 $appDir = "$destinationBaseDir\ssm_manager"
-$preferencesFile = "$appDir\preferences.json"
 $tempDir = "$env:TEMP\ssm_manager_update"
-$backupPreferencesPath = "$tempDir\preferences.json.bak"
 
 # ==============================================================================
 # Get the latest release information
@@ -77,23 +73,6 @@ New-Item -ItemType Directory -Path $tempDir | Out-Null
 if (-not (Test-Path $destinationBaseDir)) {
     Write-Host "Creating destination directory: $destinationBaseDir"
     New-Item -ItemType Directory -Path $destinationBaseDir | Out-Null
-}
-
-# ==============================================================================
-# Backup the 'preferences.json' file if it exists
-# ==============================================================================
-if (Test-Path $preferencesFile) {
-    Write-Host "Backing up preferences.json..." -ForegroundColor Cyan
-    try {
-        Copy-Item -Path $preferencesFile -Destination $backupPreferencesPath -Force -ErrorAction Stop
-        Write-Host "preferences.json backed up to $backupPreferencesPath" -ForegroundColor Green
-    } catch {
-        Write-Host "Failed to back up preferences.json. Aborting update." -ForegroundColor Red
-        exit
-    }
-}
-else {
-    Write-Host "preferences.json not found. No backup needed." -ForegroundColor Cyan
 }
 
 # ==============================================================================
@@ -141,16 +120,34 @@ try {
 }
 
 # ==============================================================================
-# Restore 'preferences.json'
+# Set the compatibility setting to run as administrator
 # ==============================================================================
-if (Test-Path $backupPreferencesPath) {
-    Write-Host "Restoring backed up preferences.json..." -ForegroundColor Green
-    try {
-        Copy-Item -Path $backupPreferencesPath -Destination $preferencesFile -Force -ErrorAction Stop
-        Write-Host "preferences.json restored successfully."
-    } catch {
-        Write-Host "Failed to restore preferences.json. Please check the backup file." -ForegroundColor Red
-    }
+try {
+    $exePath = "$appDir\ssm_manager.exe"
+    Write-Host "Setting compatibility for $exePath to run as administrator..." -ForegroundColor Cyan
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" -Name $exePath -Value "~ RUNASADMIN" -ErrorAction Stop
+} catch {
+    Write-Host "Failed to set compatibility settings. You may need to set this manually." -ForegroundColor Red
+}
+
+
+# ==============================================================================
+# Create desktop shortcut
+# ==============================================================================
+try {
+    Write-Host "Creating desktop shortcut..." -ForegroundColor Cyan
+    $targetPath = "$appDir\ssm_manager.exe"
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut([Environment]::GetFolderPath('Desktop') + "\ssm_manager.lnk")
+    $shortcut.TargetPath = $targetPath
+    $shortcut.WorkingDirectory = "$destinationBaseDir\ssm_manager"
+    $shortcut.WindowStyle = 1
+    $shortcut.Description = "Shortcut to SSM Manager"
+    $shortcut.IconLocation = "$targetPath, 0"
+    $shortcut.Save()
+    Write-Host "Desktop shortcut created successfully." -ForegroundColor Green
+} catch {
+    Write-Host "Failed to create desktop shortcut. You may need to create it manually." -ForegroundColor Red
 }
 
 # ==============================================================================

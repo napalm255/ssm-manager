@@ -26,12 +26,38 @@ from ssm_manager.utils import (
 
 APP_NAME = 'SSM Manager'
 
+# Define home directory and app data directory
+HOME_DIR = os.path.expanduser('~')
+DATA_DIR = 'ssm_manager'
+
+# Check if the system is Linux or Windows
+system = platform.system()
+if system not in ['Linux', 'Windows']:
+    print("Unsupported operating system")
+    sys.exit(1)
+
+# Set file paths
+preferences_file, cache_dir, log_file = '', '', ''
+if system == 'Linux':
+    preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
+    cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
+    log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
+elif system == 'Windows':
+    preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
+    cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
+    log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
+
+# Make sure directories exist
+os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
+os.makedirs(cache_dir, exist_ok=True)
+os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
 # Configure detailed logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s:%(name)s - %(message)s',
     handlers=[
-        logging.FileHandler('ssm_manager.log', mode='w'),
+        logging.FileHandler(log_file, mode='w'),
         logging.StreamHandler()
     ]
 )
@@ -39,17 +65,15 @@ logging.basicConfig(
 # Configure logger
 logger = logging.getLogger('ssm_manager')
 
-# Check if the system is Linux or Windows
-system = platform.system()
-if system not in ['Linux', 'Windows']:
-    logger.critical("Unsupported operating system")
-    sys.exit(1)
-
 # Setup preferences
-preferences = PreferencesHandler()
+preferences = PreferencesHandler(
+    config_file=preferences_file
+)
 
 # Setup cache
-cache = Cache()
+cache = Cache(
+    cache_dir=cache_dir
+)
 
 # Setup Flask
 app = Flask(__name__, static_folder='static', static_url_path='/', template_folder='templates')

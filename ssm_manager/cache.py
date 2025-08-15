@@ -7,8 +7,8 @@ class Cache:
     """
     Cache class to manage application cache using FileSystemCache.
     """
-    def __init__(self):
-        self._cache = FileSystemCache(cache_dir='cache', threshold=500, default_timeout=3600)
+    def __init__(self, cache_dir='cache'):
+        self._cache = FileSystemCache(cache_dir, threshold=500, default_timeout=3600)
         if self._cache.get('active_connections') is None:
             self._cache.set('active_connections', [])
 
