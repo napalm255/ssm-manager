@@ -466,7 +466,7 @@ class PSCommand(BaseModel):
     runAs: Optional[bool] = False
     system: Literal["Linux", "Windows"]
     hide: Optional[bool] = True
-    wait: Optional[bool] = True
+    wait: Optional[bool] = False
     timeout: int | None = Field(default=None, ge=0)
 
     def _build_cmd(self) -> str:
