@@ -349,8 +349,7 @@ def update_config_hosts():
             command = PSCommand(
                 hide=True,
                 runAs=True,
-                command=pscmd,
-                # command='notepad.exe',
+                command=pscmd
             )
             print(f"Running command: {command.cmd}")
             run_cmd(command, skip_pid_wait=True)
