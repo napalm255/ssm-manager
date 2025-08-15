@@ -336,18 +336,14 @@ def update_config_hosts():
 
         # Write the updated hosts file
         temp_hosts_file = os.path.join(temp_dir, 'hosts.tmp')
-        print(temp_hosts_file)
-        logger.info(f"Writing updated hosts file: {temp_hosts_file}")
         with open(temp_hosts_file, 'w', encoding='utf-8') as file:
-            logger.info(f"Writing new hosts entry: {new_host.strip()}")
             file.writelines(new_hosts_file)
-        logger.info(f"Temporary hosts file created: {temp_hosts_file}")
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{temp_hosts_file}' -Destination '{hosts_file}'\""
+            command = f"Start-Process powershell.exe -Verb RunAs -ArgumentList \"Move-Item '{temp_hosts_file}' -Destination '{hosts_file}'\" -Force"
             print(command)
-            subprocess.run(command, shell=False, check=True)
+            subprocess.run(command, shell=True, check=True)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
