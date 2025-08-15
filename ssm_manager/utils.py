@@ -464,7 +464,6 @@ class PSCommand(BaseModel):
     """
     command: str
     runAs: Optional[bool] = False
-    system: Literal["Linux", "Windows"]
     hide: Optional[bool] = True
     wait: Optional[bool] = False
     timeout: int | None = Field(default=None, ge=0)
@@ -488,32 +487,26 @@ class PSCommand(BaseModel):
         """
         Return startupinfo for Windows.
         """
-        if self.system == 'Windows':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            return startupinfo
-        return None
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        return startupinfo
 
     @property
     def exec(self) -> str:
         """
         Determine the executable based on the system type.
         """
-        if self.system == 'Windows':
-            return 'Start-Process'
-        raise ValueError(UNSUPPORTED_SYSTEM)
+        return 'Start-Process'
 
     @property
     def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
         """
-        if self.system == 'Windows':
-            _cmd = shlex.split(f"powershell -Command '{self._build_cmd()}'")
-            print(f"PS Command: {_cmd}")
-            return _cmd
-        raise ValueError(UNSUPPORTED_SYSTEM)
+        _cmd = shlex.split(f"powershell -Command '{self._build_cmd()}'")
+        print(f"PS Command: {_cmd}")
+        return _cmd
 
 
 class FreePort(BaseModel):
