@@ -304,15 +304,39 @@ def update_config_hosts():
             logger.error("Invalid data format. Expected a list of hosts.")
             return jsonify({'error': 'Invalid data format'}), 400
 
-        with open(hosts_file, 'w', encoding='utf-8') as hosts:
-            for entry in data:
-                if 'ip' in entry and 'hostname' in entry:
-                    hosts.write(f"{entry['ip']} {entry['hostname']}\n")
-                else:
-                    logger.warning("Invalid host entry, skipping: {}".format(entry))
+        with open(hosts_file, 'r', encoding='utf-8') as file:
+            current_hosts_file = file.readlines()
+
+        if current_hosts_file.contains(f' {hostname}'):
+            logger.warning(f"Host {hostname} already exists in the hosts file, skipping update.")
+            return jsonify({'status': 'skipped', 'message': f'Host {hostname} already exists.'})
+
+        new_hosts_file = []
+        found = False
+        for line in current_hosts_file:
+            if line.strip() and line.startswith('#'):
+                new_hosts_file.append(line)
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                ip = parts[0]
+                hostname = parts[1]
+            if hostname == data.get('hostname'):
+                found = True
+                new_hosts_file.append(f"{data['ip']} {data['hostname']}")
+            else:
+                new_hosts_file.append(line)
+
+        if not found:
+            new_hosts_file.append(f"{data['ip']} {data['hostname']}")
+        print(new_hosts_file)
+
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
+    except FileNotFoundError:
+        logger.error(f"Hosts file not found: {hosts_file}")
+        return jsonify({'error': 'Hosts file not found'}), 404
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to update hosts file'}), 500
