@@ -475,8 +475,7 @@ class PSCommand(BaseModel):
         """
         cmd = [self.exec,
                f'powershell.exe',
-               f'-ArgumentList',
-               f'"{self.command}"'
+               f'-ArgumentList "{self.command}"'
         ]
         if self.hide:
             cmd.append('-WindowStyle Hidden')
