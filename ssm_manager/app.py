@@ -353,10 +353,10 @@ def update_config_hosts():
         delay = 2  # seconds
         retries = 0
         while retries < max_retries and not resolved:
+            retries += 1
+            time.sleep(delay)
             if resolve_hostname(data['hostname']) == data['ip']:
                 resolved = True
-            time.sleep(delay)
-            retries += 1
 
         if not resolved:
             raise ValueError(f"Failed to resolve hostname {data['hostname']} to IP {data['ip']}")
