@@ -54,6 +54,7 @@ elif system == 'Windows':
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
 os.makedirs(cache_dir, exist_ok=True)
+os.makedirs(temp_dir, exist_ok=True)
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
 # Configure detailed logging
