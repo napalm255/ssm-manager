@@ -116,6 +116,7 @@ try {
     Write-Host "Extraction complete." -ForegroundColor Green
 } catch {
     Write-Host "An error occurred during download or extraction. Aborting." -ForegroundColor Red
+    Write-Host "Error during extraction: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
 
