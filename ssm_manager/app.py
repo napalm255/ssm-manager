@@ -323,15 +323,13 @@ def update_config_hosts():
                     new_hosts_file.append(new_host)
                 else:
                     logger.info(f"Host {hostname} already exists with IP {ip}, skipping update.")
+                    return jsonify({'status': 'success'})
                 found = True
             else:
                 new_hosts_file.append(line)
 
         if not found:
             new_hosts_file.append(new_host)
-        print(new_hosts_file)
-
-
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
     except FileNotFoundError:
