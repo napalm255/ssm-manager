@@ -344,7 +344,7 @@ def update_config_hosts():
             command = PSCommand(
                 hide=True,
                 runAs=True,
-                command="Move-Item -Path '{temp_hosts_file}' -Destination '{hosts_file}' -Force",
+                command=f"Move-Item -Path '{temp_hosts_file}' -Destination '{hosts_file}' -Force",
                 # command='notepad.exe',
                 system=system
             )
