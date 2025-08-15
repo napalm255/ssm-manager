@@ -519,7 +519,7 @@ def add_hosts_file_entry(hosts_file: str, hostname: str, ip: str) -> bool:
                 return True
 
         with open(hosts_file, 'a', encoding='utf-8') as file:
-            file.write(f"{ip} {hostname}\n")
+            file.write(f"\n{ip} {hostname}\n")
 
         logger.info(f"Updated {hosts_file} with {hostname} -> {ip}")
         return True
