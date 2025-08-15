@@ -347,7 +347,7 @@ def update_config_hosts():
                 command='Move-Item -Path "{temp_hosts_file}" -Destination "{hosts_file}" -Force',
                 system=system
             )
-            run_cmd(command)
+            run_cmd(command, skip_pid_wait=True)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
