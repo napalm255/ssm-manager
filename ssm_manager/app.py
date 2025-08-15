@@ -342,6 +342,7 @@ def update_config_hosts():
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
             command = PSCommand(
+                    hide=False,
                 command='notepad.exe',
                 system=system
             )
