@@ -334,8 +334,8 @@ def update_config_hosts():
             new_hosts_file.append(new_host)
 
         # Write the updated hosts file
-        logger.info(f"Writing updated hosts file: {temp_hosts_file}")
         temp_hosts_file = os.path.join(temp_dir, 'hosts.tmp')
+        logger.info(f"Writing updated hosts file: {temp_hosts_file}")
         with open(temp_hosts_file, 'w', encoding='utf-8') as file:
             file.writelines(new_hosts_file)
         logger.info(f"Temporary hosts file created: {temp_hosts_file}")
