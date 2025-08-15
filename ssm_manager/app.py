@@ -343,10 +343,10 @@ def update_config_hosts():
             # Windows requires admin privileges to modify hosts file
             command = PSCommand(
                 hide=False,
-                command='notepad.exe',
+                runAs=True,
+                command='Move-Item -Path "{temp_hosts_file}" -Destination "{hosts_file}" -Force',
                 system=system
             )
-            print(command.cmd)
             run_cmd(command, skip_pid_wait=True)
 
         logger.info("Hosts file updated successfully.")
