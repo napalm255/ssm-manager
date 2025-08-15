@@ -341,6 +341,8 @@ def update_config_hosts():
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
+            mvcmd = f"Move-Item -Path '{temp_hosts_file}' -Destination '{hosts_file}' -Force",
+            print(f"Running PowerShell command: {mvcmd}")
             command = PSCommand(
                 hide=True,
                 runAs=True,
@@ -349,7 +351,7 @@ def update_config_hosts():
                 system=system
             )
             print(f"Running command: {command.cmd}")
-            run_cmd(command, skip_pid_wait=True)
+            # run_cmd(command, skip_pid_wait=True)
 
         logger.info("Hosts file updated successfully.")
         return jsonify({'status': 'success'})
