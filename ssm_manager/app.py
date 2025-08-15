@@ -341,7 +341,7 @@ def update_config_hosts():
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            mvcmd = f"Move-Item -Path '{temp_hosts_file}' -Destination '{hosts_file}' -Force",
+            mvcmd = f"Move-Item -Path '{temp_hosts_file}' -Destination '{hosts_file}' -Force"
             mvcmd = mvcmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
             print(f"Running PowerShell command: {mvcmd}")
             command = PSCommand(
