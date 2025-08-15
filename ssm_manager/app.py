@@ -341,9 +341,10 @@ def update_config_hosts():
 
         if system == 'Windows':
             # Windows requires admin privileges to modify hosts file
-            mvcmd = f"Get-Acl '{hosts_file}' | Set-Acl -Path '{temp_hosts_file}';"
-            mvcmd += f"Move-Item -Path '{temp_hosts_file}' -Destination 'c:\\hosts.txt' -Force;"
-            mvcmd = mvcmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
+            # pscmd = f"Get-Acl '{hosts_file}' | Set-Acl -Path '{temp_hosts_file}';"
+            # pscmd += f"Move-Item -Path '{temp_hosts_file}' -Destination 'c:\\hosts.txt' -Force;"
+            pscmd = f"Get-Content -Path '{temp_hosts_file}' | Set-Content -Path 'c:\\hosts.txt' -Force;"
+            pscmd = mvcmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
             print(f"Running PowerShell command: {mvcmd}")
             command = PSCommand(
                 hide=True,
