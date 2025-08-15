@@ -292,7 +292,7 @@ def get_config_hosts():
         logger.error(f"Failed to load hosts file: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to load hosts file'}), 500
 
-@app.route('/api/config/hosts', methods=['POST'])
+@app.route('/api/config/host', methods=['POST'])
 def update_config_hosts():
     """
     Endpoint to update system hosts file
@@ -300,9 +300,6 @@ def update_config_hosts():
     """
     try:
         data = request.json
-        if not isinstance(data, list):
-            logger.error("Invalid data format. Expected a list of hosts.")
-            return jsonify({'error': 'Invalid data format'}), 400
 
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
