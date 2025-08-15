@@ -134,16 +134,21 @@ try {
 # ==============================================================================
 # Create desktop shortcut
 # ==============================================================================
-Write-Host "Creating desktop shortcut..." -ForegroundColor Cyan
-$targetPath = "$appDir\ssm_manager.exe"
-$shell = New-Object -ComObject WScript.Shell
-$shortcut = $shell.CreateShortcut([Environment]::GetFolderPath('Desktop') + "\ssm_manager.lnk")
-$shortcut.TargetPath = $targetPath
-$shortcut.WorkingDirectory = "$destinationBaseDir\ssm_manager"
-$shortcut.WindowStyle = 1
-$shortcut.Description = "Shortcut to SSM Manager"
-$shortcut.IconLocation = "$targetPath, 0"
-$shortcut.Save()
+try {
+    Write-Host "Creating desktop shortcut..." -ForegroundColor Cyan
+    $targetPath = "$appDir\ssm_manager.exe"
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut([Environment]::GetFolderPath('Desktop') + "\ssm_manager.lnk")
+    $shortcut.TargetPath = $targetPath
+    $shortcut.WorkingDirectory = "$destinationBaseDir\ssm_manager"
+    $shortcut.WindowStyle = 1
+    $shortcut.Description = "Shortcut to SSM Manager"
+    $shortcut.IconLocation = "$targetPath, 0"
+    $shortcut.Save()
+    Write-Host "Desktop shortcut created successfully." -ForegroundColor Green
+} catch {
+    Write-Host "Failed to create desktop shortcut. You may need to create it manually." -ForegroundColor Red
+}
 
 # ==============================================================================
 # Clean up and finish
