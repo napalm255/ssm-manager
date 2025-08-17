@@ -398,9 +398,9 @@ class PSCommand(BaseModel):
     Model representing the powershell command.
     Note: Windows only.
     """
-    command: str
     hide: Optional[bool] = True
     wait: Optional[bool] = True
+    runAs: Optional[bool] = False
     timeout: int | None = Field(default=None, ge=0)
 
     @property
@@ -408,25 +408,17 @@ class PSCommand(BaseModel):
         """
         Return startupinfo for Windows.
         """
-        if self.system == 'Windows':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            return startupinfo
-        return None
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        return startupinfo
 
     @property
     def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
         """
-        if not self.username or not self.password:
-            raise ValueError("Username and password must be provided")
-
-
-        if self.system == 'Windows':
-            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
-        raise ValueError(UNSUPPORTED_SYSTEM)
+        return shlex.split(f"powershell -Command '{self._build_cmd()}'")
 
 
 class CredCommand(PSCommand):
