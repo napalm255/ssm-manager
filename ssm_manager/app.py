@@ -38,14 +38,13 @@ if system not in ['Linux', 'Windows']:
     sys.exit(1)
 
 # Set file paths
-preferences_file, cache_dir, log_file = '', '', ''
-if system == 'Linux':
-    preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
-    cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
-    temp_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'temp')
-    log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
-    hosts_file = os.path.join('/', 'etc', 'hosts')
-elif system == 'Windows':
+preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
+cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
+temp_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'temp')
+log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
+hosts_file = os.path.join('/', 'etc', 'hosts')
+
+if system == 'Windows':
     preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
     temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
