@@ -391,8 +391,8 @@ def add_windows_credentials():
         username = data.get('username', None)
         local_port = data.get('local_port', None)
 
-        if not (username and instance.name and local_port):
-            raise AssertionError("Username, instance name, and local port are required.")
+        if not (username and instance.name and instance.id and local_port):
+            raise AssertionError("Username, instance name, instance id, and local port are required.")
 
         password = keyring.get_password('ssm_manager', username)
         if not password:
