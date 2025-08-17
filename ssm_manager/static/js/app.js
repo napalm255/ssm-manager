@@ -187,17 +187,11 @@ const app = createApp({
 
         const getVersion = async () => {
           console.debug('Fetching version...');
-          await fetch("/api/version", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            version.value = data.version;
-            title.value = data.name;
-            operating_system.value = data.operating_system;
-            console.log('Version:', version.value);
-          })
-          .catch((error) => console.error('Error fetching version:', error));
+          data = await apiFetch("/api/version")
+          version.value = data.version;
+          title.value = data.name;
+          operating_system.value = data.operating_system;
+          console.log('Version:', version.value);
         };
 
         const sessionsTableColumns = ref([
@@ -209,14 +203,8 @@ const app = createApp({
 
         const getSessions = async () => {
           console.debug('Fetching sessions...');
-          await fetch("/api/config/sessions", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            sessions.value = data;
-          })
-          .catch((error) => console.error('Error fetching sessions:', error));
+          data = await apiFetch("/api/config/sessions");
+          sessions.value = data;
         };
 
         const profilesTableColumns = ref([
@@ -229,38 +217,20 @@ const app = createApp({
 
         const getProfiles = async () => {
           console.debug('Fetching profiles...');
-          await fetch("/api/profiles", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            profiles.value = data;
-          })
-          .catch((error) => console.error('Error fetching profiles:', error));
+          data = await apiFetch("/api/profiles")
+          profiles.value = data;
         };
 
         const getRegionsAll = async () => {
           console.debug('Fetching all regions...');
-          await fetch("/api/regions/all", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            regionsAll.value = data;
-          })
-          .catch((error) => console.error('Error fetching all regions:', error));
+          data = await apiFetch("/api/regions/all")
+          regionsAll.value = data;
         };
 
         const getRegionsSelected = async () => {
           console.debug('Fetching selected regions...');
-          await fetch("/api/regions", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            regionsSelected.value = data;
-          })
-          .catch((error) => console.error('Error fetching selected regions:', error));
+          data = await apiFetch("/api/regions")
+          regionsSelected.value = data;
         };
 
       // -----------------------------------------------
@@ -269,25 +239,19 @@ const app = createApp({
 
         const getPreferences = async () => {
           console.debug('Fetching preferences...');
-          await fetch("/api/preferences", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            preferences.value = data;
+          data = await apiFetch("/api/preferences")
+          preferences.value = data;
 
-            const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
-            const logging = preferences.value.logging || { level: 'INFO' };
-            const regions = preferences.value.regions || [];
-            const credentials = preferences.value.credentials || [];
-            prefPortStart.value = portRange.start;
-            prefPortEnd.value = portRange.end;
-            prefLogLevel.value = logging.level;
-            prefRegions.value = regions;
-            prefCredentials.value = credentials;
-            prefCredentialsToDelete.value = [];
-          })
-          .catch((error) => console.error('Error fetching preferences:', error));
+          const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
+          const logging = preferences.value.logging || { level: 'INFO' };
+          const regions = preferences.value.regions || [];
+          const credentials = preferences.value.credentials || [];
+          prefPortStart.value = portRange.start;
+          prefPortEnd.value = portRange.end;
+          prefLogLevel.value = logging.level;
+          prefRegions.value = regions;
+          prefCredentials.value = credentials;
+          prefCredentialsToDelete.value = [];
         };
 
         const savePreferences = async () => {
@@ -311,26 +275,13 @@ const app = createApp({
             credentials_to_delete: prefCredentialsToDelete.value,
           };
 
-          await fetch("/api/preferences", {
+          data = await apiFetch("/api/preferences", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(newPreferences)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.status || 'Unknown error');
-            };
-            console.debug('Preferences saved successfully:', data);
-            toast('Preferences saved successfully', 'success');
-            dataRefresh();
-          })
-          .catch((error) => {
-            console.error('Error saving preferences:', error)
-            toast('Error saving preferences', 'danger');
-          });
+          console.debug('Preferences saved successfully:', data);
+          toast('Preferences saved successfully', 'success');
+          dataRefresh();
         };
 
         const validatePortRange = (start, end) => {
@@ -371,64 +322,32 @@ const app = createApp({
         const connect = async () => {
           console.debug('Connecting to AWS...');
           isConnecting.value = true;
-          await fetch("/api/connect", {
+          data = await apiFetch("/api/connect", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            currentAccountId.value = data.account_id;
-            toast('Connected to AWS successfully', 'success');
-            getInstances();
-          })
-          .catch((error) => {
-            console.error('Failed connecting to AWS:', error);
-            toast('Failed connecting to AWS', 'danger');
           });
+          currentAccountId.value = data.account_id;
+          getInstances();
           isConnecting.value = false;
+          toast('Connected to AWS successfully', 'success');
         };
 
         const disconnect = async (connection_id) => {
           console.debug('Terminating connection:', connection_id);
-          await fetch(`/api/terminate-connection/${connection_id}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            getActiveConnections();
-            toast('Connection terminated successfully', 'warning');
-          })
-          .catch((error) => {
-            console.error('Failed to terminate connection:', error);
-            toast('Failed to terminate connection', 'danger');
+          data = await apiFetch(`/api/terminate-connection/${connection_id}`, {
+            method: 'POST'
           });
+          getActiveConnections();
+          toast('Connection terminated successfully', 'warning');
         };
 
         const getActiveConnections = async () => {
-          await fetch("/api/active-connections", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            activeConnectionsCount.value = data.length;
-            activeConnections.value = data;
-          })
-          .catch((error) => console.error('Error fetching active connections:', error));
+          data = await apiFetch("/api/active-connections");
+          activeConnectionsCount.value = data.length;
+          activeConnections.value = data;
         };
 
         const instancesTableColumns = ref([
@@ -440,20 +359,11 @@ const app = createApp({
 
         const getInstances = async () => {
           console.debug('Fetching instances...');
-          await fetch("/api/instances", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            instances.value = data;
-            instancesDetails[instances.value.id] = {};
-            instancesCount.value = instances.value.length;
-            toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
-          })
-          .catch((error) => {
-            console.error('Error fetching instances:', error);
-            toast('Error fetching instances', 'danger');
-          });
+          data = await apiFetch("/api/instances");
+          instances.value = data;
+          instancesDetails[instances.value.id] = {};
+          instancesCount.value = instances.value.length;
+          toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
         };
 
         const instanceDetailsColumns = ref([
@@ -471,17 +381,8 @@ const app = createApp({
 
         const getInstanceDetails = async (instanceId) => {
           console.debug('Fetching instance details...');
-          await fetch(`/api/instance-details/${instanceId}`, {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            instancesDetails.value[instanceId] = data;
-          })
-          .catch((error) => {
-            console.error('Error fetching instance details:', error);
-            toast('Error fetching instance details', 'danger');
-          });
+          data = await apiFetch(`/api/instance-details/${instanceId}`);
+          instancesDetails.value[instanceId] = data;
         };
 
       // -----------------------------------------------
@@ -491,70 +392,41 @@ const app = createApp({
         const startShell = async (instanceId, name) => {
           const instanceName = name || instanceId;
           console.debug('Starting shell for:', instanceName);
-          await fetch(`/api/shell/${instanceId}`, {
+          data = await apiFetch(`/api/shell/${instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
               name: instanceName,
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug('Shell started:', data);
-            getActiveConnections();
-            toast('Successfully started shell', 'success');
-          })
-          .catch((error) => {
-            console.error('Error starting shell:', error);
-            toast('Error starting shell', 'danger');
           });
+          console.debug('Shell started:', data);
+          getActiveConnections();
+          toast('Successfully started shell', 'success');
         };
 
         const startRdp = async (instanceId, name) => {
           const instanceName = name || instanceId;
           console.debug('Starting RDP for:', instanceName);
-          await fetch(`/api/rdp/${instanceId}`, {
+          data = await apiFetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
               name: instanceName,
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug('RDP started:', data);
-            toast('Successfully started RDP', 'success');
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error starting RDP:', error);
-            toast('Error starting RDP', 'danger');
           });
+          console.debug('RDP started:', data);
+          toast('Successfully started RDP', 'success');
+          getActiveConnections();
         };
 
         const startPortForwarding = async () => {
           console.debug('Starting port forwarding...');
           portForwardingStarting.value = true;
 
-          await fetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
+          data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
@@ -564,30 +436,20 @@ const app = createApp({
               remote_host: portForwardingModalProperties.value.remoteHost,
               username: portForwardingModalProperties.value.username
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.log(data)
-            console.debug('Port forwarding started:', data);
-            toast('Successfully started port forwarding', 'success');
-
-            if (portForwardingModalProperties.value.username && data.local_port) {
-              addWindowsCredential(
-                portForwardingModalProperties.value.instanceId,
-                portForwardingModalProperties.value.instanceName,
-                portForwardingModalProperties.value.username,
-                data.local_port
-              );
-            }
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error starting port forwarding:', error);
-            toast('Error starting port forwarding', 'danger');
           });
+          console.debug('Port forwarding started:', data);
+          toast('Successfully started port forwarding', 'success');
+
+          if (portForwardingModalProperties.value.username && data.local_port) {
+            addWindowsCredential(
+              portForwardingModalProperties.value.instanceId,
+              portForwardingModalProperties.value.instanceName,
+              portForwardingModalProperties.value.username,
+              data.local_port
+            );
+          }
+          getActiveConnections();
+
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
         };
@@ -767,48 +629,22 @@ const app = createApp({
 
         const addSession = async () => {
           console.debug('Adding new session...');
-          await fetch("/api/config/session", {
+          data = await apiFetch("/api/config/session", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(addSessionModalProperties.value)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug(data.message);
-            toast('Session added successfully', 'success');
-            getSessions();
-          })
-          .catch((error) => {
-            console.error('Error adding session:', error);
-            toast('Error adding session', 'danger');
-          });
-
+          toast('Session added successfully', 'success');
+          getSessions();
           addSessionModal.value.hide();
         };
 
         const deleteSession = async (sessionName) => {
           console.debug('Deleting session:', sessionName);
-          await fetch(`/api/config/session/${sessionName}`, {
+          data = await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug(data.message);
-            toast('Session deleted successfully', 'success');
-            getSessions();
-          })
-          .catch((error) => {
-            console.error('Error deleting session:', error);
-            toast('Error deleting session', 'danger');
-          });
+          toast('Session deleted successfully', 'success');
+          getSessions();
         };
 
         const showAddProfileModal = async (instanceId, name) => {
@@ -831,47 +667,22 @@ const app = createApp({
 
         const addProfile = async () => {
           console.debug('Adding new profile...');
-          await fetch("/api/config/profile", {
+          data = await apiFetch("/api/config/profile", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(addProfileModalProperties.value)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug(data.message);
-            toast('Profile added successfully', 'success');
-            getProfiles();
-          })
-          .catch((error) => {
-            console.error('Error adding profile:', error);
-            toast('Error adding profile', 'danger');
-          });
+          toast('Profile added successfully', 'success');
+          getProfiles();
           addProfileModal.value.hide();
         };
 
         const deleteProfile = async (profileName) => {
           console.debug('Deleting profile:', profileName);
-          await fetch(`/api/config/profile/${profileName}`, {
+          data = await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.message || 'Unknown error');
-            }
-            console.debug(data.message);
-            toast('Profile deleted successfully', 'success');
-            getProfiles();
-          })
-          .catch((error) => {
-            console.error('Error deleting profile:', error);
-            toast('Error deleting profile', 'danger');
-          });
+          toast('Profile deleted successfully', 'success');
+          getProfiles();
         };
 
       // -----------------------------------------------
@@ -965,31 +776,54 @@ const app = createApp({
       // -----------------------------------------------
         const checkForUpdates = async () => {
           console.debug('Checking for updates...');
-          await fetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            const currentVersion = `v${version.value}`;
-            const githubVersion = data.tag_name;
-            const githubUrl = data.html_url;
-
-            if (!githubVersion || !githubUrl) {
-              throw new Error('No version information found on GitHub');
-            } else if (githubVersion !== currentVersion) {
-              console.debug('New version available:', githubVersion);
-              toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
-            } else {
-              console.debug('No updates available');
-              toast('You are using the latest version', 'success');
+          data = await apiFetch(
+            "https://api.github.com/repos/napalm255/ssm-manager/releases/latest",
+            {
+              method: 'GET'
             }
-          })
-          .catch((error) => {
-            console.error('Error checking for updates:', error);
-            toast('Error checking for updates', 'danger');
-          });
+          )
+          const currentVersion = `v${version.value}`;
+          const githubVersion = data.tag_name;
+          const githubUrl = data.html_url;
+
+          if (!githubVersion || !githubUrl) {
+            toast('Failed querying for version', 'danger');
+            new Error('Failed querying for version');
+          } else if (githubVersion !== currentVersion) {
+            console.debug('New version available:', githubVersion);
+            toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
+          } else {
+            console.debug('No updates available');
+            toast('You are using the latest version', 'success');
+          }
         };
 
+      // -----------------------------------------------
+      // API Handlers
+      // -----------------------------------------------
+        const apiFetch = async (url, options = {}) => {
+          try {
+            if (!options.method) {
+              options.method = 'GET';
+            }
+
+            if (options.method == 'POST' && !options.headers) {
+              options.headers = {
+                'Content-Type': 'application/json'
+              };
+            }
+
+            const response = await fetch(url, options);
+            const data = await response.json();
+            if (options.method !== 'GET' && (data.status && data.status !== 'success' && data.status !== 'active')) {
+              toast(data.message || 'Unknown error', 'danger');
+              throw new Error(data.message || 'Unknown error');
+            }
+            return data;
+          } catch (error) {
+            throw error; // Re-throw the error for further handling if needed
+          }
+        };
 
       // -----------------------------------------------
       // Data Refresh
