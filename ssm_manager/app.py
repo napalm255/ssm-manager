@@ -13,6 +13,7 @@ import keyring
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
+from werkzeug.exceptions import BadRequest
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
@@ -301,8 +302,10 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
+    raise BadRequest("This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file.")
     try:
         data = request.json
+
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
 
@@ -367,6 +370,9 @@ def update_config_hosts():
     except FileNotFoundError as e:
         logger.error(f"Hosts file not found: {str(e)}")
         return jsonify({'error': 'Hosts file not found'}), 404
+    except AssertionError as e:
+        logger.error(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to update hosts file'}), 500
