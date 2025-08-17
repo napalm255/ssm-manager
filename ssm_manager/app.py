@@ -302,12 +302,7 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
-    raise BadRequest(
-        jsonify({
-            "status": "error",
-            "message": "This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file."
-        })
-    )
+    raise BadRequest("This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file.")
     try:
         data = request.json
 
@@ -1055,3 +1050,13 @@ class TrayIcon():
         self.open_app(None, None)
         if not self.server.stopped():
             self.icon.run()
+
+@app.errorhandler(BadRequest)
+def handle_bad_request(error):
+    """
+    Handle BadRequest errors
+    Args:
+        error: The error object
+    Returns: JSON response with error message
+    """
+    return jsonify(error.description), 400
