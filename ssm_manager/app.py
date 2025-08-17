@@ -302,7 +302,12 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
-    raise BadRequest("This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file.")
+    raise BadRequest(
+        jsonify({
+            "status": "error",
+            "message": "This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file."
+        })
+    )
     try:
         data = request.json
 
