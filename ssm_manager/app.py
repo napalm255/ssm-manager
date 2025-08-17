@@ -401,7 +401,6 @@ def add_windows_credentials():
         command = CredCommand(
             instance=instance,
             local_port=local_port,
-            system=system,
             username=username,
             password=password
         )
