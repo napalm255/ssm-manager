@@ -570,6 +570,7 @@ const app = createApp({
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
+            console.log(data)
             console.debug('Port forwarding started:', data);
             toast('Successfully started port forwarding', 'success');
 
@@ -596,7 +597,7 @@ const app = createApp({
             await fetch(`/api/config/credential`, {
                 method: 'POST',
                 headers: {
-                'Content-Type': 'application/json'
+                  'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                   instance_name: instanceName,
@@ -612,7 +613,6 @@ const app = createApp({
                 }
                 console.debug('Windows credential added successfully:', data);
                 toast('Windows credential added successfully', 'success');
-                getActiveConnections();
             })
             .catch((error) => {
                 console.error('Error adding Windows credential:', error);

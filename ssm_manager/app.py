@@ -398,6 +398,9 @@ def add_windows_credentials():
         if not password:
             raise AssertionError("Password not found in keyring for the provided username.")
 
+        logger.warning('Instance: %s, Username: %s, Local Port: %s',
+            instance.name, username, local_port)
+
         command = CredCommand(
             instance=instance,
             local_port=local_port,
