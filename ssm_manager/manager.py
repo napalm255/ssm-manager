@@ -4,7 +4,10 @@ AWS Manager class to handle AWS connections and operations
 # pylint: disable=logging-fstring-interpolation
 import logging
 import boto3
-from botocore.exceptions import ProfileNotFound, BotoCoreError, SSOTokenLoadError
+from botocore.exceptions import (
+    ProfileNotFound, BotoCoreError, SSOTokenLoadError,
+    TokenRetrievalError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +82,16 @@ class AWSManager:
             self.region = region
             self.is_connected = True
             logger.info(f"Successfully set profile to {profile} and region to {region}")
-        except ProfileNotFound as exc:
+        except ProfileNotFound:
             self.is_connected = False
             logger.error(f"Profile '{profile}' not found")
-            raise ValueError(f"Profile '{profile}' not found") from exc
-        except SSOTokenLoadError as exc:
+        except SSOTokenLoadError:
             self.is_connected = False
             logger.error(f"SSO Token Error for {profile}")
-            raise ValueError(f"SSO Token Error for {profile}") from exc
+        except TokenRetrievalError:
+            self.is_connected = False
+            logger.error(f"Token Retrieval Error for {profile}")
+        return self.is_connected
 
     def check_connection(self):
         """

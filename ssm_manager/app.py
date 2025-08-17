@@ -462,39 +462,43 @@ def connect():
     Endpoint to connect to AWS using the specified profile and region
     Returns: JSON response with status and account ID
     """
-    try:
-        data = request.json
-        profile = AWSProfile(
-            name=data.get('profile'),
-            region=data.get('region')
+    data = request.json
+
+    # Validate required fields
+    for field in ['profile', 'region']:
+        if field not in data or not data.get(field, None):
+            raise BadRequest(f"Missing required field: {field}")
+
+    profile = AWSProfile(
+        name=data.get('profile'),
+        region=data.get('region')
+    )
+
+    logger.debug(f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}")
+    result = aws_manager.set_profile_and_region(profile.name, profile.region)
+    max_retries = 3
+    retries = 0
+    delay = 2
+    while not result and retries < max_retries:
+        retries += 1
+        logger.info(f"Starting SSO login with profile: {profile.name}")
+        command = SSOCommand(
+            region=profile.region,
+            profile=profile.name,
+            system=system,
+            action='login',
+            timeout=60
         )
-        if not profile.name or not profile.region:
-            logger.error("Failed to connect. Profile and region are required.")
-            return jsonify({'message': 'Profile and region are required'}), 400
+        run_cmd(command)
+        result = aws_manager.set_profile_and_region(profile.name, profile.region)
+        if not result:
+            time.sleep(delay)
 
-        try:
-            logger.debug(f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}")
-            aws_manager.set_profile_and_region(profile.name, profile.region)
-        except ValueError:
-            command = SSOCommand(region=profile.region,
-                                 profile=profile.name,
-                                 system=system,
-                                 action='login',
-                                 timeout=60)
-
-            logger.info(f"Starting SSO login - Profile: {command.profile}")
-            run_cmd(command)
-
-            aws_manager.set_profile_and_region(command.profile, command.region)
-
-        logger.info(f"Connected to AWS - Profile: {profile.name}, Region: {profile.region}")
-        return jsonify({
-            'status': 'success',
-            'account_id': aws_manager.account_id
-        })
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Connection error: {str(e)}", exc_info=True)
-        return jsonify({'message': 'Connection error'}), 500
+    logger.info(f"Connected to AWS - Profile: {profile.name}, Region: {profile.region}")
+    return jsonify({
+        'status': 'success',
+        'account_id': aws_manager.account_id
+    })
 
 
 @app.route('/api/instances')
