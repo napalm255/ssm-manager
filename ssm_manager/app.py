@@ -1059,4 +1059,4 @@ def handle_bad_request(error):
         error: The error object
     Returns: JSON response with error message
     """
-    return jsonify(error.description), 400
+    return jsonify({'status': 'error', 'message': error.description}), 400
