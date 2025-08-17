@@ -593,32 +593,59 @@ const app = createApp({
         };
 
         const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
-            console.debug(`Adding Windows credential for ${instanceName} (${instanceId})`);
-            await fetch(`/api/config/credential`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  instance_name: instanceName,
-                  instance_id: instanceId,
-                  username: username,
-                  local_port: localPort
-                })
+          console.debug(`Adding Windows credential for ${instanceName} (${instanceId})`);
+          await fetch(`/api/config/credential`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              instance_name: instanceName,
+              instance_id: instanceId,
+              username: username,
+              local_port: localPort
             })
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data.status || data.status !== 'success') {
-                  throw new Error(data.error || 'Unknown error');
-                }
-                console.debug('Windows credential added successfully:', data);
-                toast('Windows credential added successfully', 'success');
-            })
-            .catch((error) => {
-                console.error('Error adding Windows credential:', error);
-                toast('Error adding Windows credential', 'danger');
-            });
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
             }
+            console.debug('Windows credential added successfully:', data);
+            toast('Windows credential added successfully', 'success');
+          })
+          .catch((error) => {
+            console.error('Error adding Windows credential:', error);
+            toast('Error adding Windows credential', 'danger');
+          });
+        };
+
+        const deleteWindowsCredential = async (instanceId, instanceName, localPort) => {
+          console.debug(`Deleting Windows credential for ${instanceName} (${instanceId}) on port ${localPort}`);
+          await fetch(`/api/config/credential`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              instance_name: instanceName,
+              instance_id: instanceId,
+              local_port: localPort
+            })
+          })
+          .then((response) => response.json())
+          .then((data) => {
+            if (!data.status || data.status !== 'success') {
+              throw new Error(data.error || 'Unknown error');
+            }
+            console.debug('Windows credential deleted successfully:', data);
+            toast('Windows credential deleted successfully', 'success');
+          })
+          .catch((error) => {
+            console.error('Error deleting Windows credential:', error);
+            toast('Error deleting Windows credential', 'danger');
+          });
+        };
 
         const openRdpClient = async (instanceId, name, local_port) => {
           const instanceName = name || instanceId;

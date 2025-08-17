@@ -431,12 +431,17 @@ def delete_windows_credentials():
             raise AssertionError(f"Windows credentials are not supported on {system}.  Skipping Windows credential deletion.")
 
         data = request.json
-        username = data.get('username', None)
+        targetname = data.get('targetname', None)
 
-        if not username:
-            raise AssertionError("Username is required.")
+        if not targetname:
+            raise AssertionError("Target name is required.")
 
-        logger.info(f"Windows Credentials deleted successfully for user: {username}")
+        command = CmdKeyDeleteCommand(
+            targetname=targetname
+        )
+        run_cmd(command, skip_pid_wait=True)
+
+        logger.info(f"Windows Credentials deleted successfully for target: {targetname}")
         return jsonify({'status': 'success'})
     except AssertionError as e:
         logger.error(f"Error: {str(e)}")
