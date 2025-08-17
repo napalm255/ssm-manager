@@ -393,35 +393,15 @@ class SSMCommand(AWSCommand):
         return str(' '.join(cmd))
 
 
-class CredCommand(BaseModel):
+class PSCommand(BaseModel):
     """
-    Model representing the credential command.
+    Model representing the powershell command.
+    Note: Windows only.
     """
-    instance: Instance
-    local_port: int = Field(ge=1024, le=65535)
-    system: Literal["Linux", "Windows"]
-    username: Optional[str] = ''
-    password: Optional[str] = ''
+    command: str
     hide: Optional[bool] = True
     wait: Optional[bool] = True
     timeout: int | None = Field(default=None, ge=0)
-
-    def _build_cmd(self) -> str:
-        """
-        Build the command string.
-        """
-
-        domain = ""
-        if '\\' in self.username:
-            domain, _ = self.username.split('\\', 1)
-        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
-        hostname = f'{hostname}:{self.local_port}'
-
-        cmd = [self.exec,
-               f'/add:"{hostname}"',
-               f'/user:"{self.username}"',
-               f'/pass:"{self.password}"']
-        return str(' '.join(cmd))
 
     @property
     def startupinfo(self):
@@ -434,15 +414,6 @@ class CredCommand(BaseModel):
             startupinfo.wShowWindow = subprocess.SW_HIDE
             return startupinfo
         return None
-
-    @property
-    def exec(self) -> str:
-        """
-        Determine the executable based on the system type.
-        """
-        if self.system == 'Windows':
-            return 'cmdkey.exe'
-        raise ValueError(UNSUPPORTED_SYSTEM)
 
     @property
     def cmd(self) -> str | list:
@@ -458,7 +429,34 @@ class CredCommand(BaseModel):
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
-class PSCommand(BaseModel):
+class CredCommand(PSCommand):
+    """
+    Model representing the credential command.
+    """
+    instance: Instance
+    local_port: int = Field(ge=1024, le=65535)
+    username: str
+    password: str
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+
+        domain = ""
+        if '\\' in self.username:
+            domain, _ = self.username.split('\\', 1)
+        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
+        hostname = f'{hostname}:{self.local_port}'
+
+        cmd = ['cmdkey.exe',
+               f'/add:"{hostname}"',
+               f'/user:"{self.username}"',
+               f'/pass:"{self.password}"']
+        return str(' '.join(cmd))
+
+
+class PSCommand1(BaseModel):
     """
     Model representing the powershell command
     """
