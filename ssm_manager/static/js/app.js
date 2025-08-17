@@ -567,11 +567,20 @@ const app = createApp({
           })
           .then((response) => response.json())
           .then((data) => {
-            console.debug('Port forwarding started:', data);
             if (!data.status || data.status !== 'active') {
               throw new Error(data.error || 'Unknown error');
             }
+            console.debug('Port forwarding started:', data);
             toast('Successfully started port forwarding', 'success');
+
+            if (portForwardingModalProperties.value.username && data.local_port) {
+              addWindowsCredential(
+                portForwardingModalProperties.value.instanceId,
+                portForwardingModalProperties.value.instanceName,
+                portForwardingModalProperties.value.username,
+                data.local_port
+              );
+            }
             getActiveConnections();
           })
           .catch((error) => {
@@ -581,6 +590,35 @@ const app = createApp({
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
         };
+
+        const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
+            console.debug(`Adding Windows credential for ${instanceName} (${instanceId})`);
+            await fetch(`/api/config/credential`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  instance_name: instanceName,
+                  instance_id: instanceId,
+                  username: username,
+                  local_port: localPort
+                })
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data.status || data.status !== 'success') {
+                  throw new Error(data.error || 'Unknown error');
+                }
+                console.debug('Windows credential added successfully:', data);
+                toast('Windows credential added successfully', 'success');
+                getActiveConnections();
+            })
+            .catch((error) => {
+                console.error('Error adding Windows credential:', error);
+                toast('Error adding Windows credential', 'danger');
+            });
+            }
 
         const openRdpClient = async (instanceId, name, local_port) => {
           const instanceName = name || instanceId;

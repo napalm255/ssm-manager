@@ -372,6 +372,50 @@ def update_config_hosts():
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to update hosts file'}), 500
 
+@app.route('/api/config/credential', methods=['POST'])
+def add_windows_credentials():
+    """
+    Endpoint to add Windows credentials
+    Returns: JSON response with status
+    """
+    try:
+        if system != 'Windows':
+            raise AssertionError(f"Windows credentials are not supported on {system}.  Skipping Windows credential creation.")
+
+        data = request.json
+
+        instance = Instance(
+            name=data.get('instance_name', None),
+            id=data.get('instance_id', None)
+        )
+        username = data.get('username', None)
+        local_port = data.get('local_port', None)
+
+        if not (username and instance.name and local_port):
+            raise AssertionError("Username, instance name, and local port are required.")
+
+        password = keyring.get_password('ssm_manager', username)
+        if not password:
+            raise AssertionError("Password not found in keyring for the provided username.")
+
+        command = CredCommand(
+            instance=instance,
+            local_port=local_port,
+            system=system,
+            username=username,
+            password=password
+        )
+        run_cmd(command, skip_pid_wait=True)
+
+        logger.info(f"Windows Credentials added successfully for user: {username}")
+        return jsonify({'status': 'success'})
+    except AssertionError as e:
+        logger.error(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to add credentials: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to add credentials'}), 500
+
 @app.route('/api/connect', methods=['POST'])
 def connect():
     """
@@ -600,26 +644,6 @@ def start_custom_port(instance_id):
         if local_port is None:
             logger.error("Could not find available port for port forwarding")
             return jsonify({'error': 'No available ports'}), 503
-
-        try:
-            username = data.get('username', None)
-            if not username:
-                raise ValueError("Username is required for credential configuration")
-
-            password = keyring.get_password('ssm_manager', username)
-            if not password:
-                raise ValueError("Password not found in keyring for the provided username")
-
-            command = CredCommand(
-                instance=instance,
-                local_port=local_port,
-                system=system,
-                username=username,
-                password=password
-            )
-            run_cmd(command, skip_pid_wait=True)
-        except ValueError as e:
-            logger.error(f"Failed to configure credentials: {str(e)}")
 
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
