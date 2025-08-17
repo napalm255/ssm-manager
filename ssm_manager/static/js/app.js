@@ -779,7 +779,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
-            console.debug('Session added successfully:', data);
+            console.debug(data.message);
             toast('Session added successfully', 'success');
             getSessions();
           })
@@ -801,7 +801,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
-            console.debug('Session deleted successfully:', data);
+            console.debug(data.message);
             toast('Session deleted successfully', 'success');
             getSessions();
           })
@@ -843,7 +843,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
-            console.debug('Profile added successfully:', data);
+            console.debug(data.message);
             toast('Profile added successfully', 'success');
             getProfiles();
           })
@@ -864,7 +864,7 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
-            console.debug('Profile deleted successfully:', data);
+            console.debug(data.message);
             toast('Profile deleted successfully', 'success');
             getProfiles();
           })
