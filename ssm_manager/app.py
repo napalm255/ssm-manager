@@ -18,6 +18,7 @@ from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.config import AwsConfigManager
+from ssm_manager.logger import CustomLogger
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand,
@@ -59,6 +60,7 @@ os.makedirs(temp_dir, exist_ok=True)
 os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
 # Configure detailed logging
+logging.setLoggerClass(CustomLogger)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s:%(name)s - %(message)s',
@@ -103,11 +105,10 @@ def get_version():
                 'name': APP_NAME,
                 'operating_system': system,
             }
-        logger.debug(f"Version: {version}")
+        logger.info(f"Version: {version}")
         return jsonify(version)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error getting version: {str(e)}")
-        return jsonify({'error': 'Error getting version'}), 500
+    except FileNotFoundError:
+        return logger.failed("Version file not found.")
 
 
 @app.route('/api/profiles')
@@ -116,14 +117,9 @@ def get_profiles():
     Endpoint to get available AWS profiles
     Returns: JSON list of profile names
     """
-    try:
-        profiles = aws_manager.get_profiles()
-        logger.info(f"AWS profiles: {len(profiles)} found.")
-        logger.debug(f"Profiles: {profiles}")
-        return jsonify(profiles)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load AWS profiles: {str(e)}")
-        return jsonify({'error': 'Failed to load profiles'}), 500
+    profiles = aws_manager.get_profiles()
+    logger.info(f"AWS profiles: {len(profiles)} found.")
+    return jsonify(profiles)
 
 
 @app.route('/api/regions')
@@ -132,17 +128,12 @@ def get_regions():
     Endpoint to get available AWS regions
     Returns: JSON list of region names
     """
-    try:
-        preferences.reload_preferences()
-        regions = preferences.get_regions()
-        if not regions:
-            regions = aws_manager.get_regions()
-        logger.info(f"AWS regions: {len(regions)} listed.")
-        logger.debug(f"Regions: {regions}")
-        return jsonify(regions)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load AWS regions: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to load regions'}), 500
+    preferences.reload_preferences()
+    regions = preferences.get_regions()
+    if not regions:
+        regions = aws_manager.get_regions()
+    logger.info(f"AWS Regions: {len(regions)} listed.")
+    return jsonify(regions)
 
 
 @app.route('/api/regions/all')
@@ -151,14 +142,9 @@ def get_all_regions():
     Endpoint to get all AWS regions
     Returns: JSON list of all region names
     """
-    try:
-        regions = aws_manager.get_regions()
-        logger.info(f"All AWS regions: {len(regions)}.")
-        logger.debug(f"Regions: {regions}")
-        return jsonify(regions)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load all AWS regions: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to load all regions'}), 500
+    regions = aws_manager.get_regions()
+    logger.info(f"AWS Regions: {len(regions)} total.")
+    return jsonify(regions)
 
 
 @app.route('/api/config/sessions')
@@ -167,14 +153,11 @@ def get_config_sessions():
     Endpoint to get AWS configuration sessions
     Returns: JSON list of AWS profiles from the configuration
     """
-    try:
-        config = AwsConfigManager()
-        sessions = config.get_sessions()
-        logger.debug(f"Configuration sessions: {len(sessions)} found.")
-        return jsonify(sessions)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to fetch AWS configuration sessions: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to fetch AWS configuration sessions'}), 500
+    config = AwsConfigManager()
+    sessions = config.get_sessions()
+    logger.info(f"Sessions: {len(sessions)} found.")
+    return jsonify(sessions)
+
 
 @app.route('/api/config/session', methods=['POST'])
 def add_config_session():
@@ -182,29 +165,27 @@ def add_config_session():
     Endpoint to add a new AWS configuration session
     Returns: JSON response with status
     """
-    try:
-        data = request.json
-        session_name = data.get('name', None)
-        sso_start_url = data.get('sso_start_url', None)
-        sso_region = data.get('sso_region', None)
-        sso_registration_scopes = data.get('sso_registration_scopes', None)
+    data = request.json
 
-        if not (session_name and sso_start_url and sso_region and sso_registration_scopes):
-            logger.error("Failed to add session. All fields are required.")
-            return jsonify({'error': 'Failed to add session'}), 400
+    # Validate required fields
+    for field in ['name', 'sso_start_url', 'sso_region', 'sso_registration_scopes']:
+        if field not in data and not data.get(field, None):
+            raise BadRequest(f"Missing required field: {field}")
 
-        config = AwsConfigManager()
-        config.add_session(
-            name=session_name,
-            start_url=sso_start_url,
-            region=sso_region,
-            registration_scopes=sso_registration_scopes
-        )
-        logger.info(f"Session added successfully: {session_name}")
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to add session: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to add session'}), 500
+    config = AwsConfigManager()
+    config.add_session(
+        name=data.get('name'),
+        start_url=data.get('sso_start_url'),
+        region=data.get('sso_region'),
+        registration_scopes=data.get('sso_registration_scopes')
+    )
+
+    session_exists = any(data['name'] == data.get('name') for data in config.get_sessions())
+    if not session_exists:
+        return logger.failed(f"Failed to add session: {data.get('name')}")
+
+    return logger.success(f"Session added successfully: {data.get('name')}")
+
 
 @app.route('/api/config/session/<session_name>', methods=['DELETE'])
 def delete_config_session(session_name):
@@ -214,14 +195,22 @@ def delete_config_session(session_name):
         session_name (str): Name of the session to delete
     Returns: JSON response with status
     """
-    try:
-        config = AwsConfigManager()
-        config.delete_session(session_name)
-        logger.info(f"Session deleted successfully: {session_name}")
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to delete session: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to delete session'}), 500
+    config = AwsConfigManager()
+
+    session_exists = any(data['name'] == session_name for data in config.get_sessions())
+    if not session_exists:
+        raise BadRequest(f"Session '{session_name}' does not exist.")
+
+    config.delete_session(
+        name = session_name
+    )
+
+    session_exists = any(data['name'] == session_name for data in config.get_sessions())
+    if session_exists:
+        return logger.failed(f"Failed to delete session: {session_name}")
+
+    return logger.success(f"Session deleted successfully: {session_name}")
+
 
 @app.route('/api/config/profile', methods=['POST'])
 def add_config_profile():
@@ -229,28 +218,30 @@ def add_config_profile():
     Endpoint to add a new AWS configuration profile
     Returns: JSON response with status
     """
-    try:
-        data = request.json
-        profile_name = data.get('name', None)
+    data = request.json
+    profile_name = data.get('name', None)
 
-        if not profile_name:
-            logger.error("Failed to add profile. Profile name is required.")
-            return jsonify({'error': 'Failed to add profile'}), 400
+    # Validate required fields
+    for field in ['name', 'region', 'sso_account_id', 'sso_role_name', 'sso_session', 'output']:
+        if field not in data or not data.get(field, None):
+            raise BadRequest(f"Missing required field: {field}")
 
-        config = AwsConfigManager()
-        config.add_profile(
-            name=profile_name,
-            region = data.get('region', None),
-            sso_account_id = data.get('sso_account_id', None),
-            sso_role_name = data.get('sso_role_name', None),
-            sso_session = data.get('sso_session', None),
-            output = data.get('output', None)
-        )
-        logger.info(f"Profile added successfully: {profile_name}")
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to add profile: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to add profile'}), 500
+    config = AwsConfigManager()
+    config.add_profile(
+        name=profile_name,
+        region = data.get('region', None),
+        sso_account_id = data.get('sso_account_id', None),
+        sso_role_name = data.get('sso_role_name', None),
+        sso_session = data.get('sso_session', None),
+        output = data.get('output', None)
+    )
+
+    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    if not profile_exists:
+        return logger.failed(f"Failed to add profile: {profile_name}")
+
+    return logger.success(f"Profile added successfully: {profile_name}")
+
 
 @app.route('/api/config/profile/<profile_name>', methods=['DELETE'])
 def delete_config_profile(profile_name):
@@ -260,14 +251,23 @@ def delete_config_profile(profile_name):
         profile_name (str): Name of the profile to delete
     Returns: JSON response with status
     """
-    try:
-        config = AwsConfigManager()
-        config.delete_profile(str(profile_name))
-        logger.info(f"Profile deleted successfully: {profile_name}")
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to delete profile: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to delete profile'}), 500
+    config = AwsConfigManager()
+    profile_name = str(profile_name)
+
+    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    if not profile_exists:
+        raise BadRequest(f"Profile '{profile_name}' does not exist.")
+
+    config.delete_profile(
+        profile_name
+    )
+
+    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    if profile_exists:
+        return logger.failed(f"Failed to delete profile: {profile_name}")
+
+    return logger.success(f"Profile deleted successfully: {profile_name}")
+
 
 @app.route('/api/config/hosts')
 def get_config_hosts():
@@ -275,26 +275,26 @@ def get_config_hosts():
     Endpoint to get system hosts file
     Returns: JSON list of hosts
     """
+    hosts = []
     try:
-        hosts = []
         with open(hosts_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-        for line in lines:
-            if line.strip() and line.startswith('#'):
-                continue
-            parts = line.split()
-            if len(parts) >= 2:
-                ip = parts[0]
-                hostname = parts[1]
-                hosts.append({'ip': ip, 'hostname': hostname})
-        logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
-        return jsonify(hosts)
     except FileNotFoundError:
         logger.error(f"Hosts file not found: {hosts_file}")
-        return jsonify({'error': 'Hosts file not found'}), 404
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load hosts file: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to load hosts file'}), 500
+        return jsonify({'message': 'Hosts file not found'}), 404
+
+    for line in lines:
+        if line.strip() and line.startswith('#'):
+            continue
+        parts = line.split()
+        if len(parts) >= 2:
+            ip = parts[0]
+            hostname = parts[1]
+            hosts.append({'ip': ip, 'hostname': hostname})
+
+    logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
+    return jsonify(hosts)
+
 
 @app.route('/api/config/host', methods=['POST'])
 def update_config_hosts():
@@ -302,9 +302,10 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
-    raise BadRequest("This endpoint is not implemented yet. Please use the /api/config/hosts endpoint to view the hosts file.")
     try:
         data = request.json
+        if not (data and 'ip' in data and 'hostname' in data):
+            raise BadRequest("Invalid data: 'ip' and 'hostname' are required.")
 
         with open(hosts_file, 'r', encoding='utf-8') as file:
             current_hosts_file = file.readlines()
@@ -366,16 +367,14 @@ def update_config_hosts():
         return jsonify({'status': 'success'})
     except ValueError as e:
         logger.error(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'message': str(e)}), 400
     except FileNotFoundError as e:
         logger.error(f"Hosts file not found: {str(e)}")
-        return jsonify({'error': 'Hosts file not found'}), 404
-    except AssertionError as e:
-        logger.error(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'message': 'Hosts file not found'}), 404
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to update hosts file'}), 500
+        return jsonify({'message': 'Failed to update hosts file'}), 500
+
 
 @app.route('/api/config/credential', methods=['POST'])
 def add_windows_credentials():
@@ -420,10 +419,11 @@ def add_windows_credentials():
         return jsonify({'status': 'success'})
     except AssertionError as e:
         logger.error(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'message': str(e)}), 400
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to add credentials: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to add credentials'}), 500
+        return jsonify({'message': 'Failed to add credentials'}), 500
+
 
 @app.route('/api/config/credential', methods=['DELETE'])
 def delete_windows_credentials():
@@ -450,10 +450,11 @@ def delete_windows_credentials():
         return jsonify({'status': 'success'})
     except AssertionError as e:
         logger.error(f"Error: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'message': str(e)}), 400
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to delete credentials: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to delete credentials'}), 500
+        return jsonify({'message': 'Failed to delete credentials'}), 500
+
 
 @app.route('/api/connect', methods=['POST'])
 def connect():
@@ -469,7 +470,7 @@ def connect():
         )
         if not profile.name or not profile.region:
             logger.error("Failed to connect. Profile and region are required.")
-            return jsonify({'error': 'Profile and region are required'}), 400
+            return jsonify({'message': 'Profile and region are required'}), 400
 
         try:
             logger.debug(f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}")
@@ -493,7 +494,7 @@ def connect():
         })
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Connection error: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Connection error'}), 500
+        return jsonify({'message': 'Connection error'}), 500
 
 
 @app.route('/api/instances')
@@ -502,14 +503,10 @@ def get_instances():
     Endpoint to get a list of EC2 instances with SSM agent installed
     Returns: JSON list of instances
     """
-    try:
-        logger.debug("Loading EC2 instances...")
-        instances = aws_manager.list_ssm_instances()
-        logger.info(f"Successfully loaded {len(instances)} EC2 instances")
-        return jsonify(instances)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to load instances: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to load instances'}), 500
+    logger.debug("Loading EC2 instances...")
+    instances = aws_manager.list_ssm_instances()
+    logger.info(f"Instances: {len(instances)} found.")
+    return jsonify(instances)
 
 
 @app.route('/api/shell/<instance_id>', methods=['POST'])
@@ -563,7 +560,7 @@ def start_shell(instance_id):
         return jsonify(conn_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting Shell: {str(e)}")
-        return jsonify({'error': f'Error starting Shell connection: {instance_id}'}), 500
+        return jsonify({'message': f'Error starting Shell connection: {instance_id}'}), 500
 
 
 @app.route('/api/rdp/<instance_id>', methods=['POST'])
@@ -602,7 +599,7 @@ def start_rdp(instance_id):
 
         if local_port is None:
             logger.error("Could not find available port for RDP connection")
-            return jsonify({'error': 'No available ports for RDP connection'}), 503
+            return jsonify({'message': 'No available ports for RDP connection'}), 503
 
         command = SSMCommand(
             instance=instance,
@@ -639,7 +636,7 @@ def start_rdp(instance_id):
         return jsonify(conn_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting RDP: {str(e)}")
-        return jsonify({'error': 'Error starting RDP connection: {instance_id}'}), 500
+        return jsonify({'message': 'Error starting RDP connection: {instance_id}'}), 500
 
 
 @app.route('/api/custom-port/<instance_id>', methods=['POST'])
@@ -682,7 +679,7 @@ def start_custom_port(instance_id):
 
         if local_port is None:
             logger.error("Could not find available port for port forwarding")
-            return jsonify({'error': 'No available ports'}), 503
+            return jsonify({'message': 'No available ports'}), 503
 
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
@@ -720,7 +717,7 @@ def start_custom_port(instance_id):
         return jsonify(conn_state.dict())
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error starting port forwarding: {str(e)}")
-        return jsonify({'error': f'Error starting port forwarding: {instance_id}'}), 500
+        return jsonify({'message': f'Error starting port forwarding: {instance_id}'}), 500
 
 
 @app.route('/api/instance-details/<instance_id>')
@@ -737,13 +734,13 @@ def get_instance_details(instance_id):
         details = aws_manager.get_instance_details(instance.id)
         if details is None:
             logger.warning(f"Instance details not found: {instance.id}")
-            return jsonify({'error': 'Instance details not found'}), 404
+            return jsonify({'message': 'Instance details not found'}), 404
 
         logger.debug(f"Instance details: {details}")
         return jsonify(details)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error getting instance details: {str(e)}")
-        return jsonify({'error': f'Error getting instance details: {instance_id}'}), 500
+        return jsonify({'message': f'Error getting instance details: {instance_id}'}), 500
 
 
 @app.route('/api/preferences')
@@ -752,11 +749,7 @@ def get_preferences():
     Get application preferences
     Returns: JSON response with preferences
     """
-    try:
-        return jsonify(preferences.preferences)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error getting preferences: {str(e)}")
-        return jsonify({'error': 'Error getting preferences'}), 500
+    return jsonify(preferences.preferences)
 
 
 @app.route('/api/preferences', methods=['POST'])
@@ -770,7 +763,7 @@ def update_preferences():
         logger.info("Preferences updated successfully")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating preferences: {str(e)}")
-        return jsonify({'error': 'Error updating preferences'}), 500
+        return jsonify({'message': 'Error updating preferences'}), 500
     return jsonify({'status': 'success'})
 
 
@@ -787,7 +780,7 @@ def update_instance_preferences(instance_name):
         logger.info(f"Preferences updated for instance: {instance_name}")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error updating instance preferences: {str(e)}")
-        return jsonify({'error': f'Error updating preferences for instance: {instance_name}'}), 500
+        return jsonify({'message': f'Error updating preferences for instance: {instance_name}'}), 500
     return jsonify({'status': 'success'})
 
 @app.route('/api/refresh')
@@ -805,7 +798,7 @@ def refresh_data():
         })
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error refreshing data: {str(e)}")
-        return jsonify({'error': 'Error refreshing data'}), 500
+        return jsonify({'message': 'Error refreshing data'}), 500
 
 
 @app.route('/api/active-connections')
@@ -874,7 +867,7 @@ def terminate_connection(connection_id):
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error terminating connection: {str(e)}")
-        return jsonify({'error': f'Error terminating connection: {connection_id}'}), 500
+        return jsonify({'message': f'Error terminating connection: {connection_id}'}), 500
 
 
 @app.route('/api/rdp/<local_port>')
@@ -892,7 +885,7 @@ def open_rdp_client(local_port):
         return jsonify({'status': 'success'})
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error opening rdp client: {str(e)}")
-        return jsonify({'error': f'Error opening rdp client: {local_port}'}), 500
+        return jsonify({'message': f'Error opening rdp client: {local_port}'}), 500
 
 
 @app.route('/')

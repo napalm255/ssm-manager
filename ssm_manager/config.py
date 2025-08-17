@@ -162,7 +162,7 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
             section_name = self.session_prefix + name
@@ -173,8 +173,6 @@ class AwsConfigManager:
                 config.write(configfile)
             logger.info(f"Successfully deleted session '{name}'")
         except configparser.Error as e:
-            logger.error(f"Error deleting session: {e}")
-        except ValueError as e:
             logger.error(f"Error deleting session: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting session: {e}")
@@ -212,7 +210,7 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
             section_name = self.profile_prefix + name if name != 'default' else 'default'
@@ -223,8 +221,6 @@ class AwsConfigManager:
                 config.write(configfile)
             logger.info(f"Successfully deleted profile '{name}'")
         except configparser.Error as e:
-            logger.error(f"Error deleting profile: {e}")
-        except ValueError as e:
             logger.error(f"Error deleting profile: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting profile {e}")

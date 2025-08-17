@@ -38,11 +38,10 @@ class AWSManager:
                 profile = {'name': _profile, **config}
                 profiles.append(profile)
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
+            return profiles
         except BotoCoreError as e:
-            logger.warning(f"Error retrieving AWS profiles: {e}")
-        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS profiles: {e}")
-        return profiles
+        return []
 
     @staticmethod
     def get_regions():
@@ -55,11 +54,10 @@ class AWSManager:
         try:
             regions = boto3.Session().get_available_regions('ec2')
             logger.info(f"Successfully loaded {len(regions)} AWS regions")
+            return regions
         except BotoCoreError as e:
-            logger.warning(f"Error retrieving AWS regions: {e}")
-        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS regions: {e}")
-        return regions
+        return []
 
     def set_profile_and_region(self, profile: str, region: str):
         """
@@ -89,10 +87,6 @@ class AWSManager:
             self.is_connected = False
             logger.error(f"SSO Token Error for {profile}")
             raise ValueError(f"SSO Token Error for {profile}") from exc
-        except Exception as exc:  # pylint: disable=broad-except
-            self.is_connected = False
-            logger.error(f"Error connecting to AWS: {str(exc)}")
-            raise ValueError(f"Error connecting to AWS: {str(exc)}") from exc
 
     def check_connection(self):
         """

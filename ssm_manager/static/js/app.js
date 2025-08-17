@@ -384,7 +384,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             currentAccountId.value = data.account_id;
             toast('Connected to AWS successfully', 'success');
@@ -408,7 +408,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             getActiveConnections();
             toast('Connection terminated successfully', 'warning');
@@ -505,7 +505,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Shell started:', data);
             getActiveConnections();
@@ -534,7 +534,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('RDP started:', data);
             toast('Successfully started RDP', 'success');
@@ -568,7 +568,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.log(data)
             console.debug('Port forwarding started:', data);
@@ -609,7 +609,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Windows credential added successfully:', data);
             toast('Windows credential added successfully', 'success');
@@ -636,7 +636,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Windows credential deleted successfully:', data);
             toast('Windows credential deleted successfully', 'success');
@@ -656,7 +656,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             toast('Successfully opened RDP client', 'success');
             getActiveConnections();
@@ -777,7 +777,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Session added successfully:', data);
             toast('Session added successfully', 'success');
@@ -799,7 +799,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Session deleted successfully:', data);
             toast('Session deleted successfully', 'success');
@@ -841,7 +841,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Profile added successfully:', data);
             toast('Profile added successfully', 'success');
@@ -862,7 +862,7 @@ const app = createApp({
           .then((response) => response.json())
           .then((data) => {
             if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
+              throw new Error(data.message || 'Unknown error');
             }
             console.debug('Profile deleted successfully:', data);
             toast('Profile deleted successfully', 'success');
