@@ -19,7 +19,8 @@ from ssm_manager.cache import Cache
 from ssm_manager.config import AwsConfigManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand, CredCommand, PSCommand,
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
     run_cmd, FreePort, open_browser, resolve_hostname
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
@@ -340,8 +341,7 @@ def update_config_hosts():
         if system == 'Windows':
             pscmd = f"Get-Content -Path '{temp_hosts_file}' | Set-Content -Path '{hosts_file}' -Force;"
             pscmd = pscmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
-            command = PSCommand(
-                hide=True,
+            command = HostsFileCommand(
                 runAs=True,
                 command=pscmd
             )
@@ -398,12 +398,14 @@ def add_windows_credentials():
         if not password:
             raise AssertionError("Password not found in keyring for the provided username.")
 
-        logger.warning('Instance: %s, Username: %s, Local Port: %s',
-            instance.name, username, local_port)
+        domain = ""
+        if '\\' in username:
+            domain, _ = username.split('\\', 1)
+        targetname = f'{instance.name}.{domain}' if domain else instance.name
+        targetname = f'{targetname}:{local_port}'
 
-        command = CredCommand(
-            instance=instance,
-            local_port=local_port,
+        command = CmdKeyAddCommand(
+            targetname=targetname,
             username=username,
             password=password
         )
@@ -417,6 +419,31 @@ def add_windows_credentials():
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to add credentials: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to add credentials'}), 500
+
+@app.route('/api/config/credential', methods=['DELETE'])
+def delete_windows_credentials():
+    """
+    Endpoint to delete Windows credentials
+    Returns: JSON response with status
+    """
+    try:
+        if system != 'Windows':
+            raise AssertionError(f"Windows credentials are not supported on {system}.  Skipping Windows credential deletion.")
+
+        data = request.json
+        username = data.get('username', None)
+
+        if not username:
+            raise AssertionError("Username is required.")
+
+        logger.info(f"Windows Credentials deleted successfully for user: {username}")
+        return jsonify({'status': 'success'})
+    except AssertionError as e:
+        logger.error(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f"Failed to delete credentials: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Failed to delete credentials'}), 500
 
 @app.route('/api/connect', methods=['POST'])
 def connect():

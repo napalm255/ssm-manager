@@ -421,49 +421,53 @@ class PSCommand(BaseModel):
         return shlex.split(f"powershell -Command '{self._build_cmd()}'")
 
 
-class CredCommand(PSCommand):
+class CmdKeyAddCommand(PSCommand):
     """
     Model representing the credential command.
     """
-    instance: Instance
-    local_port: int = Field(ge=1024, le=65535)
-    username: str
-    password: str
+    targetname: str = Field(min_length=1)
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
     def _build_cmd(self) -> str:
         """
         Build the command string.
         """
-
-        domain = ""
-        if '\\' in self.username:
-            domain, _ = self.username.split('\\', 1)
-        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
-        hostname = f'{hostname}:{self.local_port}'
-
-        cmd = ['cmdkey.exe',
-               f'/add:"{hostname}"',
-               f'/user:"{self.username}"',
-               f'/pass:"{self.password}"']
+        cmd = ['cmdkey.exe']
+        cmd.extend([
+            f'/add:"{self.targetname}"',
+            f'/user:"{self.username}"',
+            f'/pass:"{self.password}"'])
         return str(' '.join(cmd))
 
 
-class PSCommand1(BaseModel):
+class CmdKeyDeleteCommand(PSCommand):
+    """
+    Model representing the credential delete command.
+    """
+    targetname: str = Field(min_length=1)
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = ['cmdkey.exe']
+        cmd.append(f'/delete:"{self.targetname}"')
+        return str(' '.join(cmd))
+
+
+class HostsFileCommand(PSCommand):
     """
     Model representing the powershell command
     """
     command: str
-    runAs: Optional[bool] = False
-    hide: Optional[bool] = True
-    wait: Optional[bool] = True
-    timeout: int | None = Field(default=None, ge=0)
 
     def _build_cmd(self) -> str:
         """
         Build the command string.
         """
-        cmd = [self.exec,
-               f'powershell.exe',
+        cmd = ['Start-Process',
+               'powershell.exe',
                f'-ArgumentList "{self.command}"'
         ]
         if self.hide:
@@ -471,30 +475,6 @@ class PSCommand1(BaseModel):
         if self.runAs:
             cmd.append('-Verb RunAs')
         return str(' '.join(cmd))
-
-    @property
-    def startupinfo(self):
-        """
-        Return startupinfo for Windows.
-        """
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-        return startupinfo
-
-    @property
-    def exec(self) -> str:
-        """
-        Determine the executable based on the system type.
-        """
-        return 'Start-Process'
-
-    @property
-    def cmd(self) -> str | list:
-        """
-        Build the command to run based on the system type.
-        """
-        return shlex.split(f"powershell -Command '{self._build_cmd()}'")
 
 
 class FreePort(BaseModel):
