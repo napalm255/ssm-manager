@@ -86,7 +86,7 @@
                 </div>
               </div>
             </div>
-            <div class="row align-items-md-stretch text-start" v-if="operating_system == 'Linux'">
+            <div class="row align-items-md-stretch text-start" v-if="operating_system == 'Windows'">
               <div class="col-md-12 pb-4">
                 <div class="card h-100">
                   <h5 class="card-header">Install and Update on Windows</h5>
@@ -99,7 +99,7 @@
                         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1"
                       </code>
                     </p>
-                    <p class="small text-muted">This command needs to be run as Administrator in order to install in `C:\Program Files (x86)\ssm_manager`.</p>
+                    <p class="small text-muted">This command needs to be run as Administrator in order to install in "C:\Program Files (x86)\ssm_manager".</p>
                   </div>
                 </div>
               </div>
