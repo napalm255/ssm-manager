@@ -363,13 +363,13 @@ def delete_config_host(hostname):
     )
     run_cmd(command, skip_pid_wait=False)
 
-    content = None
-    with open(hosts_file, 'r', encoding='utf-8') as file:
-        content = file.read()
-    pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
-    matches = pattern.findall(content)
-    if not matches:
-        return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
+    # content = None
+    # with open(hosts_file, 'r', encoding='utf-8') as file:
+    #     content = file.read()
+    # pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
+    # matches = pattern.findall(content)
+    # if not matches:
+    #     return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
 
     # if resolve_hostname(hostname):
     #     return logger.failed("Failed to delete host. Still resolvable.")
