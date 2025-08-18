@@ -349,7 +349,7 @@ def delete_config_host(hostname):
         content = file.read()
     if not content:
         return logger.failed("Hosts file is empty or not found.")
-    pattern = re.compile( rf"^\d+\s+{re.escape(hostname)}$", re.MULTILINE)
+    pattern = re.compile( rf"^\d+.*{re.escape(hostname)}$", re.MULTILINE)
     matches = pattern.findall(content)
     print(matches)
     if not matches:
