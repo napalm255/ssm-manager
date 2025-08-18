@@ -6,7 +6,7 @@ import logging
 import boto3
 from botocore.exceptions import (
     ProfileNotFound, BotoCoreError, SSOTokenLoadError,
-    TokenRetrievalError
+    TokenRetrievalError, ClientError
 )
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,7 @@ class AWSManager:
             profile (str): The AWS profile name
             region (str): The AWS region name
         """
+        self.is_connected = False
         try:
             aws_session = boto3.Session(profile_name=profile, region_name=region)
             self.ssm_client = aws_session.client('ssm')
@@ -83,14 +84,13 @@ class AWSManager:
             self.is_connected = True
             logger.info(f"Successfully set profile to {profile} and region to {region}")
         except ProfileNotFound:
-            self.is_connected = False
             logger.error(f"Profile '{profile}' not found")
         except SSOTokenLoadError:
-            self.is_connected = False
             logger.error(f"SSO Token Error for {profile}")
         except TokenRetrievalError:
-            self.is_connected = False
             logger.error(f"Token Retrieval Error for {profile}")
+        except ClientError as e:
+            logger.error(f"Client Error: {str(e)}")
         return self.is_connected
 
     def check_connection(self):
