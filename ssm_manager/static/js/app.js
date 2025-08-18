@@ -612,6 +612,10 @@ const app = createApp({
           localStorage.setItem('lastRegion', newRegion);
         });
 
+        watch(instances, (newInstances) => {
+          localStorage.setItem('lastInstances', JSON.stringify(newInstances));
+        });
+
       // -----------------------------------------------
       // Utility Functions
       // -----------------------------------------------
