@@ -207,7 +207,6 @@ const app = createApp({
         };
 
         const getHosts = async () => {
-          console.log('some debug');
           hosts.value = await apiFetch("/api/config/hosts");
         }
 
