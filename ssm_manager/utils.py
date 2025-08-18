@@ -419,7 +419,6 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        # return shlex.split('powershell -Command { ' + self._build_cmd() + ' }')
         encoded_cmd = base64.b64encode(self._build_cmd().encode('utf-16le')).decode('utf-8')
         return shlex.split(f'powershell -EncodedCommand {encoded_cmd}')
 
