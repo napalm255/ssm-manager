@@ -373,6 +373,9 @@ def delete_config_host(hostname):
     for _ in range(8):
         if host_exists(hostname):
             time.sleep(0.25)
+        else:
+            deleted = True
+            break
     if not deleted:
         return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
 
