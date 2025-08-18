@@ -353,7 +353,7 @@ def delete_config_host(hostname):
 
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     pscmd = f'(Get-Content -Path "{hosts_file_escaped}")'
-    pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + hostname + "$'' }"
+    pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + re.escape(hostname) + "$'' }"
     pscmd += f' | Set-Content -Path "{hosts_file_escaped}"'
 
     command = HostsFileCommand(
