@@ -128,7 +128,7 @@ const app = createApp({
           }
           const pages = document.querySelectorAll('.page');
           pages.forEach(p => p.style.display = 'none');
-          currentHash.value = page
+          currentHash.value = page;
           const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
           currentPage.style.display = 'block';
           localStorage.setItem('lastPage', page);
@@ -171,7 +171,7 @@ const app = createApp({
       // -----------------------------------------------
 
         const getVersion = async () => {
-          data = await apiFetch("/api/version")
+          data = await apiFetch("/api/version");
           version.value = data.version;
           title.value = data.name;
           operating_system.value = data.operating_system;
@@ -183,15 +183,15 @@ const app = createApp({
         };
 
         const getProfiles = async () => {
-          profiles.value = await apiFetch("/api/profiles")
+          profiles.value = await apiFetch("/api/profiles");
         };
 
         const getRegionsAll = async () => {
-          regionsAll.value = await apiFetch("/api/regions/all")
+          regionsAll.value = await apiFetch("/api/regions/all");
         };
 
         const getRegionsSelected = async () => {
-          regionsSelected.value = await apiFetch("/api/regions")
+          regionsSelected.value = await apiFetch("/api/regions");
         };
 
       // -----------------------------------------------
@@ -199,7 +199,7 @@ const app = createApp({
       // -----------------------------------------------
 
         const getPreferences = async () => {
-          preferences.value = await apiFetch("/api/preferences")
+          preferences.value = await apiFetch("/api/preferences");
 
           const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
           const logging = preferences.value.logging || { level: 'INFO' };
