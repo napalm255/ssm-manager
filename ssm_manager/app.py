@@ -361,6 +361,7 @@ def delete_config_host(hostname):
         command=pscmd
     )
     run_cmd(command, skip_pid_wait=True)
+    time.sleep(2)
 
     # content = None
     # with open(hosts_file, 'r', encoding='utf-8') as file:
