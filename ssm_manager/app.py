@@ -362,6 +362,7 @@ def delete_config_host(hostname):
         command=pscmd
     )
     print(f"Running command: {command.cmd}")
+    print(f"Build command: {command.__build_cmd()}")
     run_cmd(command, skip_pid_wait=True)
 
     with open(hosts_file, 'r', encoding='utf-8') as file:
