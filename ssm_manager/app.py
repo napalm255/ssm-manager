@@ -98,13 +98,12 @@ def get_version():
     try:
         logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
-        version = {}
+        version = {
+            'name': APP_NAME,
+            'operating_system': system,
+        }
         with open(version_file, 'r', encoding='utf-8') as vfile:
-            version = {
-                'version': vfile.read().strip(),
-                'name': APP_NAME,
-                'operating_system': system,
-            }
+            version['version'] = vfile.read().strip()
         logger.info(f"Version: {version}")
         return jsonify(version)
     except FileNotFoundError:
