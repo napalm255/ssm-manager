@@ -418,7 +418,9 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        return shlex.split(f"powershell -Command '{self._build_cmd()}'")
+        command = f"powershell -Command '{self._build_cmd()}'"
+        print(command)
+        return shlex.split(command)
 
 
 class CmdKeyAddCommand(PSCommand):
