@@ -359,8 +359,7 @@ def delete_config_host(hostname):
         return logger.failed("Hostname not found in hosts file.")
 
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
-    pspattern = f'Where-Object {{ $_ -notmatch ''^[0-9]+.*{hostname}$'' }}'
-    pscmd = f'(Get-Content -Path "{hosts_file_escaped}") | {pspattern} | Set-Content -Path "{hosts_file_escaped}"'
+    pscmd = rf'(Get-Content -Path "{hosts_file_escaped}") | Where-Object {{ $_ -notmatch "^[0-9]+.*{hostname}$" }} | Set-Content -Path "{hosts_file_escaped}"'
     print(pscmd)
 
     command = HostsFileCommand(
