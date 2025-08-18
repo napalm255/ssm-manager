@@ -469,7 +469,7 @@ class HostsFileCommand(PSCommand):
         """
         cmd = ['Start-Process',
                'powershell.exe',
-               f'-ArgumentList "{self.command}"'
+               f"-ArgumentList '{self.command}'"
         ]
         if self.hide:
             cmd.append('-WindowStyle Hidden')
