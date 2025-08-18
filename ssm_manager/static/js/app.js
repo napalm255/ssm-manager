@@ -186,7 +186,6 @@ const app = createApp({
       // -----------------------------------------------
 
         const getVersion = async () => {
-          console.debug('Fetching version...');
           data = await apiFetch("/api/version")
           version.value = data.version;
           title.value = data.name;
@@ -202,7 +201,6 @@ const app = createApp({
         ]);
 
         const getSessions = async () => {
-          console.debug('Fetching sessions...');
           data = await apiFetch("/api/config/sessions");
           sessions.value = data;
         };
@@ -216,19 +214,16 @@ const app = createApp({
         ]);
 
         const getProfiles = async () => {
-          console.debug('Fetching profiles...');
           data = await apiFetch("/api/profiles")
           profiles.value = data;
         };
 
         const getRegionsAll = async () => {
-          console.debug('Fetching all regions...');
           data = await apiFetch("/api/regions/all")
           regionsAll.value = data;
         };
 
         const getRegionsSelected = async () => {
-          console.debug('Fetching selected regions...');
           data = await apiFetch("/api/regions")
           regionsSelected.value = data;
         };
@@ -238,7 +233,6 @@ const app = createApp({
       // -----------------------------------------------
 
         const getPreferences = async () => {
-          console.debug('Fetching preferences...');
           data = await apiFetch("/api/preferences")
           preferences.value = data;
 
@@ -255,7 +249,6 @@ const app = createApp({
         };
 
         const savePreferences = async () => {
-          console.debug('Saving preferences...');
 
           if (!validatePortRange(prefPortStart.value, prefPortEnd.value)) {
             console.error('Invalid port range:', prefPortStart.value, prefPortEnd.value);
@@ -301,7 +294,6 @@ const app = createApp({
         };
 
         const addCredential = () => {
-          console.debug('Adding new credential...');
           prefCredentials.value.push({
             'username': '',
             'password': ''
@@ -309,7 +301,6 @@ const app = createApp({
         };
 
         const removeCredential = (index) => {
-          console.debug('Removing credential at index:', index);
           prefCredentialsToDelete.value.push(prefCredentials.value[index]);
           prefCredentials.value.splice(index, 1);
         }
@@ -320,7 +311,6 @@ const app = createApp({
       // -----------------------------------------------
 
         const connect = async () => {
-          console.debug('Connecting to AWS...');
           isConnecting.value = true;
           data = await apiFetch("/api/connect", {
             method: 'POST',
@@ -336,7 +326,6 @@ const app = createApp({
         };
 
         const disconnect = async (connection_id) => {
-          console.debug('Terminating connection:', connection_id);
           data = await apiFetch(`/api/terminate-connection/${connection_id}`, {
             method: 'POST'
           });
@@ -358,7 +347,6 @@ const app = createApp({
         ]);
 
         const getInstances = async () => {
-          console.debug('Fetching instances...');
           data = await apiFetch("/api/instances");
           instances.value = data;
           instancesDetails[instances.value.id] = {};
@@ -380,7 +368,6 @@ const app = createApp({
         ]);
 
         const getInstanceDetails = async (instanceId) => {
-          console.debug('Fetching instance details...');
           data = await apiFetch(`/api/instance-details/${instanceId}`);
           instancesDetails.value[instanceId] = data;
         };
@@ -391,7 +378,6 @@ const app = createApp({
 
         const startShell = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          console.debug('Starting shell for:', instanceName);
           data = await apiFetch(`/api/shell/${instanceId}`, {
             method: 'POST',
             body: JSON.stringify({
@@ -407,7 +393,6 @@ const app = createApp({
 
         const startRdp = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          console.debug('Starting RDP for:', instanceName);
           data = await apiFetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
             body: JSON.stringify({
@@ -422,7 +407,6 @@ const app = createApp({
         };
 
         const startPortForwarding = async () => {
-          console.debug('Starting port forwarding...');
           portForwardingStarting.value = true;
 
           data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
@@ -455,7 +439,6 @@ const app = createApp({
         };
 
         const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
-          console.debug(`Adding Windows credential for ${instanceName} (${instanceId})`);
           await fetch(`/api/config/credential`, {
             method: 'POST',
             headers: {
@@ -483,7 +466,6 @@ const app = createApp({
         };
 
         const deleteWindowsCredential = async (instanceId, instanceName, localPort) => {
-          console.debug(`Deleting Windows credential for ${instanceName} (${instanceId}) on port ${localPort}`);
           await fetch(`/api/config/credential`, {
             method: 'DELETE',
             headers: {
@@ -511,12 +493,11 @@ const app = createApp({
 
         const openRdpClient = async (instanceId, name, local_port) => {
           const instanceName = name || instanceId;
-          console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
           await fetch(`/api/rdp/${local_port}`, {
             method: 'GET'
           })
           .then((response) => response.json())
-          .then((data) => {
+          .then(async (data) => {
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
@@ -557,7 +538,7 @@ const app = createApp({
           portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
             keyboard: true
           });
-          document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
+          document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', async () => {
             portMappingsModalInstance.value = null;
             portMappingsModalProperties.value = [];
             await getPreferences();
@@ -585,7 +566,7 @@ const app = createApp({
             body: JSON.stringify(newMappings)
           })
           .then((response) => response.json())
-          .then((data) => {
+          .then(async (data) => {
             if (!data.status || data.status !== 'success') {
               throw new Error(data.status || 'Unknown error');
             };
@@ -628,7 +609,6 @@ const app = createApp({
         };
 
         const addSession = async () => {
-          console.debug('Adding new session...');
           data = await apiFetch("/api/config/session", {
             method: 'POST',
             body: JSON.stringify(addSessionModalProperties.value)
@@ -639,7 +619,6 @@ const app = createApp({
         };
 
         const deleteSession = async (sessionName) => {
-          console.debug('Deleting session:', sessionName);
           data = await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
@@ -666,7 +645,6 @@ const app = createApp({
         };
 
         const addProfile = async () => {
-          console.debug('Adding new profile...');
           data = await apiFetch("/api/config/profile", {
             method: 'POST',
             body: JSON.stringify(addProfileModalProperties.value)
@@ -677,7 +655,6 @@ const app = createApp({
         };
 
         const deleteProfile = async (profileName) => {
-          console.debug('Deleting profile:', profileName);
           data = await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
@@ -750,7 +727,6 @@ const app = createApp({
         };
 
         const copyToClipboard = async (text) => {
-          console.debug('Copying to clipboard:', text);
           await navigator.clipboard.writeText(text)
           toast('Copied to clipboard', 'success');
         };
@@ -775,7 +751,6 @@ const app = createApp({
       // Check GitHub for updates
       // -----------------------------------------------
         const checkForUpdates = async () => {
-          console.debug('Checking for updates...');
           data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
           const currentVersion = `v${version.value}`;
           const githubVersion = data.tag_name;
@@ -825,7 +800,6 @@ const app = createApp({
       // -----------------------------------------------
 
         const dataRefresh = async () => {
-          console.debug('Refreshing data...');
           await getVersion();
           await getSessions();
           await getProfiles();
