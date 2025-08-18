@@ -527,12 +527,19 @@ def resolve_hostname(hostname: str) -> str | None:
         hostname (str): The hostname to resolve
     Returns: The resolved IP address or the original hostname if resolution fails
     """
-    try:
-        ip_address = socket.gethostbyname(hostname)
-        logger.debug(f"Resolved {hostname} to {ip_address}")
-        return ip_address
-    except socket.gaierror as e:
-        logger.error(f"Failed to resolve {hostname}: {str(e)}")
+    max_retries = 3
+    retries = 0
+    delay = 1
+    while retries < max_retries:
+        try:
+            ip_address = socket.gethostbyname(hostname)
+            logger.debug(f"Resolved {hostname} to {ip_address}")
+            return ip_address
+        except socket.gaierror:
+            logger.warning(f"Failed to resolve {hostname}. Retrying...")
+            retries += 1
+            sleep(delay)
+    logger.error(f"Failed to resolve hostname: {hostname}")
     return None
 
 

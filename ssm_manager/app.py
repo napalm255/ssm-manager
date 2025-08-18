@@ -2,6 +2,7 @@
 SSM Manager
 """
 import os
+import re
 import sys
 import logging
 import threading
@@ -22,7 +23,7 @@ from ssm_manager.logger import CustomLogger
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand,
-    CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
+    CmdKeyAddCommand, CmdKeyDeleteCommand,
     run_cmd, FreePort, open_browser, resolve_hostname
 )
 # pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
@@ -287,7 +288,7 @@ def get_config_hosts():
         parts = line.split()
         if len(parts) >= 2:
             ip = parts[0]
-            hostname = parts[1]
+            hostname = parts[1:]
             hosts.append({'ip': ip, 'hostname': hostname})
 
     logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
@@ -307,90 +308,27 @@ def update_config_hosts():
         if not data.get(field, None):
             raise BadRequest(f"Missing required field: {field}")
 
+    hostname = data.get('hostname')
+    ip = data.get('ip')
+    content = None
+
+    with open(hosts_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+    print(content)
+    print(hostname)
+    print(ip)
+
+    pattern = re.compile(
+        rf"^(!#)(?P<ip>{re.escape(ip)})\s+(P<hostname>{re.escape(hostname)})\s*$",
+        re.MULTILINE
+    )
+    replacement = rf"{ip}\t{hostname}\n"
+    new_content = re.sub(pattern, replacement, content)
+    logger.info(new_content)
+
+    if not resolve_hostname(data.get('hostname')):
+        return logger.failed(f"Failed to resolve hostname: {data.get('hostname')}")
     return logger.failed("Failed to update hosts file.<br>This feature is not implemented yet.")
-
-
-# @app.route('/api/config/host_v1', methods=['POST'])
-# def update_config_hosts_v1():
-#     """
-#     Endpoint to update system hosts file
-#     Returns: JSON response with status
-#     """
-#     try:
-#         data = request.json
-# 
-#         # Validate required fields
-#         for field in ['hostname', 'ip']:
-#             if not data.get(field, None):
-#                 raise BadRequest(f"Missing required field: {field}")
-# 
-#         with open(hosts_file, 'r', encoding='utf-8') as file:
-#             current_hosts_file = file.readlines()
-# 
-#         new_host = f"{data['ip']} {data['hostname']}\n"
-#         new_hosts_file = []
-#         found = False
-#         for line in current_hosts_file:
-#             if line.strip() and line.startswith('#'):
-#                 new_hosts_file.append(line)
-#                 continue
-#             if line.strip() == '':
-#                 # Preserve empty lines
-#                 new_hosts_file.append(line)
-#                 continue
-# 
-#             ip, hostname = line.split()
-#             if hostname == data.get('hostname'):
-#                 if ip != data.get('ip'):
-#                     logger.info(f"Updating host {hostname} from {ip} to {data['ip']}")
-#                     new_hosts_file.append(new_host)
-#                 else:
-#                     logger.info(f"Host {hostname} already exists with IP {ip}, skipping update.")
-#                     return jsonify({'status': 'success'})
-#                 found = True
-#             else:
-#                 new_hosts_file.append(line)
-# 
-#         if not found:
-#             new_hosts_file.append(new_host)
-# 
-#         temp_hosts_file = os.path.join(temp_dir, 'hosts.tmp')
-#         with open(temp_hosts_file, 'w', encoding='utf-8') as file:
-#             file.writelines(new_hosts_file)
-# 
-#         if system == 'Windows':
-#             pscmd = f"Get-Content -Path '{temp_hosts_file}' | Set-Content -Path '{hosts_file}' -Force;"
-#             pscmd = pscmd.replace('\\', '\\\\')  # Escape backslashes for PowerShell
-#             command = HostsFileCommand(
-#                 runAs=True,
-#                 command=pscmd
-#             )
-#             run_cmd(command, skip_pid_wait=True)
-# 
-#         resolved = False
-#         delay = 2
-#         retries = 0
-#         max_retries = 3
-#         while retries < max_retries and not resolved:
-#             retries += 1
-#             time.sleep(delay)
-#             if resolve_hostname(data['hostname']) == data['ip']:
-#                 resolved = True
-# 
-#         if not resolved:
-#             raise ValueError(f"Failed to resolve hostname {data['hostname']} to IP {data['ip']}")
-# 
-#         logger.info("Hosts file updated successfully.")
-#         return jsonify({'status': 'success'})
-#     except ValueError as e:
-#         logger.error(f"Error: {str(e)}")
-#         return jsonify({'message': str(e)}), 400
-#     except FileNotFoundError as e:
-#         logger.error(f"Hosts file not found: {str(e)}")
-#         return jsonify({'message': 'Hosts file not found'}), 404
-#     except Exception as e:  # pylint: disable=broad-except
-#         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
-#         return jsonify({'message': 'Failed to update hosts file'}), 500
 
 
 @app.route('/api/config/host/<hostname>', methods=['DELETE'])
@@ -401,7 +339,8 @@ def delete_config_host(hostname):
         hostname (str): Hostname to delete
     Returns: JSON response with status
     """
-    return logger.failed(f"Failed to delete host: {hostname}.<br>This feature is not implemented yet.")
+    logger.debug(f"Deleting host: {hostname}")
+    return logger.failed("Failed to delete host.<br>This feature is not implemented yet.")
 
 
 @app.route('/api/config/credential', methods=['POST'])

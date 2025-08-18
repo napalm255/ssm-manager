@@ -161,8 +161,8 @@ const app = createApp({
         ]);
 
         const hostsTableColumns = ref([
-          { title: 'Hostname', field: 'hostname' },
-          { title: 'IP Address', field: 'ip' }
+          { title: 'IP Address', field: 'ip' },
+          { title: 'Hostname', field: 'hostname' }
         ]);
 
         const instanceDetailsColumns = ref([
@@ -402,18 +402,6 @@ const app = createApp({
             })
           });
           toast('Windows credential added successfully', 'success');
-        };
-
-        const deleteWindowsCredential = async (instanceId, instanceName, localPort) => {
-          await apiFetch(`/api/config/credential`, {
-            method: 'DELETE',
-            body: JSON.stringify({
-              instance_name: instanceName,
-              instance_id: instanceId,
-              local_port: localPort
-            })
-          });
-          toast('Windows credential deleted successfully', 'success');
         };
 
         const openRdpClient = async (local_port) => {
