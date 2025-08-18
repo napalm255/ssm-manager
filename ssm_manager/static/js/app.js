@@ -100,7 +100,7 @@ const app = createApp({
         });
 
       // -----------------------------------------------
-      // Navigation and Page Switching
+      // Navigation
       // -----------------------------------------------
 
         const navBar = ref([
@@ -167,7 +167,7 @@ const app = createApp({
         ]);
 
       // -----------------------------------------------
-      // Version, Profiles, and Regions Management
+      // Version, Profiles, and Regions
       // -----------------------------------------------
 
         const getVersion = async () => {
@@ -710,6 +710,9 @@ const app = createApp({
       // -----------------------------------------------
 
         onMounted(async () => {
+          // Watch for hash changes
+          window.addEventListener('hashchange', updateHash);
+
           // Set the initial theme
           const lastTheme = localStorage.getItem('lastTheme');
           if (lastTheme) {
@@ -734,6 +737,15 @@ const app = createApp({
             currentRegion.value = lastRegion;
           }
 
+          // Load data from the server
+          await getVersion();
+          checkForUpdates();
+          getSessions();
+          getProfiles();
+          getRegionsAll();
+          getRegionsSelected();
+          await getPreferences();
+
           // Restore instances if available and not expired
           const lastInstances = localStorage.getItem('lastInstances');
           const lastInstancesTimestamp = localStorage.getItem('lastInstancesTimestamp');
@@ -755,32 +767,19 @@ const app = createApp({
           tooltipTriggerList.value = document.querySelectorAll('[data-bs-toggle="tooltip"]');
           tooltipList.value = [...tooltipTriggerList.value].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-          // Watch for hash changes
-          window.addEventListener('hashchange', updateHash);
-
-          // Load data from the server
-          await getVersion();
-          checkForUpdates();
-          getSessions();
-          getProfiles();
-          getRegionsAll();
-          getRegionsSelected();
-          await getPreferences();
-
           // Query active connections every 2 seconds
           setInterval(getActiveConnections, 2500);
-
         });
 
         onUnmounted(async () => {
-          // Clean up event listeners
-          window.removeEventListener('hashchange', updateHash);
-
           // Dispose of tooltips
           tooltipList.value.forEach(tooltip => tooltip.dispose());
 
           // Clear the interval for active connections
           clearInterval(intervalActiveConnections);
+
+          // Clean up event listeners
+          window.removeEventListener('hashchange', updateHash);
         });
 
         return {
