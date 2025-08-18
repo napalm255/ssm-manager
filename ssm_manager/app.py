@@ -355,7 +355,6 @@ def delete_config_host(hostname):
     pscmd = f'(Get-Content -Path "{hosts_file_escaped}")'
     pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + hostname + "$'' }"
     pscmd += f' | Set-Content -Path "{hosts_file_escaped}"'
-    print(pscmd)
 
     command = HostsFileCommand(
         runAs=True,
