@@ -316,9 +316,6 @@ def update_config_hosts():
 
     with open(hosts_file, 'r', encoding='utf-8') as file:
         content = file.read()
-    print(content)
-    print(hostname)
-    print(ip)
 
     pattern = re.compile(
         rf"^(!#)(?P<ip>{re.escape(ip)})\s+(P<hostname>{re.escape(hostname)})\s*$",
@@ -351,7 +348,6 @@ def delete_config_host(hostname):
         return logger.failed("Hosts file is empty or not found.")
     pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
     matches = pattern.findall(content)
-    print(matches)
     if not matches:
         return logger.failed(f"Hostname '{hostname}' not found in hosts file.")
 
@@ -365,7 +361,6 @@ def delete_config_host(hostname):
         runAs=True,
         command=pscmd
     )
-    print(f'Command: {command.cmd}')
     run_cmd(command, skip_pid_wait=True)
 
     with open(hosts_file, 'r', encoding='utf-8') as file:
