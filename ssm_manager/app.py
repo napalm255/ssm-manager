@@ -23,10 +23,11 @@ from ssm_manager.logger import CustomLogger
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
     AWSProfile, SSMCommand, SSOCommand, RDPCommand,
-    CmdKeyAddCommand, CmdKeyDeleteCommand,
+    CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
     run_cmd, FreePort, open_browser, resolve_hostname
 )
-# pylint: disable=logging-fstring-interpolation, line-too-long, consider-using-with
+# pylint: disable=logging-fstring-interpolation, consider-using-with
+# pylint: disable=line-too-long, too-many-lines
 
 APP_NAME = 'SSM Manager'
 
@@ -339,6 +340,13 @@ def delete_config_host(hostname):
         hostname (str): Hostname to delete
     Returns: JSON response with status
     """
+    if system != 'Windows':
+        return logger.failed(f"This feature is not supported on {system}.")
+
+    pattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
+    pscmd = f"(Get-Content -Path '{hosts_file}') | {pattern} | Set-Content -Path '{hosts_file}'"
+    print(pscmd)
+
     logger.debug(f"Deleting host: {hostname}")
     return logger.failed("Failed to delete host.<br>This feature is not implemented yet.")
 
