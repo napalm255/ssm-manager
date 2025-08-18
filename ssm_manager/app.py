@@ -366,6 +366,7 @@ def delete_config_host(hostname):
     content = None
     with open(hosts_file, 'r', encoding='utf-8') as file:
         content = file.read()
+    pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
     matches = pattern.findall(content)
     if not matches:
         return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
