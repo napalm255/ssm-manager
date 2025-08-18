@@ -349,9 +349,6 @@ def delete_config_host(hostname):
     pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
     matches = pattern.findall(content)
     if not matches:
-        return logger.failed(f"Hostname '{hostname}' not found in hosts file.")
-
-    if hostname not in content:
         return logger.failed("Hostname not found in hosts file.")
 
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
@@ -364,12 +361,14 @@ def delete_config_host(hostname):
         runAs=True,
         command=pscmd
     )
-    print(f"Running command: {command.cmd}")
-    print(f"Build command: {command._build_cmd()}")
-    run_cmd(command, skip_pid_wait=True)
+    run_cmd(command, skip_pid_wait=False)
 
+    content = None
     with open(hosts_file, 'r', encoding='utf-8') as file:
         content = file.read()
+    matches = pattern.findall(content)
+    if not matches:
+        return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
 
     # if resolve_hostname(hostname):
     #     return logger.failed("Failed to delete host. Still resolvable.")
