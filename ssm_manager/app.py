@@ -53,7 +53,8 @@ if system == 'Windows':
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
     temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
-    hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
+    # hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
+    hosts_file = os.path.join('C:\\', 'Users', 'bgibson', 'hosts')
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
@@ -343,9 +344,8 @@ def delete_config_host(hostname):
     if system != 'Windows':
         return logger.failed(f"This feature is not supported on {system}.")
 
-    some_file = "C:\\Users\\bgibson\\hosts"
     pattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
-    pscmd = f"(Get-Content -Path '{some_file}') | {pattern} | Set-Content -Path '{some_file}'"
+    pscmd = f"(Get-Content -Path '{hosts_file}') | {pattern} | Set-Content -Path '{hosts_file}'"
     pscmd.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     print(pscmd)
     command = HostsFileCommand(
@@ -355,7 +355,7 @@ def delete_config_host(hostname):
     run_cmd(command, skip_pid_wait=True)
 
     if resolve_hostname(hostname):
-        return logger.failed("Failed to resolve hostname")
+        return logger.failed("Failed to delete host. Still resolvable.")
     return logger.success("Host deleted successfully")
 
 
