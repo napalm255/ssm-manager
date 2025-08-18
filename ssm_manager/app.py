@@ -349,7 +349,7 @@ def delete_config_host(hostname):
         content = file.read()
     if not content:
         return logger.failed("Hosts file is empty or not found.")
-    pattern = re.compile( rf"^\d+.*{re.escape(hostname)}$", re.MULTILINE)
+    pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
     matches = pattern.findall(content)
     print(matches)
     if not matches:
@@ -358,7 +358,7 @@ def delete_config_host(hostname):
     if hostname not in content:
         return logger.failed("Hostname not found in hosts file.")
 
-    pspattern = f"Where-Object {{ $_ -notmatch '^\\\d+.*{hostname}$' }}"
+    pspattern = f"Where-Object {{ $_ -notmatch '^[0-9]+.*{hostname}$' }}"
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     pscmd = f"(Get-Content -Path '{hosts_file_escaped}') | {pspattern} | Set-Content -Path '{hosts_file_escaped}'"
     print(pscmd)
