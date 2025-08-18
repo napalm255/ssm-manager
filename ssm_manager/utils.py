@@ -476,6 +476,7 @@ class HostsFileCommand(PSCommand):
             cmd.append('-WindowStyle Hidden')
         if self.runAs:
             cmd.append('-Verb RunAs')
+        print('Build cmd: ' +str(' '.join(cmd)))
         return str(' '.join(cmd))
 
 
