@@ -54,7 +54,6 @@ if system == 'Windows':
     temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
     hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
-    # hosts_file = os.path.join('C:\\', 'Users', 'bgibson', 'hosts')
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
