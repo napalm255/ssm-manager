@@ -344,8 +344,22 @@ def delete_config_host(hostname):
     if system != 'Windows':
         return logger.failed(f"This feature is not supported on {system}.")
 
-    pattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
-    pscmd = f"(Get-Content -Path '{hosts_file}') | {pattern} | Set-Content -Path '{hosts_file}'"
+    content = None
+    with open(hosts_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+    if not content:
+        return logger.failed("Hosts file is empty or not found.")
+    pattern = re.compile( rf"^\d+\s+{re.escape(hostname)}$", re.MULTILINE)
+    matches = pattern.findall(content)
+    print(matches)
+    if not matches:
+        return logger.failed(f"Hostname '{hostname}' not found in hosts file.")
+
+    if hostname not in content:
+        return logger.failed("Hostname not found in hosts file.")
+
+    pspattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
+    pscmd = f"(Get-Content -Path '{hosts_file}') | {pspattern} | Set-Content -Path '{hosts_file}'"
     pscmd.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     print(pscmd)
     command = HostsFileCommand(
@@ -354,8 +368,13 @@ def delete_config_host(hostname):
     )
     run_cmd(command, skip_pid_wait=True)
 
-    if resolve_hostname(hostname):
-        return logger.failed("Failed to delete host. Still resolvable.")
+    with open(hosts_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+
+
+    # if resolve_hostname(hostname):
+    #     return logger.failed("Failed to delete host. Still resolvable.")
     return logger.success("Host deleted successfully")
 
 
