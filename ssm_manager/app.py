@@ -343,8 +343,9 @@ def delete_config_host(hostname):
     if system != 'Windows':
         return logger.failed(f"This feature is not supported on {system}.")
 
+    some_file = "C:\\Users\\bgibson\\hosts"
     pattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
-    pscmd = f"(Get-Content -Path '{hosts_file}') | {pattern} | Set-Content -Path '{hosts_file}'"
+    pscmd = f"(Get-Content -Path '{some_file}') | {pattern} | Set-Content -Path '{some_file}'"
     print(pscmd)
 
     logger.debug(f"Deleting host: {hostname}")
