@@ -346,10 +346,17 @@ def delete_config_host(hostname):
     some_file = "C:\\Users\\bgibson\\hosts"
     pattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
     pscmd = f"(Get-Content -Path '{some_file}') | {pattern} | Set-Content -Path '{some_file}'"
+    pscmd.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     print(pscmd)
+    command = HostsFileCommand(
+        runAs=True,
+        command=pscmd
+    )
+    run_cmd(command, skip_pid_wait=True)
 
-    logger.debug(f"Deleting host: {hostname}")
-    return logger.failed("Failed to delete host.<br>This feature is not implemented yet.")
+    if resolve_hostname(hostname):
+        return logger.failed("Failed to resolve hostname")
+    return logger.success("Host deleted successfully")
 
 
 @app.route('/api/config/credential', methods=['POST'])
