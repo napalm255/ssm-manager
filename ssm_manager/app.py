@@ -368,15 +368,20 @@ def delete_config_host(hostname):
         command=pscmd
     )
     run_cmd(command, skip_pid_wait=True)
-    time.sleep(2)
+
+    deleted = False
+    for _ in range(8):
+        if host_exists(hostname):
+            time.sleep(0.25)
+            continue
+    if not deleted:
+        return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
 
     # content = None
     # with open(hosts_file, 'r', encoding='utf-8') as file:
     #     content = file.read()
     # pattern = re.compile( rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
     # matches = pattern.findall(content)
-    if host_exists(hostname):
-        return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
     return logger.success("Host deleted successfully")
 
 
