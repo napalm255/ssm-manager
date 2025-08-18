@@ -280,8 +280,8 @@ const app = createApp({
             body: JSON.stringify(newPreferences)
           })
           console.debug('Preferences saved successfully:', data);
+          await getPreferences();
           toast('Preferences saved successfully', 'success');
-          dataRefresh();
         };
 
         const validatePortRange = (start, end) => {
@@ -330,7 +330,7 @@ const app = createApp({
             })
           });
           currentAccountId.value = data.account_id;
-          getInstances();
+          await getInstances();
           isConnecting.value = false;
           toast('Connected to AWS successfully', 'success');
         };
@@ -340,7 +340,7 @@ const app = createApp({
           data = await apiFetch(`/api/terminate-connection/${connection_id}`, {
             method: 'POST'
           });
-          getActiveConnections();
+          await getActiveConnections();
           toast('Connection terminated successfully', 'warning');
         };
 
@@ -401,7 +401,7 @@ const app = createApp({
             })
           });
           console.debug('Shell started:', data);
-          getActiveConnections();
+          await getActiveConnections();
           toast('Successfully started shell', 'success');
         };
 
@@ -417,8 +417,8 @@ const app = createApp({
             })
           });
           console.debug('RDP started:', data);
+          await getActiveConnections();
           toast('Successfully started RDP', 'success');
-          getActiveConnections();
         };
 
         const startPortForwarding = async () => {
@@ -441,14 +441,14 @@ const app = createApp({
           toast('Successfully started port forwarding', 'success');
 
           if (portForwardingModalProperties.value.username && data.local_port) {
-            addWindowsCredential(
+            await addWindowsCredential(
               portForwardingModalProperties.value.instanceId,
               portForwardingModalProperties.value.instanceName,
               portForwardingModalProperties.value.username,
               data.local_port
             );
           }
-          getActiveConnections();
+          await getActiveConnections();
 
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
@@ -520,8 +520,8 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.message || 'Unknown error');
             }
+            await getActiveConnections();
             toast('Successfully opened RDP client', 'success');
-            getActiveConnections();
           })
           .catch((error) => {
             console.error('Error opening RDP client:', error);
@@ -560,7 +560,7 @@ const app = createApp({
           document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
             portMappingsModalInstance.value = null;
             portMappingsModalProperties.value = [];
-            getPreferences();
+            await getPreferences();
           });
           portMappingsModalInstance.value = { id: instanceId, name: name };
           portMappingsModalProperties.value = portMappings.value[instanceName] || [];
@@ -589,9 +589,9 @@ const app = createApp({
             if (!data.status || data.status !== 'success') {
               throw new Error(data.status || 'Unknown error');
             };
+            await getPreferences();
             console.debug('Port mappings saved successfully:', data);
             toast('Port mappings saved successfully', 'success');
-            dataRefresh();
           })
           .catch((error) => {
             console.error('Error saving port mappings:', error)
@@ -633,9 +633,9 @@ const app = createApp({
             method: 'POST',
             body: JSON.stringify(addSessionModalProperties.value)
           })
+          await getSessions();
+          addSessionModal.value.hide();          
           toast('Session added successfully', 'success');
-          getSessions();
-          addSessionModal.value.hide();
         };
 
         const deleteSession = async (sessionName) => {
@@ -643,8 +643,8 @@ const app = createApp({
           data = await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
-          toast('Session deleted successfully', 'success');
-          getSessions();
+          await getSessions();
+          toast('Session deleted successfully', 'success');          
         };
 
         const showAddProfileModal = async (instanceId, name) => {
@@ -671,9 +671,9 @@ const app = createApp({
             method: 'POST',
             body: JSON.stringify(addProfileModalProperties.value)
           })
-          toast('Profile added successfully', 'success');
-          getProfiles();
+          await getProfiles();
           addProfileModal.value.hide();
+          toast('Profile added successfully', 'success');
         };
 
         const deleteProfile = async (profileName) => {
@@ -681,8 +681,8 @@ const app = createApp({
           data = await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
+          await getProfiles();
           toast('Profile deleted successfully', 'success');
-          getProfiles();
         };
 
       // -----------------------------------------------
@@ -776,12 +776,7 @@ const app = createApp({
       // -----------------------------------------------
         const checkForUpdates = async () => {
           console.debug('Checking for updates...');
-          data = await apiFetch(
-            "https://api.github.com/repos/napalm255/ssm-manager/releases/latest",
-            {
-              method: 'GET'
-            }
-          )
+          data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
           const currentVersion = `v${version.value}`;
           const githubVersion = data.tag_name;
           const githubUrl = data.html_url;
@@ -799,7 +794,7 @@ const app = createApp({
         };
 
       // -----------------------------------------------
-      // API Handlers
+      // API Handler
       // -----------------------------------------------
         const apiFetch = async (url, options = {}) => {
           try {
@@ -876,10 +871,13 @@ const app = createApp({
           window.addEventListener('hashchange', updateHash);
 
           // Load data from the server
-          await dataRefresh();
-
-          // Check for updates
-          await checkForUpdates();
+          await getVersion();
+          checkForUpdates();
+          getSessions();
+          getProfiles();
+          getRegionsAll();
+          getRegionsSelected();
+          await getPreferences();
 
           // Query active connections every 2 seconds
           setInterval(getActiveConnections, 2500);
