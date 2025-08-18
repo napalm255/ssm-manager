@@ -252,7 +252,7 @@
                         <button class="btn btn-sm connection-shell mx-2" title="Shell" v-if="connection.type == 'Shell'">
                           <i class="bi bi-terminal"></i>
                         </button>
-                        <button class="btn btn-sm connection-rdp mx-2" title="RDP" v-if="connection.type == 'RDP'" @click="openRdpClient(connection.instance.id, connection.name, connection.local_port)">
+                        <button class="btn btn-sm connection-rdp mx-2" title="RDP" v-if="connection.type == 'RDP'" @click="openRdpClient(connection.local_port)">
                           <i class="bi bi-display"></i>
                         </button>
                         <button class="btn btn-sm connection-port-forward text-white mx-2" title="Port Forwarding" v-if="connection.type == 'Custom Port' || connection.type == 'Remote Host Port'">

@@ -7,7 +7,6 @@ const app = createApp({
         const operating_system = ref("");
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
-        // const currentPage = ref("Start");
         const currentHash = ref('#/start');
         const currentProfile = ref("Select Profile");
         const currentRegion = ref("Select Region");
@@ -184,7 +183,7 @@ const app = createApp({
       // -----------------------------------------------
 
         const getVersion = async () => {
-          data = await apiFetch("/api/version");
+          const data = await apiFetch("/api/version");
           version.value = data.version;
           title.value = data.name;
           operating_system.value = data.operating_system;
@@ -292,7 +291,7 @@ const app = createApp({
 
         const connect = async () => {
           isConnecting.value = true;
-          data = await apiFetch("/api/connect", {
+          const data = await apiFetch("/api/connect", {
             method: 'POST',
             body: JSON.stringify({
               profile: currentProfile.value,
@@ -325,7 +324,7 @@ const app = createApp({
         };
 
         const getInstanceDetails = async (instanceId) => {
-          data = await apiFetch(`/api/instance-details/${instanceId}`);
+          const data = await apiFetch(`/api/instance-details/${instanceId}`);
           instancesDetails.value[instanceId] = data;
         };
 
@@ -364,7 +363,7 @@ const app = createApp({
         const startPortForwarding = async () => {
           portForwardingStarting.value = true;
 
-          data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
+          const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
             body: JSON.stringify({
               profile: currentProfile.value,
@@ -417,8 +416,7 @@ const app = createApp({
           toast('Windows credential deleted successfully', 'success');
         };
 
-        const openRdpClient = async (instanceId, name, local_port) => {
-          const instanceName = name || instanceId;
+        const openRdpClient = async (local_port) => {
           await apiFetch(`/api/rdp/${local_port}`);
           toast('Successfully opened RDP client', 'success');
         };
@@ -707,7 +705,7 @@ const app = createApp({
       // Check GitHub for updates
       // -----------------------------------------------
         const checkForUpdates = async () => {
-          data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
+          const data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
           const currentVersion = `v${version.value}`;
           const githubVersion = data.tag_name;
           const githubUrl = data.html_url;
@@ -715,7 +713,7 @@ const app = createApp({
 
           if (!githubVersion || !githubUrl) {
             toast('Failed querying for version', 'danger');
-            new Error('Failed querying for version');
+            throw new Error('Failed querying for version');
           }
           console.log('Latest version:', githubVersion);
           if (versionComparison < 0) {
@@ -731,27 +729,23 @@ const app = createApp({
       // API Handler
       // -----------------------------------------------
         const apiFetch = async (url, options = {}) => {
-          try {
-            if (!options.method) {
-              options.method = 'GET';
-            }
-
-            if (options.method == 'POST' && !options.headers) {
-              options.headers = {
-                'Content-Type': 'application/json'
-              };
-            }
-
-            const response = await fetch(url, options);
-            const data = await response.json();
-            if (options.method !== 'GET' && (data.status && data.status !== 'success' && data.status !== 'active')) {
-              toast(data.message || 'Unknown error', 'danger');
-              throw new Error(data.message || 'Unknown error');
-            }
-            return data;
-          } catch (error) {
-            throw error; // Re-throw the error for further handling if needed
+          if (!options.method) {
+            options.method = 'GET';
           }
+
+          if (options.method == 'POST' && !options.headers) {
+            options.headers = {
+              'Content-Type': 'application/json'
+            };
+          }
+
+          const response = await fetch(url, options);
+          const data = await response.json();
+          if (options.method !== 'GET' && (data.status && data.status !== 'success' && data.status !== 'active')) {
+            toast(data.message || 'Unknown error', 'danger');
+            throw new Error(data.message || 'Unknown error');
+          }
+          return data;
         };
 
       // -----------------------------------------------

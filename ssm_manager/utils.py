@@ -520,7 +520,7 @@ class FreePort(BaseModel):
         return None
 
 
-def resolve_hostname(hostname: str) -> str:
+def resolve_hostname(hostname: str) -> str | None:
     """
     Resolve a hostname to an IP address
     Args:
