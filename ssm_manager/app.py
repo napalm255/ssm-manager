@@ -53,7 +53,8 @@ if system == 'Windows':
     cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
     temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
     log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
-    hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
+    # hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
+    hosts_file = os.path.join('C:\\', 'Users', 'bgibson', 'hosts')
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
@@ -352,7 +353,7 @@ def delete_config_host(hostname):
 
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     pscmd = f'(Get-Content -Path "{hosts_file_escaped}")'
-    pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + hostname + "$'' }"
+    pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + re.escape(hostname) + "$'' }"
     pscmd += f' | Set-Content -Path "{hosts_file_escaped}"'
 
     command = HostsFileCommand(
