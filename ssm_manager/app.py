@@ -309,23 +309,10 @@ def update_config_hosts():
         if not data.get(field, None):
             raise BadRequest(f"Missing required field: {field}")
 
-    hostname = data.get('hostname')
-    ip = data.get('ip')
-    content = None
-
     with open(hosts_file, 'r', encoding='utf-8') as file:
         content = file.read()
+        logger.debug(f"Current hosts file content: {content}")
 
-    pattern = re.compile(
-        rf"^(!#)(?P<ip>{re.escape(ip)})\s+(P<hostname>{re.escape(hostname)})\s*$",
-        re.MULTILINE
-    )
-    replacement = rf"{ip}\t{hostname}\n"
-    new_content = re.sub(pattern, replacement, content)
-    logger.info(new_content)
-
-    if not resolve_hostname(data.get('hostname')):
-        return logger.failed(f"Failed to resolve hostname: {data.get('hostname')}")
     return logger.failed("Failed to update hosts file.<br>This feature is not implemented yet.")
 
 

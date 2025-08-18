@@ -116,8 +116,18 @@ try {
     Write-Host "Extraction complete." -ForegroundColor Green
 } catch {
     Write-Host "An error occurred during download or extraction. Aborting." -ForegroundColor Red
-    Write-Host "Error during extraction: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
+}
+
+# ==============================================================================
+# Remove the compatibility setting to run as administrator
+# ==============================================================================
+try {
+    $exePath = "$appDir\ssm_manager.exe"
+    Write-Host "Setting compatibility for $exePath to run as administrator..." -ForegroundColor Cyan
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" -Name $exePath
+} catch {
+    Write-Host "Failed to set compatibility settings. You may need to set this manually." -ForegroundColor Red
 }
 
 # ==============================================================================
