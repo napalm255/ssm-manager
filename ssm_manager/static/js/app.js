@@ -7,7 +7,7 @@ const app = createApp({
         const operating_system = ref("");
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
-        const currentPage = ref("Start");
+        // const currentPage = ref("Start");
         const currentHash = ref('#/start');
         const currentProfile = ref("Select Profile");
         const currentRegion = ref("Select Region");
@@ -53,11 +53,16 @@ const app = createApp({
         const isConnecting = ref(false);
 
         const instances = ref([]);
-        const instancesCount = ref(0);
+        const instancesTimestamp = ref(null);
+        const instancesCount = computed(() => {
+          return instances.value.length;
+        });
         const instancesDetails = ref({});
 
         const activeConnections = ref([]);
-        const activeConnectionsCount = ref(0);
+        const activeConnectionsCount = computed(() => {
+          return activeConnections.value.length;
+        });
         const intervalActiveConnections = ref(null);
 
         const portForwardingModal = ref(null);
@@ -107,79 +112,27 @@ const app = createApp({
 
         const updateHash = async () => {
           currentHash.value = window.location.hash;
-          switch (currentHash.value) {
-            case '#/home':
-              switchPage('Home');
-              break;
-            case '#/instances':
-              switchPage('Instances');
-              break;
-            case '#/preferences':
-              switchPage('Preferences');
-              break;
-            case '#/profiles':
-              switchPage('Profiles');
-              break;
-            default:
-              switchPage('Start');
+          if (!currentHash.value) {
+            currentHash.value = '#/start';
           }
+          switchPage(currentHash.value);
         }
 
         const switchPage = async (page) => {
-          const homePage = document.getElementById('home');
-          const instancesPage = document.getElementById('instances');
-          const preferencesPage = document.getElementById('preferences');
-          const profilesPage = document.getElementById('profiles');
-          switch (page) {
-            case "Start":
-              if (profiles.value.length === 0) {
-                switchPage('Home')
-              } else {
-                switchPage('Instances');
-              }
-              break;
-            case "Home":
-              currentPage.value = "Home";
-              homePage.style.display = 'block';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/home';
-              currentHash.value = '#/home';
-              localStorage.setItem('lastPage', 'Home');
-              break;
-            case "Instances":
-              currentPage.value = "Instances";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'block';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/instances';
-              currentHash.value = '#/instances';
-              localStorage.setItem('lastPage', 'Instances');
-              break;
-            case "Preferences":
-              currentPage.value = "Preferences";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'block';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/preferences';
-              currentHash.value = '#/preferences';
-              localStorage.setItem('lastPage', 'Preferences');
-              break;
-            case "Profiles":
-              currentPage.value = "Profiles";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'block';
-              window.location.hash = '#/profiles';
-              currentHash.value = '#/profiles';
-              localStorage.setItem('lastPage', 'Profiles');
-              break;
+          if (!page || page === '#/start') {
+            if (profiles.value.length === 0) {
+              page = '#/home';
+            } else {
+              page = '#/instances';
+            }
           }
-        }
+          const pages = document.querySelectorAll('.page');
+          pages.forEach(p => p.style.display = 'none');
+          currentHash.value = page
+          const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
+          currentPage.style.display = 'block';
+          localStorage.setItem('lastPage', page);
+        };
 
       // -----------------------------------------------
       // Table Columns
@@ -200,6 +153,19 @@ const app = createApp({
           { title: 'Session Name', field: 'sso_session' }
         ]);
 
+        const instanceDetailsColumns = ref([
+          { title: 'Name', field: 'name' },
+          { title: 'Instance ID', field: 'id' },
+          { title: 'AMI ID', field: 'ami_id' },
+          { title: 'VPC ID', field: 'vpc_id' },
+          { title: 'Subnet ID', field: 'subnet_id' },
+          { title: 'IAM Role', field: 'iam_role' },
+          { title: 'SSH Key', field: 'ssh_key' },
+          { title: 'Private IP', field: 'private_ip' },
+          { title: 'Public IP', field: 'public_ip' },
+          { title: 'Security Groups', field: 'security_groups' }
+        ]);
+
       // -----------------------------------------------
       // Version, Profiles, and Regions Management
       // -----------------------------------------------
@@ -213,23 +179,19 @@ const app = createApp({
         };
 
         const getSessions = async () => {
-          data = await apiFetch("/api/config/sessions");
-          sessions.value = data;
+          sessions.value = await apiFetch("/api/config/sessions");
         };
 
         const getProfiles = async () => {
-          data = await apiFetch("/api/profiles")
-          profiles.value = data;
+          profiles.value = await apiFetch("/api/profiles")
         };
 
         const getRegionsAll = async () => {
-          data = await apiFetch("/api/regions/all")
-          regionsAll.value = data;
+          regionsAll.value = await apiFetch("/api/regions/all")
         };
 
         const getRegionsSelected = async () => {
-          data = await apiFetch("/api/regions")
-          regionsSelected.value = data;
+          regionsSelected.value = await apiFetch("/api/regions")
         };
 
       // -----------------------------------------------
@@ -237,8 +199,7 @@ const app = createApp({
       // -----------------------------------------------
 
         const getPreferences = async () => {
-          data = await apiFetch("/api/preferences")
-          preferences.value = data;
+          preferences.value = await apiFetch("/api/preferences")
 
           const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
           const logging = preferences.value.logging || { level: 'INFO' };
@@ -271,7 +232,7 @@ const app = createApp({
             credentials_to_delete: prefCredentialsToDelete.value,
           };
 
-          data = await apiFetch("/api/preferences", {
+          await apiFetch("/api/preferences", {
             method: 'POST',
             body: JSON.stringify(newPreferences)
           })
@@ -328,7 +289,7 @@ const app = createApp({
         };
 
         const disconnect = async (connection_id) => {
-          data = await apiFetch(`/api/terminate-connection/${connection_id}`, {
+          await apiFetch(`/api/terminate-connection/${connection_id}`, {
             method: 'POST'
           });
           await getActiveConnections();
@@ -336,31 +297,15 @@ const app = createApp({
         };
 
         const getActiveConnections = async () => {
-          data = await apiFetch("/api/active-connections");
-          activeConnectionsCount.value = data.length;
-          activeConnections.value = data;
+          activeConnections.value = await apiFetch("/api/active-connections");
         };
 
         const getInstances = async () => {
-          data = await apiFetch("/api/instances");
-          instances.value = data;
-          instancesDetails[instances.value.id] = {};
-          instancesCount.value = instances.value.length;
+          instances.value = await apiFetch("/api/instances");
+          instancesTimestamp.value = Date.now() + 5 * 60 * 1000; // Set timestamp to 5 minutes in the future
+          instancesDetails.value[instances.value.id] = {};
           toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
         };
-
-        const instanceDetailsColumns = ref([
-          { title: 'Name', field: 'name' },
-          { title: 'Instance ID', field: 'id' },
-          { title: 'AMI ID', field: 'ami_id' },
-          { title: 'VPC ID', field: 'vpc_id' },
-          { title: 'Subnet ID', field: 'subnet_id' },
-          { title: 'IAM Role', field: 'iam_role' },
-          { title: 'SSH Key', field: 'ssh_key' },
-          { title: 'Private IP', field: 'private_ip' },
-          { title: 'Public IP', field: 'public_ip' },
-          { title: 'Security Groups', field: 'security_groups' }
-        ]);
 
         const getInstanceDetails = async (instanceId) => {
           data = await apiFetch(`/api/instance-details/${instanceId}`);
@@ -373,7 +318,7 @@ const app = createApp({
 
         const startShell = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          data = await apiFetch(`/api/shell/${instanceId}`, {
+          await apiFetch(`/api/shell/${instanceId}`, {
             method: 'POST',
             body: JSON.stringify({
               profile: currentProfile.value,
@@ -387,7 +332,7 @@ const app = createApp({
 
         const startRdp = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          data = await apiFetch(`/api/rdp/${instanceId}`, {
+          await apiFetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
             body: JSON.stringify({
               profile: currentProfile.value,
@@ -424,14 +369,14 @@ const app = createApp({
               data.local_port
             );
           }
-          await getActiveConnections();
 
+          await getActiveConnections();
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
         };
 
         const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
-          data = await apiFetch(`/api/config/credential`, {
+          await apiFetch(`/api/config/credential`, {
             method: 'POST',
             body: JSON.stringify({
               instance_name: instanceName,
@@ -444,7 +389,7 @@ const app = createApp({
         };
 
         const deleteWindowsCredential = async (instanceId, instanceName, localPort) => {
-          data = await apiFetch(`/api/config/credential`, {
+          await apiFetch(`/api/config/credential`, {
             method: 'DELETE',
             body: JSON.stringify({
               instance_name: instanceName,
@@ -457,8 +402,7 @@ const app = createApp({
 
         const openRdpClient = async (instanceId, name, local_port) => {
           const instanceName = name || instanceId;
-          data = await apiFetch(`/api/rdp/${local_port}`);
-          getActiveConnections();
+          await apiFetch(`/api/rdp/${local_port}`);
           toast('Successfully opened RDP client', 'success');
         };
 
@@ -510,7 +454,7 @@ const app = createApp({
             ports: validPorts
           };
 
-          data = await apiFetch(`/api/preferences/${instanceName}`, {
+          await apiFetch(`/api/preferences/${instanceName}`, {
             method: 'POST',
             body: JSON.stringify(newMappings)
           })
@@ -547,7 +491,7 @@ const app = createApp({
         };
 
         const addSession = async () => {
-          data = await apiFetch("/api/config/session", {
+          await apiFetch("/api/config/session", {
             method: 'POST',
             body: JSON.stringify(addSessionModalProperties.value)
           })
@@ -557,7 +501,7 @@ const app = createApp({
         };
 
         const deleteSession = async (sessionName) => {
-          data = await apiFetch(`/api/config/session/${sessionName}`, {
+          await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
           await getSessions();
@@ -583,7 +527,7 @@ const app = createApp({
         };
 
         const addProfile = async () => {
-          data = await apiFetch("/api/config/profile", {
+          await apiFetch("/api/config/profile", {
             method: 'POST',
             body: JSON.stringify(addProfileModalProperties.value)
           })
@@ -593,7 +537,7 @@ const app = createApp({
         };
 
         const deleteProfile = async (profileName) => {
-          data = await apiFetch(`/api/config/profile/${profileName}`, {
+          await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
           await getProfiles();
@@ -612,8 +556,16 @@ const app = createApp({
           localStorage.setItem('lastRegion', newRegion);
         });
 
+        watch(currentAccountId, (newAccountId) => {
+          localStorage.setItem('lastAccountId', newAccountId);
+        });
+
         watch(instances, (newInstances) => {
           localStorage.setItem('lastInstances', JSON.stringify(newInstances));
+        });
+
+        watch(instancesTimestamp, (newTimestamp) => {
+          localStorage.setItem('lastInstancesTimestamp', newTimestamp);
         });
 
       // -----------------------------------------------
@@ -668,6 +620,19 @@ const app = createApp({
           return 'just now';
         };
 
+        const compareVersions = async (v1, v2) => {
+          const v1Parts = v1.split('.').map(Number);
+          const v2Parts = v2.split('.').map(Number);
+          const maxLength = Math.max(v1Parts.length, v2Parts.length);
+          for (let i = 0; i < maxLength; i++) {
+            const part1 = v1Parts[i] || 0;
+            const part2 = v2Parts[i] || 0;
+            if (part1 > part2) return 1;  // v1 is greater
+            if (part1 < part2) return -1;  // v2 is greater
+          }
+          return 0;  // Versions are equal
+        };
+
         const copyToClipboard = async (text) => {
           await navigator.clipboard.writeText(text)
           toast('Copied to clipboard', 'success');
@@ -697,16 +662,19 @@ const app = createApp({
           const currentVersion = `v${version.value}`;
           const githubVersion = data.tag_name;
           const githubUrl = data.html_url;
+          const versionComparison = await compareVersions(currentVersion, githubVersion);
 
           if (!githubVersion || !githubUrl) {
             toast('Failed querying for version', 'danger');
             new Error('Failed querying for version');
-          } else if (githubVersion !== currentVersion) {
-            console.log('New version available:', githubVersion);
+          }
+          console.log('Latest version:', githubVersion);
+          if (versionComparison < 0) {
             toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
-          } else {
-            console.log('No updates available');
+          } else if (versionComparison === 0) {
             toast('You are using the latest version', 'success');
+          } else if (versionComparison > 0) {
+            toast(`You are using a development version`, 'warning');
           }
         };
 
@@ -753,10 +721,10 @@ const app = createApp({
           if (lastPage) {
             await switchPage(lastPage);
           } else {
-            await switchPage('Start');
+            await switchPage('#/start');
           }
 
-          // Set profile and region
+          // Set profile, region, and account ID
           const lastProfile = localStorage.getItem('lastProfile');
           if (lastProfile) {
             currentProfile.value = lastProfile;
@@ -764,6 +732,23 @@ const app = createApp({
           const lastRegion = localStorage.getItem('lastRegion');
           if (lastRegion) {
             currentRegion.value = lastRegion;
+          }
+
+          // Restore instances if available and not expired
+          const lastInstances = localStorage.getItem('lastInstances');
+          const lastInstancesTimestamp = localStorage.getItem('lastInstancesTimestamp');
+          const lastAccountId = localStorage.getItem('lastAccountId');
+          if (lastInstances && lastInstancesTimestamp) {
+            const item = JSON.parse(lastInstances);
+            const now = Date.now();
+            if (lastInstancesTimestamp > now) {
+              currentAccountId.value = lastAccountId || '';
+              instances.value = item;
+            } else {
+              localStorage.removeItem('lastAccountId');
+              localStorage.removeItem('lastInstances');
+              localStorage.removeItem('lastInstancesTimestamp');
+            }
           }
 
           // Initialize tooltips
@@ -799,7 +784,7 @@ const app = createApp({
         });
 
         return {
-          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+          title, version, operating_system, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
