@@ -419,7 +419,7 @@ class PSCommand(BaseModel):
         Build the command to run based on the system type.
         """
         command = f"powershell -Command '{self._build_cmd()}'"
-        print(command)
+        print(f'Pre shlex: {command}')
         return shlex.split(command)
 
 
