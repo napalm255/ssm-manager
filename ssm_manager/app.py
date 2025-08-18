@@ -279,8 +279,7 @@ def get_config_hosts():
         with open(hosts_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
     except FileNotFoundError:
-        logger.error(f"Hosts file not found: {hosts_file}")
-        return jsonify({'message': 'Hosts file not found'}), 404
+        return logger.failed("Hosts file not found", 404)
 
     for line in lines:
         if line.strip() and line.startswith('#'):
@@ -301,8 +300,25 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
+    data = request.json
+
+    # Validate required fields
+    for field in ['hostname', 'ip']:
+        if field not in data or not data.get(field, None):
+            raise BadRequest(f"Missing required field: {field}")
+
+    return logger.failed("Failed to update hosts file.<br>This feature is not implemented yet.")
+
+
+@app.route('/api/config/host_v1', methods=['POST'])
+def update_config_hosts_v1():
+    """
+    Endpoint to update system hosts file
+    Returns: JSON response with status
+    """
     try:
         data = request.json
+
         if not (data and 'ip' in data and 'hostname' in data):
             raise BadRequest("Invalid data: 'ip' and 'hostname' are required.")
 
@@ -373,6 +389,17 @@ def update_config_hosts():
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Failed to update hosts file: {str(e)}", exc_info=True)
         return jsonify({'message': 'Failed to update hosts file'}), 500
+
+
+@app.route('/api/config/host/<hostname>', methods=['DELETE'])
+def delete_config_host(hostname):
+    """
+    Endpoint to delete a host from the system hosts file
+    Args:
+        hostname (str): Hostname to delete
+    Returns: JSON response with status
+    """
+    return logger.failed(f"Failed to delete host: {hostname}.<br>This feature is not implemented yet.")
 
 
 @app.route('/api/config/credential', methods=['POST'])
@@ -909,6 +936,17 @@ def favicon():
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
+@app.errorhandler(BadRequest)
+def handle_bad_request(error):
+    """
+    Handle BadRequest errors
+    Args:
+        error: The error object
+    Returns: JSON response with error message
+    """
+    return jsonify({'status': 'error', 'message': error.description}), 400
+
+
 class ServerThread(threading.Thread):
     """
     Thread class for running the Flask server
@@ -1046,13 +1084,3 @@ class TrayIcon():
         self.open_app(None, None)
         if not self.server.stopped():
             self.icon.run()
-
-@app.errorhandler(BadRequest)
-def handle_bad_request(error):
-    """
-    Handle BadRequest errors
-    Args:
-        error: The error object
-    Returns: JSON response with error message
-    """
-    return jsonify({'status': 'error', 'message': error.description}), 400

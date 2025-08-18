@@ -47,6 +47,13 @@ const app = createApp({
           return prefCredentials.value.length;
         });
 
+        const hosts = ref([]);
+        const hostsCount = computed(() => {
+          return hosts.value.length;
+        });
+        const addHostModal = ref(null);
+        const addHostModalProperties = ref({});
+
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
 
@@ -107,7 +114,8 @@ const app = createApp({
           {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
           {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
           {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
-          {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'}
+          {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'},
+          {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'}
         ]);
 
         const updateHash = async () => {
@@ -153,6 +161,11 @@ const app = createApp({
           { title: 'Session Name', field: 'sso_session' }
         ]);
 
+        const hostsTableColumns = ref([
+          { title: 'Hostname', field: 'hostname' },
+          { title: 'IP Address', field: 'ip' }
+        ]);
+
         const instanceDetailsColumns = ref([
           { title: 'Name', field: 'name' },
           { title: 'Instance ID', field: 'id' },
@@ -193,6 +206,10 @@ const app = createApp({
         const getRegionsSelected = async () => {
           regionsSelected.value = await apiFetch("/api/regions");
         };
+
+        const getHosts = async () => {
+          hosts.value = await apiFetch("/api/config/hosts");
+        }
 
       // -----------------------------------------------
       // Preferences Management
@@ -544,6 +561,38 @@ const app = createApp({
           toast('Profile deleted successfully', 'success');
         };
 
+        const showAddHostModal = async () => {
+          addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
+            keyboard: true
+          });
+          document.getElementById('addHostModal').addEventListener('hidden.bs.modal', async () => {
+            addHostModalProperties.value = {};
+          });
+          addHostModalProperties.value = {
+            hostname: '',
+            ip: ''
+          };
+          addHostModal.value.show();
+        };
+
+        const addHost = async (hostname, ip) => {
+          console.log(addHostModalProperties.value);
+          await apiFetch("/api/config/host", {
+            method: 'POST',
+            body: JSON.stringify(addHostModalProperties.value)
+          });
+          await getHosts();
+          toast('Host added successfully', 'success');
+        };
+
+        const deleteHost = async (hostname) => {
+          await apiFetch(`/api/config/host/${hostname}`, {
+            method: 'DELETE'
+          });
+          await getHosts();
+          toast('Host deleted successfully', 'success');
+        };
+
       // -----------------------------------------------
       // Event Listeners
       // -----------------------------------------------
@@ -744,6 +793,7 @@ const app = createApp({
           getProfiles();
           getRegionsAll();
           getRegionsSelected();
+          getHosts();
           await getPreferences();
 
           // Restore instances if available and not expired
@@ -789,6 +839,7 @@ const app = createApp({
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
+          hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
