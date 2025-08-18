@@ -3,6 +3,7 @@ Utilities for SSM-Manager.
 """
 # pylint: disable=logging-fstring-interpolation
 import logging
+import base64
 import shlex
 import shutil
 import subprocess
@@ -393,69 +394,89 @@ class SSMCommand(AWSCommand):
         return str(' '.join(cmd))
 
 
-class CredCommand(BaseModel):
+class PSCommand(BaseModel):
     """
-    Model representing the credential command.
+    Model representing the powershell command.
+    Note: Windows only.
     """
-    instance: Instance
-    local_port: int = Field(ge=1024, le=65535)
-    system: Literal["Linux", "Windows"]
-    username: Optional[str] = ''
-    password: Optional[str] = ''
     hide: Optional[bool] = True
     wait: Optional[bool] = True
+    runAs: Optional[bool] = False
     timeout: int | None = Field(default=None, ge=0)
-
-    def _build_cmd(self) -> str:
-        """
-        Build the command string.
-        """
-
-        domain = ""
-        if '\\' in self.username:
-            domain, _ = self.username.split('\\', 1)
-        hostname = f'{self.instance.name}.{domain}' if domain else self.instance.name
-        hostname = f'{hostname}:{self.local_port}'
-
-        cmd = [self.exec,
-               f'/add:"{hostname}"',
-               f'/user:"{self.username}"',
-               f'/pass:"{self.password}"']
-        return str(' '.join(cmd))
 
     @property
     def startupinfo(self):
         """
         Return startupinfo for Windows.
         """
-        if self.system == 'Windows':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            return startupinfo
-        return None
-
-    @property
-    def exec(self) -> str:
-        """
-        Determine the executable based on the system type.
-        """
-        if self.system == 'Windows':
-            return 'cmdkey.exe'
-        raise ValueError(UNSUPPORTED_SYSTEM)
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        return startupinfo
 
     @property
     def cmd(self) -> str | list:
         """
         Build the command to run based on the system type.
         """
-        if not self.username or not self.password:
-            raise ValueError("Username and password must be provided")
+        encoded_cmd = base64.b64encode(self._build_cmd().encode('utf-16le')).decode('utf-8')
+        return shlex.split(f'powershell -EncodedCommand {encoded_cmd}')
 
 
-        if self.system == 'Windows':
-            return shlex.split(f"powershell -Command '{self._build_cmd()}'")
-        raise ValueError(UNSUPPORTED_SYSTEM)
+class CmdKeyAddCommand(PSCommand):
+    """
+    Model representing the credential command.
+    """
+    targetname: str = Field(min_length=1)
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = ['cmdkey.exe']
+        cmd.extend([
+            f'/add:"{self.targetname}"',
+            f'/user:"{self.username}"',
+            f'/pass:"{self.password}"'])
+        return str(' '.join(cmd))
+
+
+class CmdKeyDeleteCommand(PSCommand):
+    """
+    Model representing the credential delete command.
+    """
+    targetname: str = Field(min_length=1)
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = ['cmdkey.exe']
+        cmd.append(f'/delete:"{self.targetname}"')
+        return str(' '.join(cmd))
+
+
+class HostsFileCommand(PSCommand):
+    """
+    Model representing the powershell command
+    """
+    command: str
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = ['Start-Process',
+               'powershell.exe',
+               f"-ArgumentList '{self.command}'"
+        ]
+        if self.hide:
+            cmd.append('-WindowStyle Hidden')
+        if self.runAs:
+            cmd.append('-Verb RunAs')
+        return str(' '.join(cmd))
 
 
 class FreePort(BaseModel):
@@ -499,6 +520,29 @@ class FreePort(BaseModel):
                 logger.error(f"Error checking port {port}: {str(e)}")
         logger.error(f"No free port found after {max_attempts} attempts")
         return None
+
+
+def resolve_hostname(hostname: str) -> str | None:
+    """
+    Resolve a hostname to an IP address
+    Args:
+        hostname (str): The hostname to resolve
+    Returns: The resolved IP address or the original hostname if resolution fails
+    """
+    max_retries = 3
+    retries = 0
+    delay = 1
+    while retries < max_retries:
+        try:
+            ip_address = socket.gethostbyname(hostname)
+            logger.debug(f"Resolved {hostname} to {ip_address}")
+            return ip_address
+        except socket.gaierror:
+            logger.warning(f"Failed to resolve {hostname}. Retrying...")
+            retries += 1
+            sleep(delay)
+    logger.error(f"Failed to resolve hostname: {hostname}")
+    return None
 
 
 def socket_is_open(port):

@@ -4,7 +4,10 @@ AWS Manager class to handle AWS connections and operations
 # pylint: disable=logging-fstring-interpolation
 import logging
 import boto3
-from botocore.exceptions import ProfileNotFound, BotoCoreError, SSOTokenLoadError
+from botocore.exceptions import (
+    ProfileNotFound, BotoCoreError, SSOTokenLoadError,
+    TokenRetrievalError, ClientError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +41,10 @@ class AWSManager:
                 profile = {'name': _profile, **config}
                 profiles.append(profile)
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
+            return profiles
         except BotoCoreError as e:
-            logger.warning(f"Error retrieving AWS profiles: {e}")
-        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS profiles: {e}")
-        return profiles
+        return []
 
     @staticmethod
     def get_regions():
@@ -55,11 +57,10 @@ class AWSManager:
         try:
             regions = boto3.Session().get_available_regions('ec2')
             logger.info(f"Successfully loaded {len(regions)} AWS regions")
+            return regions
         except BotoCoreError as e:
-            logger.warning(f"Error retrieving AWS regions: {e}")
-        except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error retrieving AWS regions: {e}")
-        return regions
+        return []
 
     def set_profile_and_region(self, profile: str, region: str):
         """
@@ -68,6 +69,7 @@ class AWSManager:
             profile (str): The AWS profile name
             region (str): The AWS region name
         """
+        self.is_connected = False
         try:
             aws_session = boto3.Session(profile_name=profile, region_name=region)
             self.ssm_client = aws_session.client('ssm')
@@ -81,18 +83,15 @@ class AWSManager:
             self.region = region
             self.is_connected = True
             logger.info(f"Successfully set profile to {profile} and region to {region}")
-        except ProfileNotFound as exc:
-            self.is_connected = False
+        except ProfileNotFound:
             logger.error(f"Profile '{profile}' not found")
-            raise ValueError(f"Profile '{profile}' not found") from exc
-        except SSOTokenLoadError as exc:
-            self.is_connected = False
+        except SSOTokenLoadError:
             logger.error(f"SSO Token Error for {profile}")
-            raise ValueError(f"SSO Token Error for {profile}") from exc
-        except Exception as exc:  # pylint: disable=broad-except
-            self.is_connected = False
-            logger.error(f"Error connecting to AWS: {str(exc)}")
-            raise ValueError(f"Error connecting to AWS: {str(exc)}") from exc
+        except TokenRetrievalError:
+            logger.error(f"Token Retrieval Error for {profile}")
+        except ClientError as e:
+            logger.error(f"Client Error: {str(e)}")
+        return self.is_connected
 
     def check_connection(self):
         """

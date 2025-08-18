@@ -162,7 +162,7 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
             section_name = self.session_prefix + name
@@ -174,48 +174,9 @@ class AwsConfigManager:
             logger.info(f"Successfully deleted session '{name}'")
         except configparser.Error as e:
             logger.error(f"Error deleting session: {e}")
-        except ValueError as e:
-            logger.error(f"Error deleting session: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting session: {e}")
 
-
-    def get_profiles(self) -> list[dict[str, str]]:
-        """
-        Lists all available profiles in the config file.
-
-        Returns:
-            list[dict[str, str]]: A list of dictionaries where each dictionary contains
-            profile properties like 'name', 'region', 'output', 'sso_session', 'sso_account_id',
-            and 'sso_role_name'.
-        """
-        profiles = []
-        try:
-            profile_names = []
-            config = configparser.ConfigParser()
-            if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
-
-            config.read(self._config_path)
-            for section in config.sections():
-                if section.startswith(self.profile_prefix):
-                    profile_names.append(section[len(self.profile_prefix):])
-                elif section == 'default':
-                    profile_names.append('default')
-
-            for name in profile_names:
-                section_name = self.profile_prefix + name if name != 'default' else 'default'
-                profile = {'name': name}
-                for prop in ['region', 'output', 'sso_session', 'sso_account_id', 'sso_role_name']:
-                    if not config.has_option(section_name, prop):
-                        logger.warning(f"Warning: '{prop}' not found in section '{section_name}'")
-                        continue
-                    profile[prop] = config.get(section_name, prop, fallback=None)
-        except configparser.Error as e:
-            logger.error(f"Error reading profiles: {e}")
-        except ValueError as e:
-            logger.error(f"Error reading profiles: {e}")
-        return profiles
 
     def add_profile(self, name: str, **kwargs):
         """
@@ -249,7 +210,7 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
 
             config.read(self._config_path)
             section_name = self.profile_prefix + name if name != 'default' else 'default'
@@ -260,8 +221,6 @@ class AwsConfigManager:
                 config.write(configfile)
             logger.info(f"Successfully deleted profile '{name}'")
         except configparser.Error as e:
-            logger.error(f"Error deleting profile: {e}")
-        except ValueError as e:
             logger.error(f"Error deleting profile: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting profile {e}")

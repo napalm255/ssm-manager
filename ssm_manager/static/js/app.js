@@ -7,7 +7,6 @@ const app = createApp({
         const operating_system = ref("");
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
-        const currentPage = ref("Start");
         const currentHash = ref('#/start');
         const currentProfile = ref("Select Profile");
         const currentRegion = ref("Select Region");
@@ -47,17 +46,29 @@ const app = createApp({
           return prefCredentials.value.length;
         });
 
+        const hosts = ref([]);
+        const hostsCount = computed(() => {
+          return hosts.value.length;
+        });
+        const addHostModal = ref(null);
+        const addHostModalProperties = ref({});
+
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
 
         const isConnecting = ref(false);
 
         const instances = ref([]);
-        const instancesCount = ref(0);
+        const instancesTimestamp = ref(null);
+        const instancesCount = computed(() => {
+          return instances.value.length;
+        });
         const instancesDetails = ref({});
 
         const activeConnections = ref([]);
-        const activeConnectionsCount = ref(0);
+        const activeConnectionsCount = computed(() => {
+          return activeConnections.value.length;
+        });
         const intervalActiveConnections = ref(null);
 
         const portForwardingModal = ref(null);
@@ -95,110 +106,44 @@ const app = createApp({
         });
 
       // -----------------------------------------------
-      // Navigation and Page Switching
+      // Navigation
       // -----------------------------------------------
 
         const navBar = ref([
           {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
           {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
           {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
-          {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'}
+          {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'},
+          {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'}
         ]);
 
         const updateHash = async () => {
           currentHash.value = window.location.hash;
-          switch (currentHash.value) {
-            case '#/home':
-              switchPage('Home');
-              break;
-            case '#/instances':
-              switchPage('Instances');
-              break;
-            case '#/preferences':
-              switchPage('Preferences');
-              break;
-            case '#/profiles':
-              switchPage('Profiles');
-              break;
-            default:
-              switchPage('Start');
+          if (!currentHash.value) {
+            currentHash.value = '#/start';
           }
+          switchPage(currentHash.value);
         }
 
         const switchPage = async (page) => {
-          const homePage = document.getElementById('home');
-          const instancesPage = document.getElementById('instances');
-          const preferencesPage = document.getElementById('preferences');
-          const profilesPage = document.getElementById('profiles');
-          switch (page) {
-            case "Start":
-              if (profiles.value.length === 0) {
-                switchPage('Home')
-              } else {
-                switchPage('Instances');
-              }
-              break;
-            case "Home":
-              currentPage.value = "Home";
-              homePage.style.display = 'block';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/home';
-              currentHash.value = '#/home';
-              localStorage.setItem('lastPage', 'Home');
-              break;
-            case "Instances":
-              currentPage.value = "Instances";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'block';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/instances';
-              currentHash.value = '#/instances';
-              localStorage.setItem('lastPage', 'Instances');
-              break;
-            case "Preferences":
-              currentPage.value = "Preferences";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'block';
-              profilesPage.style.display = 'none';
-              window.location.hash = '#/preferences';
-              currentHash.value = '#/preferences';
-              localStorage.setItem('lastPage', 'Preferences');
-              break;
-            case "Profiles":
-              currentPage.value = "Profiles";
-              homePage.style.display = 'none';
-              instancesPage.style.display = 'none';
-              preferencesPage.style.display = 'none';
-              profilesPage.style.display = 'block';
-              window.location.hash = '#/profiles';
-              currentHash.value = '#/profiles';
-              localStorage.setItem('lastPage', 'Profiles');
-              break;
+          if (!page || page === '#/start') {
+            if (profiles.value.length === 0) {
+              page = '#/home';
+            } else {
+              page = '#/instances';
+            }
           }
-        }
-
-      // -----------------------------------------------
-      // Version, Profiles, and Regions Management
-      // -----------------------------------------------
-
-        const getVersion = async () => {
-          console.debug('Fetching version...');
-          await fetch("/api/version", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            version.value = data.version;
-            title.value = data.name;
-            operating_system.value = data.operating_system;
-            console.log('Version:', version.value);
-          })
-          .catch((error) => console.error('Error fetching version:', error));
+          const pages = document.querySelectorAll('.page');
+          pages.forEach(p => p.style.display = 'none');
+          currentHash.value = page;
+          const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
+          currentPage.style.display = 'block';
+          localStorage.setItem('lastPage', page);
         };
+
+      // -----------------------------------------------
+      // Table Columns
+      // -----------------------------------------------
 
         const sessionsTableColumns = ref([
           { title: 'Session Name', field: 'name' },
@@ -206,18 +151,6 @@ const app = createApp({
           { title: 'SSO Region', field: 'sso_region' },
           { title: 'SSO Registration Scopes', field: 'sso_registration_scopes' }
         ]);
-
-        const getSessions = async () => {
-          console.debug('Fetching sessions...');
-          await fetch("/api/config/sessions", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            sessions.value = data;
-          })
-          .catch((error) => console.error('Error fetching sessions:', error));
-        };
 
         const profilesTableColumns = ref([
           { title: 'Profile Name', field: 'name' },
@@ -227,72 +160,76 @@ const app = createApp({
           { title: 'Session Name', field: 'sso_session' }
         ]);
 
+        const hostsTableColumns = ref([
+          { title: 'IP Address', field: 'ip' },
+          { title: 'Hostname', field: 'hostname' }
+        ]);
+
+        const instanceDetailsColumns = ref([
+          { title: 'Name', field: 'name' },
+          { title: 'Instance ID', field: 'id' },
+          { title: 'AMI ID', field: 'ami_id' },
+          { title: 'VPC ID', field: 'vpc_id' },
+          { title: 'Subnet ID', field: 'subnet_id' },
+          { title: 'IAM Role', field: 'iam_role' },
+          { title: 'SSH Key', field: 'ssh_key' },
+          { title: 'Private IP', field: 'private_ip' },
+          { title: 'Public IP', field: 'public_ip' },
+          { title: 'Security Groups', field: 'security_groups' }
+        ]);
+
+      // -----------------------------------------------
+      // Version, Profiles, and Regions
+      // -----------------------------------------------
+
+        const getVersion = async () => {
+          const data = await apiFetch("/api/version");
+          version.value = data.version;
+          title.value = data.name;
+          operating_system.value = data.operating_system;
+          console.log('Version:', version.value);
+        };
+
+        const getSessions = async () => {
+          sessions.value = await apiFetch("/api/config/sessions");
+        };
+
         const getProfiles = async () => {
-          console.debug('Fetching profiles...');
-          await fetch("/api/profiles", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            profiles.value = data;
-          })
-          .catch((error) => console.error('Error fetching profiles:', error));
+          profiles.value = await apiFetch("/api/profiles");
         };
 
         const getRegionsAll = async () => {
-          console.debug('Fetching all regions...');
-          await fetch("/api/regions/all", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            regionsAll.value = data;
-          })
-          .catch((error) => console.error('Error fetching all regions:', error));
+          regionsAll.value = await apiFetch("/api/regions/all");
         };
 
         const getRegionsSelected = async () => {
-          console.debug('Fetching selected regions...');
-          await fetch("/api/regions", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            regionsSelected.value = data;
-          })
-          .catch((error) => console.error('Error fetching selected regions:', error));
+          regionsSelected.value = await apiFetch("/api/regions");
         };
+
+        const getHosts = async () => {
+          hosts.value = await apiFetch("/api/config/hosts");
+        }
 
       // -----------------------------------------------
       // Preferences Management
       // -----------------------------------------------
 
         const getPreferences = async () => {
-          console.debug('Fetching preferences...');
-          await fetch("/api/preferences", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            preferences.value = data;
+          preferences.value = await apiFetch("/api/preferences");
 
-            const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
-            const logging = preferences.value.logging || { level: 'INFO' };
-            const regions = preferences.value.regions || [];
-            const credentials = preferences.value.credentials || [];
-            prefPortStart.value = portRange.start;
-            prefPortEnd.value = portRange.end;
-            prefLogLevel.value = logging.level;
-            prefRegions.value = regions;
-            prefCredentials.value = credentials;
-            prefCredentialsToDelete.value = [];
-          })
-          .catch((error) => console.error('Error fetching preferences:', error));
+          const portRange = preferences.value.port_range || { start: 60000, end: 65535 };
+          const logging = preferences.value.logging || { level: 'INFO' };
+          const regions = preferences.value.regions || [];
+          const credentials = preferences.value.credentials || [];
+          prefPortStart.value = portRange.start;
+          prefPortEnd.value = portRange.end;
+          prefLogLevel.value = logging.level;
+          prefRegions.value = regions;
+          prefCredentials.value = credentials;
+          prefCredentialsToDelete.value = [];
         };
 
         const savePreferences = async () => {
-          console.debug('Saving preferences...');
-
           if (!validatePortRange(prefPortStart.value, prefPortEnd.value)) {
             console.error('Invalid port range:', prefPortStart.value, prefPortEnd.value);
             return;
@@ -311,26 +248,12 @@ const app = createApp({
             credentials_to_delete: prefCredentialsToDelete.value,
           };
 
-          await fetch("/api/preferences", {
+          await apiFetch("/api/preferences", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(newPreferences)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.status || 'Unknown error');
-            };
-            console.debug('Preferences saved successfully:', data);
-            toast('Preferences saved successfully', 'success');
-            dataRefresh();
-          })
-          .catch((error) => {
-            console.error('Error saving preferences:', error)
-            toast('Error saving preferences', 'danger');
-          });
+          await getPreferences();
+          toast('Preferences saved successfully', 'success');
         };
 
         const validatePortRange = (start, end) => {
@@ -350,7 +273,6 @@ const app = createApp({
         };
 
         const addCredential = () => {
-          console.debug('Adding new credential...');
           prefCredentials.value.push({
             'username': '',
             'password': ''
@@ -358,7 +280,6 @@ const app = createApp({
         };
 
         const removeCredential = (index) => {
-          console.debug('Removing credential at index:', index);
           prefCredentialsToDelete.value.push(prefCredentials.value[index]);
           prefCredentials.value.splice(index, 1);
         }
@@ -369,119 +290,42 @@ const app = createApp({
       // -----------------------------------------------
 
         const connect = async () => {
-          console.debug('Connecting to AWS...');
           isConnecting.value = true;
-          await fetch("/api/connect", {
+          const data = await apiFetch("/api/connect", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            currentAccountId.value = data.account_id;
-            toast('Connected to AWS successfully', 'success');
-            getInstances();
-          })
-          .catch((error) => {
-            console.error('Failed connecting to AWS:', error);
-            toast('Failed connecting to AWS', 'danger');
           });
+          currentAccountId.value = data.account_id;
+          await getInstances();
           isConnecting.value = false;
+          toast('Connected to AWS successfully', 'success');
         };
 
         const disconnect = async (connection_id) => {
-          console.debug('Terminating connection:', connection_id);
-          await fetch(`/api/terminate-connection/${connection_id}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            getActiveConnections();
-            toast('Connection terminated successfully', 'warning');
-          })
-          .catch((error) => {
-            console.error('Failed to terminate connection:', error);
-            toast('Failed to terminate connection', 'danger');
+          await apiFetch(`/api/terminate-connection/${connection_id}`, {
+            method: 'POST'
           });
+          await getActiveConnections();
+          toast('Connection terminated successfully', 'warning');
         };
 
         const getActiveConnections = async () => {
-          await fetch("/api/active-connections", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            activeConnectionsCount.value = data.length;
-            activeConnections.value = data;
-          })
-          .catch((error) => console.error('Error fetching active connections:', error));
+          activeConnections.value = await apiFetch("/api/active-connections");
         };
-
-        const instancesTableColumns = ref([
-          { title: 'Name', field: 'name' },
-          { title: 'Instance ID', field: 'id' },
-          { title: 'OS', field: 'os' },
-          { title: 'Type', field: 'type' }
-        ]);
 
         const getInstances = async () => {
-          console.debug('Fetching instances...');
-          await fetch("/api/instances", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            instances.value = data;
-            instancesDetails[instances.value.id] = {};
-            instancesCount.value = instances.value.length;
-            toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
-          })
-          .catch((error) => {
-            console.error('Error fetching instances:', error);
-            toast('Error fetching instances', 'danger');
-          });
+          instances.value = await apiFetch("/api/instances");
+          instancesTimestamp.value = Date.now() + 5 * 60 * 1000; // Set timestamp to 5 minutes in the future
+          instancesDetails.value[instances.value.id] = {};
+          toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
         };
 
-        const instanceDetailsColumns = ref([
-          { title: 'Name', field: 'name' },
-          { title: 'Instance ID', field: 'id' },
-          { title: 'AMI ID', field: 'ami_id' },
-          { title: 'VPC ID', field: 'vpc_id' },
-          { title: 'Subnet ID', field: 'subnet_id' },
-          { title: 'IAM Role', field: 'iam_role' },
-          { title: 'SSH Key', field: 'ssh_key' },
-          { title: 'Private IP', field: 'private_ip' },
-          { title: 'Public IP', field: 'public_ip' },
-          { title: 'Security Groups', field: 'security_groups' }
-        ]);
-
         const getInstanceDetails = async (instanceId) => {
-          console.debug('Fetching instance details...');
-          await fetch(`/api/instance-details/${instanceId}`, {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            instancesDetails.value[instanceId] = data;
-          })
-          .catch((error) => {
-            console.error('Error fetching instance details:', error);
-            toast('Error fetching instance details', 'danger');
-          });
+          const data = await apiFetch(`/api/instance-details/${instanceId}`);
+          instancesDetails.value[instanceId] = data;
         };
 
       // -----------------------------------------------
@@ -490,71 +334,37 @@ const app = createApp({
 
         const startShell = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          console.debug('Starting shell for:', instanceName);
-          await fetch(`/api/shell/${instanceId}`, {
+          await apiFetch(`/api/shell/${instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
               name: instanceName,
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('Shell started:', data);
-            getActiveConnections();
-            toast('Successfully started shell', 'success');
-          })
-          .catch((error) => {
-            console.error('Error starting shell:', error);
-            toast('Error starting shell', 'danger');
           });
+          await getActiveConnections();
+          toast('Successfully started shell', 'success');
         };
 
         const startRdp = async (instanceId, name) => {
           const instanceName = name || instanceId;
-          console.debug('Starting RDP for:', instanceName);
-          await fetch(`/api/rdp/${instanceId}`, {
+          await apiFetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
               name: instanceName,
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('RDP started:', data);
-            toast('Successfully started RDP', 'success');
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error starting RDP:', error);
-            toast('Error starting RDP', 'danger');
           });
+          await getActiveConnections();
+          toast('Successfully started RDP', 'success');
         };
 
         const startPortForwarding = async () => {
-          console.debug('Starting port forwarding...');
           portForwardingStarting.value = true;
 
-          await fetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
+          const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify({
               profile: currentProfile.value,
               region: currentRegion.value,
@@ -564,42 +374,39 @@ const app = createApp({
               remote_host: portForwardingModalProperties.value.remoteHost,
               username: portForwardingModalProperties.value.username
             })
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            console.debug('Port forwarding started:', data);
-            if (!data.status || data.status !== 'active') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            toast('Successfully started port forwarding', 'success');
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error starting port forwarding:', error);
-            toast('Error starting port forwarding', 'danger');
           });
+          toast('Successfully started port forwarding', 'success');
+
+          if (portForwardingModalProperties.value.username && data.local_port) {
+            await addWindowsCredential(
+              portForwardingModalProperties.value.instanceId,
+              portForwardingModalProperties.value.instanceName,
+              portForwardingModalProperties.value.username,
+              data.local_port
+            );
+          }
+
+          await getActiveConnections();
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
         };
 
-        const openRdpClient = async (instanceId, name, local_port) => {
-          const instanceName = name || instanceId;
-          console.debug(`Opening RDP to ${instanceName} via port ${local_port}`);
-          await fetch(`/api/rdp/${local_port}`, {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            toast('Successfully opened RDP client', 'success');
-            getActiveConnections();
-          })
-          .catch((error) => {
-            console.error('Error opening RDP client:', error);
-            toast('Error opening RDP client', 'danger');
+        const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
+          await apiFetch(`/api/config/credential`, {
+            method: 'POST',
+            body: JSON.stringify({
+              instance_name: instanceName,
+              instance_id: instanceId,
+              username: username,
+              local_port: localPort
+            })
           });
+          toast('Windows credential added successfully', 'success');
+        };
+
+        const openRdpClient = async (local_port) => {
+          await apiFetch(`/api/rdp/${local_port}`);
+          toast('Successfully opened RDP client', 'success');
         };
 
       // -----------------------------------------------
@@ -650,27 +457,13 @@ const app = createApp({
             ports: validPorts
           };
 
-          await fetch(`/api/preferences/${instanceName}`, {
+          await apiFetch(`/api/preferences/${instanceName}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(newMappings)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.status || 'Unknown error');
-            };
-            console.debug('Port mappings saved successfully:', data);
-            toast('Port mappings saved successfully', 'success');
-            dataRefresh();
-          })
-          .catch((error) => {
-            console.error('Error saving port mappings:', error)
-            toast('Error saving port mappings', 'danger');
-          });
+          getPreferences();
           portMappingsModal.value.hide();
+          toast('Port mappings saved successfully', 'success');
         };
 
         const addPortMapping = () => {
@@ -688,7 +481,7 @@ const app = createApp({
           addSessionModal.value = new bootstrap.Modal(document.getElementById('addSessionModal'), {
             keyboard: true
           });
-          document.getElementById('addSessionModal').addEventListener('hidden.bs.modal', () => {
+          document.getElementById('addSessionModal').addEventListener('hidden.bs.modal', async () => {
             addSessionModalProperties.value = {};
           });
           addSessionModalProperties.value = {
@@ -701,56 +494,28 @@ const app = createApp({
         };
 
         const addSession = async () => {
-          console.debug('Adding new session...');
-          await fetch("/api/config/session", {
+          await apiFetch("/api/config/session", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(addSessionModalProperties.value)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('Session added successfully:', data);
-            toast('Session added successfully', 'success');
-            getSessions();
-          })
-          .catch((error) => {
-            console.error('Error adding session:', error);
-            toast('Error adding session', 'danger');
-          });
-
+          await getSessions();
           addSessionModal.value.hide();
+          toast('Session added successfully', 'success');
         };
 
         const deleteSession = async (sessionName) => {
-          console.debug('Deleting session:', sessionName);
-          await fetch(`/api/config/session/${sessionName}`, {
+          await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('Session deleted successfully:', data);
-            toast('Session deleted successfully', 'success');
-            getSessions();
-          })
-          .catch((error) => {
-            console.error('Error deleting session:', error);
-            toast('Error deleting session', 'danger');
-          });
+          await getSessions();
+          toast('Session deleted successfully', 'success');
         };
 
         const showAddProfileModal = async (instanceId, name) => {
           addProfileModal.value = new bootstrap.Modal(document.getElementById('addProfileModal'), {
             keyboard: true
           });
-          document.getElementById('addProfileModal').addEventListener('hidden.bs.modal', () => {
+          document.getElementById('addProfileModal').addEventListener('hidden.bs.modal', async () => {
             addProfileModalProperties.value = {};
           });
           addProfileModalProperties.value = {
@@ -765,48 +530,53 @@ const app = createApp({
         };
 
         const addProfile = async () => {
-          console.debug('Adding new profile...');
-          await fetch("/api/config/profile", {
+          await apiFetch("/api/config/profile", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
             body: JSON.stringify(addProfileModalProperties.value)
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('Profile added successfully:', data);
-            toast('Profile added successfully', 'success');
-            getProfiles();
-          })
-          .catch((error) => {
-            console.error('Error adding profile:', error);
-            toast('Error adding profile', 'danger');
-          });
+          await getProfiles();
           addProfileModal.value.hide();
+          toast('Profile added successfully', 'success');
         };
 
         const deleteProfile = async (profileName) => {
-          console.debug('Deleting profile:', profileName);
-          await fetch(`/api/config/profile/${profileName}`, {
+          await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.status || data.status !== 'success') {
-              throw new Error(data.error || 'Unknown error');
-            }
-            console.debug('Profile deleted successfully:', data);
-            toast('Profile deleted successfully', 'success');
-            getProfiles();
-          })
-          .catch((error) => {
-            console.error('Error deleting profile:', error);
-            toast('Error deleting profile', 'danger');
+          await getProfiles();
+          toast('Profile deleted successfully', 'success');
+        };
+
+        const showAddHostModal = async () => {
+          addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
+            keyboard: true
           });
+          document.getElementById('addHostModal').addEventListener('hidden.bs.modal', async () => {
+            addHostModalProperties.value = {};
+          });
+          addHostModalProperties.value = {
+            hostname: '',
+            ip: ''
+          };
+          addHostModal.value.show();
+        };
+
+        const addHost = async (hostname, ip) => {
+          console.log(addHostModalProperties.value);
+          await apiFetch("/api/config/host", {
+            method: 'POST',
+            body: JSON.stringify(addHostModalProperties.value)
+          });
+          await getHosts();
+          toast('Host added successfully', 'success');
+        };
+
+        const deleteHost = async (hostname) => {
+          await apiFetch(`/api/config/host/${hostname}`, {
+            method: 'DELETE'
+          });
+          await getHosts();
+          toast('Host deleted successfully', 'success');
         };
 
       // -----------------------------------------------
@@ -819,6 +589,18 @@ const app = createApp({
 
         watch(currentRegion, (newRegion) => {
           localStorage.setItem('lastRegion', newRegion);
+        });
+
+        watch(currentAccountId, (newAccountId) => {
+          localStorage.setItem('lastAccountId', newAccountId);
+        });
+
+        watch(instances, (newInstances) => {
+          localStorage.setItem('lastInstances', JSON.stringify(newInstances));
+        });
+
+        watch(instancesTimestamp, (newTimestamp) => {
+          localStorage.setItem('lastInstancesTimestamp', newTimestamp);
         });
 
       // -----------------------------------------------
@@ -873,8 +655,20 @@ const app = createApp({
           return 'just now';
         };
 
+        const compareVersions = async (v1, v2) => {
+          const v1Parts = v1.split('.').map(Number);
+          const v2Parts = v2.split('.').map(Number);
+          const maxLength = Math.max(v1Parts.length, v2Parts.length);
+          for (let i = 0; i < maxLength; i++) {
+            const part1 = v1Parts[i] || 0;
+            const part2 = v2Parts[i] || 0;
+            if (part1 > part2) return 1;  // v1 is greater
+            if (part1 < part2) return -1;  // v2 is greater
+          }
+          return 0;  // Versions are equal
+        };
+
         const copyToClipboard = async (text) => {
-          console.debug('Copying to clipboard:', text);
           await navigator.clipboard.writeText(text)
           toast('Copied to clipboard', 'success');
         };
@@ -899,45 +693,47 @@ const app = createApp({
       // Check GitHub for updates
       // -----------------------------------------------
         const checkForUpdates = async () => {
-          console.debug('Checking for updates...');
-          await fetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest", {
-            method: 'GET'
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            const currentVersion = `v${version.value}`;
-            const githubVersion = data.tag_name;
-            const githubUrl = data.html_url;
+          const data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
+          const currentVersion = `v${version.value}`;
+          const githubVersion = data.tag_name;
+          const githubUrl = data.html_url;
+          const versionComparison = await compareVersions(currentVersion, githubVersion);
 
-            if (!githubVersion || !githubUrl) {
-              throw new Error('No version information found on GitHub');
-            } else if (githubVersion !== currentVersion) {
-              console.debug('New version available:', githubVersion);
-              toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
-            } else {
-              console.debug('No updates available');
-              toast('You are using the latest version', 'success');
-            }
-          })
-          .catch((error) => {
-            console.error('Error checking for updates:', error);
-            toast('Error checking for updates', 'danger');
-          });
+          if (!githubVersion || !githubUrl) {
+            toast('Failed querying for version', 'danger');
+            throw new Error('Failed querying for version');
+          }
+          console.log('Latest version:', githubVersion);
+          if (versionComparison < 0) {
+            toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
+          } else if (versionComparison === 0) {
+            toast('You are using the latest version', 'success');
+          } else if (versionComparison > 0) {
+            toast(`You are using a development version`, 'warning');
+          }
         };
 
-
       // -----------------------------------------------
-      // Data Refresh
+      // API Handler
       // -----------------------------------------------
+        const apiFetch = async (url, options = {}) => {
+          if (!options.method) {
+            options.method = 'GET';
+          }
 
-        const dataRefresh = async () => {
-          console.debug('Refreshing data...');
-          await getVersion();
-          await getSessions();
-          await getProfiles();
-          await getRegionsAll();
-          await getRegionsSelected();
-          await getPreferences();
+          if (options.method == 'POST' && !options.headers) {
+            options.headers = {
+              'Content-Type': 'application/json'
+            };
+          }
+
+          const response = await fetch(url, options);
+          const data = await response.json();
+          if (options.method !== 'GET' && (data.status && data.status !== 'success' && data.status !== 'active')) {
+            toast(data.message || 'Unknown error', 'danger');
+            throw new Error(data.message || 'Unknown error');
+          }
+          return data;
         };
 
       // -----------------------------------------------
@@ -945,6 +741,9 @@ const app = createApp({
       // -----------------------------------------------
 
         onMounted(async () => {
+          // Watch for hash changes
+          window.addEventListener('hashchange', updateHash);
+
           // Set the initial theme
           const lastTheme = localStorage.getItem('lastTheme');
           if (lastTheme) {
@@ -956,10 +755,10 @@ const app = createApp({
           if (lastPage) {
             await switchPage(lastPage);
           } else {
-            await switchPage('Start');
+            await switchPage('#/start');
           }
 
-          // Set profile and region
+          // Set profile, region, and account ID
           const lastProfile = localStorage.getItem('lastProfile');
           if (lastProfile) {
             currentProfile.value = lastProfile;
@@ -969,47 +768,65 @@ const app = createApp({
             currentRegion.value = lastRegion;
           }
 
+          // Load data from the server
+          await getVersion();
+          checkForUpdates();
+          getSessions();
+          getProfiles();
+          getRegionsAll();
+          getRegionsSelected();
+          getHosts();
+          await getPreferences();
+
+          // Restore instances if available and not expired
+          const lastInstances = localStorage.getItem('lastInstances');
+          const lastInstancesTimestamp = localStorage.getItem('lastInstancesTimestamp');
+          const lastAccountId = localStorage.getItem('lastAccountId');
+          if (lastInstances && lastInstancesTimestamp) {
+            const item = JSON.parse(lastInstances);
+            const now = Date.now();
+            if (lastInstancesTimestamp > now) {
+              currentAccountId.value = lastAccountId || '';
+              instances.value = item;
+            } else {
+              localStorage.removeItem('lastAccountId');
+              localStorage.removeItem('lastInstances');
+              localStorage.removeItem('lastInstancesTimestamp');
+            }
+          }
+
           // Initialize tooltips
           tooltipTriggerList.value = document.querySelectorAll('[data-bs-toggle="tooltip"]');
           tooltipList.value = [...tooltipTriggerList.value].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
-          // Watch for hash changes
-          window.addEventListener('hashchange', updateHash);
-
-          // Load data from the server
-          await dataRefresh();
-
-          // Check for updates
-          await checkForUpdates();
-
           // Query active connections every 2 seconds
           setInterval(getActiveConnections, 2500);
-
         });
 
         onUnmounted(async () => {
-          // Clean up event listeners
-          window.removeEventListener('hashchange', updateHash);
-
           // Dispose of tooltips
           tooltipList.value.forEach(tooltip => tooltip.dispose());
 
           // Clear the interval for active connections
           clearInterval(intervalActiveConnections);
+
+          // Clean up event listeners
+          window.removeEventListener('hashchange', updateHash);
         });
 
         return {
-          title, version, operating_system, githubUrl, navBar, switchPage, currentPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+          title, version, operating_system, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
+          hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
           connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
-          getInstances, getInstanceDetails, instances, instancesCount, instancesTableColumns, instancesDetails, instanceDetailsColumns,
+          getInstances, getInstanceDetails, instances, instancesCount, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
         };
     }
