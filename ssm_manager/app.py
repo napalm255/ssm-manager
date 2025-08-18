@@ -370,9 +370,6 @@ def delete_config_host(hostname):
     matches = pattern.findall(content)
     if matches:
         return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
-
-    if resolve_hostname(hostname):
-        return logger.failed("Failed to delete host. Still resolvable.")
     return logger.success("Host deleted successfully")
 
 
