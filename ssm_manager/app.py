@@ -361,17 +361,15 @@ def delete_config_host(hostname):
     pspattern = f"Where-Object {{ $_ -notmatch '^\\d+.*{hostname}$' }}"
     pscmd = f"(Get-Content -Path '{hosts_file}') | {pspattern} | Set-Content -Path '{hosts_file}'"
     pscmd.replace('\\', '\\\\')  # Escape backslashes for Windows paths
-    print(pscmd)
     command = HostsFileCommand(
         runAs=True,
         command=pscmd
     )
+    print(command.cmd)
     run_cmd(command, skip_pid_wait=True)
 
     with open(hosts_file, 'r', encoding='utf-8') as file:
         content = file.read()
-
-
 
     # if resolve_hostname(hostname):
     #     return logger.failed("Failed to delete host. Still resolvable.")
