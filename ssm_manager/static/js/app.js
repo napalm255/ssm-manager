@@ -442,16 +442,13 @@ const app = createApp({
         };
 
         const portForwardingAddHost = async () => {
-          const username = portForwardingModalProperties.value.username || '';
+          let username = portForwardingModalProperties.value.username || '';
           let domain = ''
-          if (username && username.includes('\\')) {
+          if (username?.includes('\\')) {
             const parts = username.split('\\');
             if (parts.length > 1) {
               domain = parts[0];
               username = parts[1];
-            } else {
-              domain = '';
-              username = parts[0];
             }
           }
           let hostname = portForwardingModalProperties.value.instanceName;
