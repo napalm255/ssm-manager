@@ -302,6 +302,16 @@ def update_config_hosts():
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
+    if system != 'Windows':
+        return logger.failed(f"This feature is not supported on {system}.")
+
+    def host_ip_exists(hostname, ip):
+        """Check if a hostname with the given IP exists in the hosts file."""
+        pattern = re.compile(rf"^{re.escape(ip)}\s+{re.escape(hostname)}$", re.MULTILINE)
+        with open(hosts_file, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return bool(pattern.search(content))
+
     data = request.json
 
     # Validate required fields
@@ -309,11 +319,32 @@ def update_config_hosts():
         if not data.get(field, None):
             raise BadRequest(f"Missing required field: {field}")
 
-    with open(hosts_file, 'r', encoding='utf-8') as file:
-        content = file.read()
-        logger.debug(f"Current hosts file content: {content}")
+    hostname = data['hostname']
+    ip = data['ip']
+    record = f'{ip}\t{hostname}'
 
-    return logger.failed("Failed to update hosts file.<br>This feature is not implemented yet.")
+    if host_ip_exists(hostname, ip):
+        return logger.failed(f"Host {hostname} with IP {ip} already exists in the hosts file.")
+
+    hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
+    pscmd = f'(Add-Content -Path "{hosts_file_escaped}" -Value "{record}")'
+
+    command = HostsFileCommand(
+        runAs=True,
+        command=pscmd
+    )
+    run_cmd(command, skip_pid_wait=True)
+    added = False
+    for _ in range(16):
+        if resolve_hostname(hostname) != ip:
+            time.sleep(0.25)
+        else:
+            added = True
+            break
+    if not added:
+        return logger.failed("Failed to add host to hosts file.<br>Host still resolvable.")
+
+    return logger.success("Host added successfully")
 
 
 @app.route('/api/config/host/<hostname>', methods=['DELETE'])
