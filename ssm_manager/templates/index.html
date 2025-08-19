@@ -641,6 +641,10 @@
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>
               </select>
             </div>
+            <div class="form-check form-switch" v-if="operating_system == 'Windows'">
+              <input class="form-check-input" type="checkbox" role="switch" id="createHostEntry" v-model="portForwardingModalProperties.hostentry">
+              <label class="form-check-label" for="createHostEntry">Create host entry</label>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

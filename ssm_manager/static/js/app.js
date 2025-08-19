@@ -389,6 +389,13 @@ const app = createApp({
             );
           }
 
+          if (portForwardingModalProperties.value.hostentry) {
+            await addHost(
+              portForwardingModalProperties.value.instanceName,
+              "127.0.0.1"
+            );
+          }
+
           await getActiveConnections();
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
