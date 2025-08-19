@@ -454,7 +454,7 @@ const app = createApp({
               username = parts[0];
             }
           }
-          const hostname = portForwardingModalProperties.value.instanceName;
+          let hostname = portForwardingModalProperties.value.instanceName;
           hostname += domain ? `.${domain}` : '';
 
           const newHost = {
