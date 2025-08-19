@@ -148,7 +148,7 @@ main {
   color: #FFFFFF;
 }
 
-.edit-port-mapping.button.bi-pencil-square {
+.edit-port-mapping .bi-pencil-square {
   font-size: 1.3rem;
 }
 
