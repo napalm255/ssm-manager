@@ -48,6 +48,7 @@ const app = createApp({
 
         const hosts = ref([]);
         const hostsAdding = ref(false);
+        const hostDeleting = ref(false);
         const hostsCount = computed(() => {
           return hosts.value.length;
         });
@@ -577,11 +578,13 @@ const app = createApp({
         };
 
         const deleteHost = async (hostname) => {
+          hostDeleting.value = true;
           await apiFetch(`/api/config/host/${hostname}`, {
             method: 'DELETE'
           });
           await getHosts();
           toast('Host deleted successfully', 'success');
+          hostDeleting.value = false;
         };
 
       // -----------------------------------------------
@@ -827,7 +830,7 @@ const app = createApp({
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
-          hosts, addHost, deleteHost, hostsAdding, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
+          hosts, addHost, deleteHost, hostsAdding, hostDeleting, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
