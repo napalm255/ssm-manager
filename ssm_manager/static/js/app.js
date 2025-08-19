@@ -445,7 +445,7 @@ const app = createApp({
           const username = portForwardingModalProperties.value.username || '';
           const domain = ''
           if (!username && username.includes('\\')) {
-            parts = username.split('\\');
+            const parts = username.split('\\');
             if (parts.length > 1) {
               domain = parts[0];
               username = parts[1];
