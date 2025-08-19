@@ -47,7 +47,6 @@ const app = createApp({
         });
 
         const hosts = ref([]);
-        const hostsAdding = ref(false);
         const hostsCount = computed(() => {
           return hosts.value.length;
         });
@@ -56,8 +55,6 @@ const app = createApp({
 
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
-
-        const isConnecting = ref(false);
 
         const instances = ref([]);
         const instancesTimestamp = ref(null);
@@ -74,7 +71,6 @@ const app = createApp({
 
         const portForwardingModal = ref(null);
         const portForwardingModalProperties = ref({});
-        const portForwardingStarting = ref(false);
 
         const portMappings = computed(() => {
           const mappings = {};
@@ -105,6 +101,16 @@ const app = createApp({
           }
           return false;
         });
+
+        const isPreferencesSaving = ref(false);
+        const isConnecting = ref(false);
+        const isProfileAdding = ref(false);
+        const isProfileDeleting = ref([]);
+        const isSessionAdding = ref(false);
+        const isSessionDeleting = ref([]);
+        const isHostsAdding = ref(false);
+        const isHostsDeleting = ref([]);
+        const isPortForwardingStarting = ref(false);
 
       // -----------------------------------------------
       // Navigation
@@ -232,6 +238,7 @@ const app = createApp({
         };
 
         const savePreferences = async () => {
+          isPreferencesSaving.value = true;
           if (!validatePortRange(prefPortStart.value, prefPortEnd.value)) {
             console.error('Invalid port range:', prefPortStart.value, prefPortEnd.value);
             return;
@@ -256,6 +263,7 @@ const app = createApp({
           })
           await getPreferences();
           toast('Preferences saved successfully', 'success');
+          isPreferencesSaving.value = false;
         };
 
         const validatePortRange = (start, end) => {
@@ -366,7 +374,7 @@ const app = createApp({
         };
 
         const startPortForwarding = async () => {
-          portForwardingStarting.value = true;
+          isPortForwardingStarting.value = true;
 
           const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
             method: 'POST',
@@ -397,7 +405,7 @@ const app = createApp({
 
           await getActiveConnections();
           portForwardingModal.value.hide();
-          portForwardingStarting.value = false;
+          isPortForwardingStarting.value = false;
         };
 
         const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
@@ -428,7 +436,7 @@ const app = createApp({
           });
           document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
             portForwardingModalProperties.value = {};
-            portForwardingStarting.value = false;
+            isPortForwardingStarting.value = false;
           });
           portForwardingModalProperties.value = {
             instanceId: instanceId,
@@ -527,6 +535,7 @@ const app = createApp({
         };
 
         const addSession = async () => {
+          isSessionAdding.value = true;
           await apiFetch("/api/config/session", {
             method: 'POST',
             body: JSON.stringify(addSessionModalProperties.value)
@@ -534,14 +543,17 @@ const app = createApp({
           await getSessions();
           addSessionModal.value.hide();
           toast('Session added successfully', 'success');
+          isSessionAdding.value = false;
         };
 
         const deleteSession = async (sessionName) => {
+          isSessionDeleting.value.push(sessionName);
           await apiFetch(`/api/config/session/${sessionName}`, {
             method: 'DELETE'
           })
           await getSessions();
           toast('Session deleted successfully', 'success');
+          removeByValue(isSessionDeleting.value, sessionName);
         };
 
         const showAddProfileModal = async (instanceId, name) => {
@@ -563,6 +575,7 @@ const app = createApp({
         };
 
         const addProfile = async () => {
+          isProfileAdding.value = true;
           await apiFetch("/api/config/profile", {
             method: 'POST',
             body: JSON.stringify(addProfileModalProperties.value)
@@ -570,14 +583,17 @@ const app = createApp({
           await getProfiles();
           addProfileModal.value.hide();
           toast('Profile added successfully', 'success');
+          isProfileAdding.value = false;
         };
 
         const deleteProfile = async (profileName) => {
+          isProfileDeleting.value.push(profileName);
           await apiFetch(`/api/config/profile/${profileName}`, {
             method: 'DELETE'
           })
           await getProfiles();
           toast('Profile deleted successfully', 'success');
+          removeByValue(isProfileDeleting.value, profileName);
         };
 
         const showAddHostModal = async () => {
@@ -595,7 +611,7 @@ const app = createApp({
         };
 
         const addHost = async () => {
-          hostsAdding.value = true;
+          isHostsAdding.value = true;
           await apiFetch("/api/config/host", {
             method: 'POST',
             body: JSON.stringify(addHostModalProperties.value)
@@ -604,15 +620,17 @@ const app = createApp({
           addHostModal.value.hide();
           addHostModalProperties.value = {};
           toast('Host added successfully', 'success');
-          hostsAdding.value = false;
+          isHostsAdding.value = false;
         };
 
         const deleteHost = async (hostname) => {
+          isHostsDeleting.value.push(hostname);
           await apiFetch(`/api/config/host/${hostname}`, {
             method: 'DELETE'
           });
           await getHosts();
           toast('Host deleted successfully', 'success');
+          removeByValue(isHostsDeleting.value, hostname);
         };
 
       // -----------------------------------------------
@@ -664,6 +682,13 @@ const app = createApp({
             autohide: true
           });
           toastInstance.show();
+        };
+
+        const removeByValue = async (array, value) => {
+          const index = array.indexOf(value);
+          if (index > -1) {
+            array.splice(index, 1);
+          }
         };
 
         const timeAgo = (timestamp) => {
@@ -858,13 +883,14 @@ const app = createApp({
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
+          isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting, isPortForwardingStarting,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
-          hosts, addHost, deleteHost, hostsAdding, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
+          hosts, addHost, deleteHost, isHostsAdding, isHostsDeleting, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
-          showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
+          showPortForwardingModal, portForwardingModalProperties,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
-          connect, disconnect, isConnecting, startShell, startRdp, openRdpClient, startPortForwarding,
+          connect, disconnect, startShell, startRdp, openRdpClient, startPortForwarding,
           getInstances, getInstanceDetails, instances, instancesCount, instancesDetails, instanceDetailsColumns,
           activeConnections, activeConnectionsCount,
         };

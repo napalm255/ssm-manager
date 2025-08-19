@@ -327,7 +327,10 @@
           <div class="btn-group mr-2">
             <!-- Buttons -->
             <button type="button" class="btn btn-outline-success" @click="savePreferences()">
-              <i class="bi bi-floppy-fill"></i>&nbsp;&nbsp;Save
+              <output v-if="isPreferencesSaving" class="spinner-border spinner-border-sm" aria-hidden="true"></output>
+              <span v-if="isPreferencesSaving" class="visually-hidden">Saving...</span>
+              <span v-if="!isPreferencesSaving"><i class="bi bi-floppy-fill"></i></span>
+              &nbsp;&nbsp;Save
             </button>
           </div>
         </div>
@@ -501,6 +504,7 @@
               <thead class="small text-uppercase">
                 <tr>
                   <th v-for="column in sessionsTableColumns" v-html="column.title"></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -508,7 +512,13 @@
                   <td v-for="column in sessionsTableColumns" :key="column.field">
                     <span v-html="session[column.field]"></span>
                   </td>
-                  <td><i class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteSession(session.name)"></i></td>
+                  <td>
+                    <button type="button" class="btn btn-danger" @click="deleteSession(session.name)">
+                      <output v-if="isSessionDeleting.includes(session.name)" class="spinner-border spinner-border-sm" aria-hidden="true"></output>
+                      <span v-if="isSessionDeleting.includes(session.name)" class="visually-hidden">Deleting...</span>
+                      <i v-if="!isSessionDeleting.includes(session.name)" class="bi bi-trash"></i>
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -542,7 +552,13 @@
                   <td v-for="column in profilesTableColumns" :key="column.field">
                     <span v-html="profile[column.field]"></span>
                   </td>
-                  <td><i class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteProfile(profile.name)"></i></td>
+                  <td>
+                    <button type="button" class="btn btn-danger" @click="deleteProfile(profile.name)">
+                      <output v-if="isProfileDeleting.includes(profile.name)" class="spinner-border spinner-border-sm" aria-hidden="true"></output>
+                      <span v-if="isProfileDeleting.includes(profile.name)" class="visually-hidden">Deleting...</span>
+                      <i v-if="!isProfileDeleting.includes(profile.name)" class="bi bi-trash"></i>
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -571,8 +587,8 @@
               <div class="m-0">Hosts</div>
             </div>
             <span>
-              <span class="badge me-2" :class="hostsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="hostsCount + ' hosts'"></span>
-              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddHostModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
+              <span class="badge" :class="hostsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="hostsCount + ' hosts'"></span>
+              <button v-if="operating_system == 'Windows'" type="button" class="btn btn-outline-success btn-sm ms-2" @click="showAddHostModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -584,6 +600,7 @@
               <thead class="small text-uppercase">
                 <tr>
                   <th v-for="column in hostsTableColumns" v-html="column.title"></th>
+                  <th v-if="operating_system == 'Windows'"></th>
                 </tr>
               </thead>
               <tbody>
@@ -591,8 +608,12 @@
                   <td v-for="column in hostsTableColumns" :key="column.field">
                     <span v-html="host[column.field]"></span>
                   </td>
-                  <td>
-                    <i class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteHost(host.hostname)"></i>
+                  <td class="text-end" v-if="operating_system == 'Windows'">
+                    <button type="button" class="btn btn-danger" @click="deleteHost(host.hostname)">
+                      <output v-if="isHostsDeleting.includes(host.hostname)" class="spinner-border spinner-border-sm" aria-hidden="true"></output>
+                      <span v-if="isHostsDeleting.includes(host.hostname)" class="visually-hidden">Deleting...</span>
+                      <i v-if="!isHostsDeleting.includes(host.hostname)" class="bi bi-trash"></i>
+                    </button>
                   </td>
                 </tr>
               </tbody>
