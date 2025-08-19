@@ -74,6 +74,16 @@ main {
   padding-left: 15px;
 }
 
+.loading-instances {
+  margin-top: 2vh;
+  width: 3rem;
+  height: 3rem;
+}
+
+.loading-instance-details {
+  margin-top: 2vh;
+}
+
 .instance-card {
   border: 1px solid var(--bs-secondary);
 }
@@ -144,15 +154,17 @@ main {
 }
 
 .edit-port-mapping {
-  color: var(--color-port-forward);
+  background-color: var(--color-port-forward);
+  color: #FFFFFF;
 }
 
-.edit-port-mapping.bi-pencil-square {
+.edit-port-mapping .bi-pencil-square {
   font-size: 1.3rem;
 }
 
 .edit-port-mapping:hover {
-  color: var(--color-port-forward-hover);
+  background-color: var(--color-port-forward-hover);
+  color: #FFFFFF;
   transform: scale(1.10);
   cursor: pointer;
 }

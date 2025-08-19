@@ -8,8 +8,8 @@ const app = createApp({
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
         const currentHash = ref('#/start');
-        const currentProfile = ref("Select Profile");
-        const currentRegion = ref("Select Region");
+        const currentProfile = ref("");
+        const currentRegion = ref("");
         const currentAccountId = ref("");
 
         const sessions = ref([]);
@@ -47,6 +47,7 @@ const app = createApp({
         });
 
         const hosts = ref([]);
+        const hostsAdding = ref(false);
         const hostsCount = computed(() => {
           return hosts.value.length;
         });
@@ -91,7 +92,7 @@ const app = createApp({
         const portMappingsModalDuplicatePort = computed(() => {
           const allPorts = preferences.value.instances?.flatMap(instance => {
             if (instance.name !== portMappingsModalInstance.value?.name) {
-              return instance.ports.map(port => port.local_port);
+              return instance?.ports?.map(port => port.local_port);
             }
             return [];
           });
@@ -127,7 +128,7 @@ const app = createApp({
 
         const switchPage = async (page) => {
           if (!page || page === '#/start') {
-            if (profiles.value.length === 0) {
+            if (profilesCount.value === 0) {
               page = '#/home';
             } else {
               page = '#/instances';
@@ -135,10 +136,11 @@ const app = createApp({
           }
           const pages = document.querySelectorAll('.page');
           pages.forEach(p => p.style.display = 'none');
-          currentHash.value = page;
           const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
           currentPage.style.display = 'block';
           localStorage.setItem('lastPage', page);
+          currentHash.value = page;
+          window.location.hash = page;
         };
 
       // -----------------------------------------------
@@ -284,24 +286,27 @@ const app = createApp({
           prefCredentials.value.splice(index, 1);
         }
 
-
       // -----------------------------------------------
       // Instance scanning and connection management
       // -----------------------------------------------
 
         const connect = async () => {
           isConnecting.value = true;
-          const data = await apiFetch("/api/connect", {
-            method: 'POST',
-            body: JSON.stringify({
-              profile: currentProfile.value,
-              region: currentRegion.value
-            })
-          });
-          currentAccountId.value = data.account_id;
-          await getInstances();
+          try {
+            const data = await apiFetch("/api/connect", {
+              method: 'POST',
+              body: JSON.stringify({
+                profile: currentProfile.value,
+                region: currentRegion.value
+              })
+            });
+            currentAccountId.value = data.account_id;
+            await getInstances();
+            toast('Connected to AWS successfully', 'success');
+          } catch (error) {
+            console.error('Connection error:', error);
+          }
           isConnecting.value = false;
-          toast('Connected to AWS successfully', 'success');
         };
 
         const disconnect = async (connection_id) => {
@@ -386,6 +391,10 @@ const app = createApp({
             );
           }
 
+          if (portForwardingModalProperties.value.hostentry) {
+            await portForwardingAddHost();
+          }
+
           await getActiveConnections();
           portForwardingModal.value.hide();
           portForwardingStarting.value = false;
@@ -430,6 +439,30 @@ const app = createApp({
             username: ''
           };
           portForwardingModal.value.show();
+        };
+
+        const portForwardingAddHost = async () => {
+          const username = portForwardingModalProperties.value.username || '';
+          let domain = ''
+          if (username?.includes('\\')) {
+            const parts = username.split('\\');
+            if (parts.length > 1) {
+              domain = parts[0];
+            }
+          }
+          let hostname = portForwardingModalProperties.value.instanceName;
+          hostname += domain ? `.${domain}` : '';
+
+          const newHost = {
+            ip: "127.0.0.1",
+            hostname: hostname
+          };
+          await apiFetch("/api/config/host", {
+            method: 'POST',
+            body: JSON.stringify(newHost)
+          });
+          await getHosts();
+          toast('Host added successfully', 'success');
         };
 
         const showPortMappingsModal = async (instanceId, name) => {
@@ -561,14 +594,17 @@ const app = createApp({
           addHostModal.value.show();
         };
 
-        const addHost = async (hostname, ip) => {
-          console.log(addHostModalProperties.value);
+        const addHost = async () => {
+          hostsAdding.value = true;
           await apiFetch("/api/config/host", {
             method: 'POST',
             body: JSON.stringify(addHostModalProperties.value)
           });
           await getHosts();
+          addHostModal.value.hide();
+          addHostModalProperties.value = {};
           toast('Host added successfully', 'success');
+          hostsAdding.value = false;
         };
 
         const deleteHost = async (hostname) => {
@@ -692,6 +728,7 @@ const app = createApp({
       // -----------------------------------------------
       // Check GitHub for updates
       // -----------------------------------------------
+
         const checkForUpdates = async () => {
           const data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
           const currentVersion = `v${version.value}`;
@@ -705,7 +742,7 @@ const app = createApp({
           }
           console.log('Latest version:', githubVersion);
           if (versionComparison < 0) {
-            toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
+            toast(`New version available: <b><a href="${githubUrl}" class="text-white" target="_blank">${githubVersion}</a></b>`, 'primary');
           } else if (versionComparison === 0) {
             toast('You are using the latest version', 'success');
           } else if (versionComparison > 0) {
@@ -716,6 +753,7 @@ const app = createApp({
       // -----------------------------------------------
       // API Handler
       // -----------------------------------------------
+
         const apiFetch = async (url, options = {}) => {
           if (!options.method) {
             options.method = 'GET';
@@ -770,13 +808,14 @@ const app = createApp({
 
           // Load data from the server
           await getVersion();
-          checkForUpdates();
-          getSessions();
-          getProfiles();
-          getRegionsAll();
-          getRegionsSelected();
-          getHosts();
+          await getProfiles();
+          await getRegionsAll();
+          await getRegionsSelected();
           await getPreferences();
+          getActiveConnections();
+          getSessions();
+          getHosts();
+          checkForUpdates();
 
           // Restore instances if available and not expired
           const lastInstances = localStorage.getItem('lastInstances');
@@ -821,7 +860,7 @@ const app = createApp({
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
-          hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
+          hosts, addHost, deleteHost, hostsAdding, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
