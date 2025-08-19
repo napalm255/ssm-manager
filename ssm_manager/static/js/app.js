@@ -443,7 +443,7 @@ const app = createApp({
 
         const portForwardingAddHost = async () => {
           const username = portForwardingModalProperties.value.username || '';
-          const domain = ''
+          let domain = ''
           if (username && username.includes('\\')) {
             const parts = username.split('\\');
             if (parts.length > 1) {
