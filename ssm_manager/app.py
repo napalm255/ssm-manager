@@ -324,7 +324,7 @@ def update_config_hosts():
     record = f'{ip}`t{hostname}'
 
     if host_ip_exists(hostname, ip):
-        return logger.failed(f"Host {hostname} with IP {ip} already exists in the hosts file.")
+        return logger.success(f"Host {hostname} with IP {ip} already exists in the hosts file.")
 
     hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
     pscmd = f'(Add-Content -Path "{hosts_file_escaped}" -Value "{record}")'
