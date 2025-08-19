@@ -321,7 +321,7 @@ def update_config_hosts():
 
     hostname = data['hostname']
     ip = data['ip']
-    record = f'{ip}\t{hostname}'
+    record = f'{ip}`t{hostname}'
 
     if host_ip_exists(hostname, ip):
         return logger.failed(f"Host {hostname} with IP {ip} already exists in the hosts file.")
