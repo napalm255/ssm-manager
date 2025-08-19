@@ -239,7 +239,8 @@ class ConnectionScanner():
                     continue
                 if proc.name().lower() not in ('aws', 'aws.exe'):
                     continue
-                logger.debug(f"Found a new process: {proc.info}")
+                if self.get_arg(proc.cmdline(), 'sso') == 'login':
+                    continue
                 instance = Instance(
                     id=self.get_arg(proc.cmdline(), '--target')
                 )
