@@ -128,7 +128,7 @@ const app = createApp({
 
         const switchPage = async (page) => {
           if (!page || page === '#/start') {
-            if (profilesCount === 0) {
+            if (profilesCount.value === 0) {
               page = '#/home';
             } else {
               page = '#/instances';
