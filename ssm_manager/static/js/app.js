@@ -570,6 +570,7 @@ const app = createApp({
             body: JSON.stringify(addHostModalProperties.value)
           });
           await getHosts();
+          addHostModal.value.hide();
           toast('Host added successfully', 'success');
         };
 
