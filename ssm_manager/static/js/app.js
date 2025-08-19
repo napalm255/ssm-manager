@@ -92,7 +92,7 @@ const app = createApp({
         const portMappingsModalDuplicatePort = computed(() => {
           const allPorts = preferences.value.instances?.flatMap(instance => {
             if (instance.name !== portMappingsModalInstance.value?.name) {
-              return instance.ports.map(port => port.local_port);
+              return instance?.ports?.map(port => port.local_port);
             }
             return [];
           });
@@ -128,7 +128,7 @@ const app = createApp({
 
         const switchPage = async (page) => {
           if (!page || page === '#/start') {
-            if (profiles.value.length === 0) {
+            if (profilesCount === 0) {
               page = '#/home';
             } else {
               page = '#/instances';
