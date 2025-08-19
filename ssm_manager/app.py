@@ -492,9 +492,9 @@ def connect():
 
     logger.debug(f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}")
     result = aws_manager.set_profile_and_region(profile.name, profile.region)
-    max_retries = 3
+    max_retries = 2
     retries = 0
-    delay = 2
+    delay = 1
     while not result and retries < max_retries:
         retries += 1
         logger.info(f"Starting SSO login with profile: {profile.name}")

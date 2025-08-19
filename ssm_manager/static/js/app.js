@@ -286,23 +286,26 @@ const app = createApp({
           prefCredentials.value.splice(index, 1);
         }
 
-
       // -----------------------------------------------
       // Instance scanning and connection management
       // -----------------------------------------------
 
         const connect = async () => {
           isConnecting.value = true;
-          const data = await apiFetch("/api/connect", {
-            method: 'POST',
-            body: JSON.stringify({
-              profile: currentProfile.value,
-              region: currentRegion.value
-            })
-          });
-          currentAccountId.value = data.account_id;
-          await getInstances();
-          toast('Connected to AWS successfully', 'success');
+          try {
+            const data = await apiFetch("/api/connect", {
+              method: 'POST',
+              body: JSON.stringify({
+                profile: currentProfile.value,
+                region: currentRegion.value
+              })
+            });
+            currentAccountId.value = data.account_id;
+            await getInstances();
+            toast('Connected to AWS successfully', 'success');
+          } catch (error) {
+            console.error('Connection error:', error);
+          }
           isConnecting.value = false;
         };
 
@@ -439,9 +442,23 @@ const app = createApp({
         };
 
         const portForwardingAddHost = async () => {
+          username = portForwardingModalProperties.value.username || '';
+          if (!username && username.includes('\\')) {
+            parts = username.split('\\');
+            if (parts.length > 1) {
+              domain = parts[0];
+              username = parts[1];
+            } else {
+              domain = '';
+              username = parts[0];
+            }
+          }
+          hostname = portForwardingModalProperties.value.instanceName;
+          hostname += domain ? `.${domain}` : '';
+
           const newHost = {
             ip: "127.0.0.1",
-            hostname: portForwardingModalProperties.value.instanceName
+            hostname: hostname
           };
           await apiFetch("/api/config/host", {
             method: 'POST',
@@ -714,6 +731,7 @@ const app = createApp({
       // -----------------------------------------------
       // Check GitHub for updates
       // -----------------------------------------------
+
         const checkForUpdates = async () => {
           const data = await apiFetch("https://api.github.com/repos/napalm255/ssm-manager/releases/latest");
           const currentVersion = `v${version.value}`;
@@ -738,6 +756,7 @@ const app = createApp({
       // -----------------------------------------------
       // API Handler
       // -----------------------------------------------
+
         const apiFetch = async (url, options = {}) => {
           if (!options.method) {
             options.method = 'GET';
