@@ -596,9 +596,7 @@
                     <span v-html="host[column.field]"></span>
                   </td>
                   <td>
-                    <output v-if="hostsDeleting" class="spinner-border spinner-border-sm" aria-hidden="true"></output>
-                    <span v-if="hostsDeleting" class="visually-hidden">Deleting...</span>
-                    <i v-if="!hostsDeleting" class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteHost(host.hostname)"></i>
+                    <i class="bi bi-trash text-danger" style="cursor: pointer;" @click="deleteHost(host.hostname)"></i>
                   </td>
                 </tr>
               </tbody>
