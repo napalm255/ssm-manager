@@ -8,8 +8,8 @@ const app = createApp({
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
         const currentHash = ref('#/start');
-        const currentProfile = ref("Select Profile");
-        const currentRegion = ref("Select Region");
+        const currentProfile = ref("");
+        const currentRegion = ref("");
         const currentAccountId = ref("");
 
         const sessions = ref([]);
@@ -118,6 +118,7 @@ const app = createApp({
         ]);
 
         const updateHash = async () => {
+          console.log('Hash changed:', window.location.hash);
           currentHash.value = window.location.hash;
           if (!currentHash.value) {
             currentHash.value = '#/start';
@@ -135,10 +136,11 @@ const app = createApp({
           }
           const pages = document.querySelectorAll('.page');
           pages.forEach(p => p.style.display = 'none');
-          currentHash.value = page;
           const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
           currentPage.style.display = 'block';
           localStorage.setItem('lastPage', page);
+          currentHash.value = page;
+          window.location.hash = page;
         };
 
       // -----------------------------------------------
@@ -300,8 +302,8 @@ const app = createApp({
           });
           currentAccountId.value = data.account_id;
           await getInstances();
-          isConnecting.value = false;
           toast('Connected to AWS successfully', 'success');
+          isConnecting.value = false;
         };
 
         const disconnect = async (connection_id) => {
@@ -705,7 +707,7 @@ const app = createApp({
           }
           console.log('Latest version:', githubVersion);
           if (versionComparison < 0) {
-            toast(`New version available: <b><a href="${githubUrl}" target="_blank">${githubVersion}</a></b>`, 'info');
+            toast(`New version available: <b><a href="${githubUrl}" class="text-white" target="_blank">${githubVersion}</a></b>`, 'primary');
           } else if (versionComparison === 0) {
             toast('You are using the latest version', 'success');
           } else if (versionComparison > 0) {
@@ -770,13 +772,14 @@ const app = createApp({
 
           // Load data from the server
           await getVersion();
-          checkForUpdates();
-          getSessions();
-          getProfiles();
-          getRegionsAll();
-          getRegionsSelected();
-          getHosts();
+          await getProfiles();
+          await getRegionsAll();
+          await getRegionsSelected();
           await getPreferences();
+          getActiveConnections();
+          getSessions();
+          getHosts();
+          checkForUpdates();
 
           // Restore instances if available and not expired
           const lastInstances = localStorage.getItem('lastInstances');

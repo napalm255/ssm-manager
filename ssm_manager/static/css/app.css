@@ -144,15 +144,17 @@ main {
 }
 
 .edit-port-mapping {
-  color: var(--color-port-forward);
+  background-color: var(--color-port-forward);
+  color: #FFFFFF;
 }
 
-.edit-port-mapping.bi-pencil-square {
+.edit-port-mapping.button.bi-pencil-square {
   font-size: 1.3rem;
 }
 
 .edit-port-mapping:hover {
-  color: var(--color-port-forward-hover);
+  background-color: var(--color-port-forward-hover);
+  color: #FFFFFF;
   transform: scale(1.10);
   cursor: pointer;
 }

@@ -39,7 +39,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub" @mouseup="hideTooltip($event)">
+            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub" data-bs-original-title="GitHub" @click="hideTooltip($event)">
               <i class="bi bi-github"></i>
             </a>
           </li>
@@ -156,7 +156,7 @@
                 <span class="badge" :class="instancesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
               </div>
             </div>
-            <div class="card-body-flush overflow-y-auto w-100">
+            <div class="card-body-flush overflow-y-auto w-100 position-relative">
               <!-- Instances Table -->
               <div class="text-center text-muted p-4 h-100" v-if="instancesCount == 0">
                 <i class="bi bi-hdd-rack-fill"></i>
@@ -202,7 +202,7 @@
                   </h2>
                   <!-- Instance Details -->
                   <div :id="instance.id" class="accordion-collapse collapse">
-                    <div class="accordion-body m-0 pt-0 pb-2 px-4">
+                    <div class="accordion-body m-0 pt-0 pb-2 px-4 position-relative">
                       <div class="row">
                         <div class="col">
                           <small class="text-success ps-2" v-if="instance.state == 'running'" title="Running"><i class="bi bi-check-circle-fill"></i><span class="ps-1">Running</span></small>
@@ -222,15 +222,19 @@
                       </div>
                       <div class="row border-top">
                         <div class="col-3 text-end fw-bold"><small>Port Mappings</small></div>
-                        <div class="col-8 text-start text-muted">
+                        <div class="col-6 text-start text-muted">
                           <div class="row" v-for="port in portMappings[instance.name]" v-if="instance.name in portMappings">
                             <div class="col-5 text-start"><span v-html="port.local_port"></span></div>
                             <div class="col-1"><i class="bi bi-arrow-right-short"></i></div>
                             <div class="col-5 text-start"><span v-html="port.remote_port"></span></div>
                           </div>
                         </div>
-                        <div class="col-1 text-end">
-                          <i class="bi bi-pencil-square edit-port-mapping" @click="showPortMappingsModal(instance.id, instance.name)"></i>
+                        <div class="col-3 text-end">
+                          <button type="button" class="btn edit-port-mapping my-1"
+                                  style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;"
+                                  @click="showPortMappingsModal(instance.id, instance.name)">
+                            <i class="bi bi-pencil-square edit-port-mapping"></i>
+                          </button>
                         </div>
                       </div>
                       <div class="row border-top" v-for="column in instanceDetailsColumns">
@@ -239,8 +243,22 @@
                           <small v-if="instance.id in instancesDetails" v-html="instancesDetails[instance.id][column.field]" style="cursor: pointer;" @click="copyToClipboard(instancesDetails[instance.id][column.field])"></small>
                         </div>
                       </div>
+                      <!-- Loading Spinner -->
+                      <div v-if="!(instance.id in instancesDetails)" class="d-flex justify-content-center position-absolute top-0 bottom-0 start-0 end-0 bg-light opacity-75">
+                        <div class="spinner-border text-primary" role="status"
+                          style="margin-top: 10vh;">
+                          <span class="visually-hidden">Loading...</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
+              </div>
+              <!-- Loading Spinner -->
+              <div v-if="isConnecting" class="d-flex justify-content-center position-absolute top-0 bottom-0 start-0 end-0 bg-light opacity-75">
+                <div class="spinner-border text-primary" role="status"
+                  style="margin-top: 10vh; width: 5rem; height: 5rem;">
+                  <span class="visually-hidden">Loading...</span>
                 </div>
               </div>
             </div>
