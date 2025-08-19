@@ -574,10 +574,11 @@ const app = createApp({
           hostsAdding.value = true;
           await apiFetch("/api/config/host", {
             method: 'POST',
-            body: JSON.stringify(addHostModalProperties.value)
+            body: JSON.stringify({"hostname": hostname, "ip": ip })
           });
           await getHosts();
           addHostModal.value.hide();
+          addHostModalProperties.value = {};
           toast('Host added successfully', 'success');
           hostsAdding.value = false;
         };
