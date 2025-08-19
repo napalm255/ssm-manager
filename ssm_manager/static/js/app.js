@@ -442,7 +442,8 @@ const app = createApp({
         };
 
         const portForwardingAddHost = async () => {
-          username = portForwardingModalProperties.value.username || '';
+          const username = portForwardingModalProperties.value.username || '';
+          const domain = ''
           if (!username && username.includes('\\')) {
             parts = username.split('\\');
             if (parts.length > 1) {
@@ -453,7 +454,7 @@ const app = createApp({
               username = parts[0];
             }
           }
-          hostname = portForwardingModalProperties.value.instanceName;
+          const hostname = portForwardingModalProperties.value.instanceName;
           hostname += domain ? `.${domain}` : '';
 
           const newHost = {
