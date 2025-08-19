@@ -47,6 +47,7 @@ const app = createApp({
         });
 
         const hosts = ref([]);
+        const hostsAdding = ref(false);
         const hostsCount = computed(() => {
           return hosts.value.length;
         });
@@ -564,7 +565,7 @@ const app = createApp({
         };
 
         const addHost = async (hostname, ip) => {
-          console.log(addHostModalProperties.value);
+          hostsAdding.value = true;
           await apiFetch("/api/config/host", {
             method: 'POST',
             body: JSON.stringify(addHostModalProperties.value)
@@ -572,6 +573,7 @@ const app = createApp({
           await getHosts();
           addHostModal.value.hide();
           toast('Host added successfully', 'success');
+          hostsAdding.value = false;
         };
 
         const deleteHost = async (hostname) => {
@@ -825,7 +827,7 @@ const app = createApp({
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
-          hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
+          hosts, addHost, deleteHost, hostsAdding, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties, portForwardingStarting,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
