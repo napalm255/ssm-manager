@@ -119,7 +119,6 @@ const app = createApp({
         ]);
 
         const updateHash = async () => {
-          console.log('Hash changed:', window.location.hash);
           currentHash.value = window.location.hash;
           if (!currentHash.value) {
             currentHash.value = '#/start';
