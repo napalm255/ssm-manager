@@ -441,6 +441,19 @@ const app = createApp({
           portForwardingModal.value.show();
         };
 
+        const portForwardingAddHost = async () => {
+          const newHost = {
+            ip: "127.0.0.1",
+            hostname: portForwardingModalProperties.value.instanceName
+          };
+          await apiFetch("/api/config/host", {
+            method: 'POST',
+            body: JSON.stringify(newHost)
+          });
+          await getHosts();
+          toast('Host added successfully', 'success');
+        };
+
         const showPortMappingsModal = async (instanceId, name) => {
           const instanceName = name || instanceId;
           portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
@@ -570,11 +583,11 @@ const app = createApp({
           addHostModal.value.show();
         };
 
-        const addHost = async (hostname, ip) => {
+        const addHost = async () => {
           hostsAdding.value = true;
           await apiFetch("/api/config/host", {
             method: 'POST',
-            body: JSON.stringify({"hostname": hostname, "ip": ip })
+            body: JSON.stringify(addHostModalProperties.value)
           });
           await getHosts();
           addHostModal.value.hide();
