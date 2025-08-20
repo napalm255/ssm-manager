@@ -671,7 +671,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="startPortForwarding" :disabled="isPortForwardingStarting">
               <span v-if="isPortForwardingStarting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <output v-if="isPortForwardingStarting" class="visually-hidden">Connecting...</output>
+              <output v-if="isPortForwardingStarting">&nbsp;Connecting...</output>
               <span v-if="!isPortForwardingStarting">Connect</span>
             </button>
           </div>
