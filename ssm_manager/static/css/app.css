@@ -94,11 +94,19 @@ main {
 
 .start-shell {
   background-color: var(--color-shell);
+  color: #FFFFFF;
+}
+
+.start-shell:disabled {
+  border-color: var(--color-shell);
+  background-color: var(--color-shell);
+  color: #FFFFFF;
 }
 
 .start-shell:hover {
   background-color: var(--color-shell-hover);
   transform: scale(1.10);
+  color: #FFFFFF;
 }
 
 .connection-shell {
@@ -112,6 +120,12 @@ main {
 }
 
 .start-rdp {
+  background-color: var(--color-rdp);
+  color: #FFFFFF;
+}
+
+.start-rdp:disabled {
+  border-color: var(--color-rdp);
   background-color: var(--color-rdp);
   color: #FFFFFF;
 }
