@@ -133,7 +133,7 @@
               <div class="col-auto">
                 <button id="connectBtn" class="btn btn-sm btn-success" @click="connect()" :disabled="isConnecting">
                   <span v-if="isConnecting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                  <span v-if="isConnecting" class="visually-hidden" role="status">Connecting...</span>
+                  <output v-if="isConnecting" class="visually-hidden">Connecting...</output>
                   <i v-if="!isConnecting" class="bi bi-search"></i>
                 </button>
               </div>
@@ -245,9 +245,9 @@
                       </div>
                       <!-- Loading Spinner -->
                       <div v-if="!(instance.id in instancesDetails)" class="d-flex justify-content-center position-absolute top-0 bottom-0 start-0 end-0 bg-light opacity-75">
-                        <div class="spinner-border text-primary loading-instance-details" role="status">
+                        <output class="spinner-border text-primary loading-instance-details">
                           <span class="visually-hidden">Loading...</span>
-                        </div>
+                        </output>
                       </div>
                     </div>
                   </div>
@@ -255,9 +255,9 @@
               </div>
               <!-- Loading Spinner -->
               <div v-if="isConnecting" class="d-flex justify-content-center position-absolute top-0 bottom-0 start-0 end-0 bg-light opacity-75">
-                <div class="spinner-border text-primary loading-instances" role="status">
+                <output class="spinner-border text-primary loading-instances">
                   <span class="visually-hidden">Loading...</span>
-                </div>
+                </output>
               </div>
             </div>
           </div>
@@ -332,7 +332,7 @@
             <!-- Buttons -->
             <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()" :disabled="isPreferencesSaving">
               <span v-if="isPreferencesSaving" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="isPreferencesSaving" class="visually-hidden" role="status">Saving...</span>
+              <output v-if="isPreferencesSaving" class="visually-hidden">Saving...</output>
               <span v-if="!isPreferencesSaving"><i class="bi bi-floppy-fill"></i></span>
               &nbsp;&nbsp;Save
             </button>
@@ -519,7 +519,7 @@
                   <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteSession(session.name)" :disabled="isSessionDeleting.includes(session.name)">
                       <span v-if="isSessionDeleting.includes(session.name)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                      <span v-if="isSessionDeleting.includes(session.name)" class="visually-hidden" role="status">Deleting...</span>
+                      <output v-if="isSessionDeleting.includes(session.name)" class="visually-hidden">Deleting...</output>
                       <i v-if="!isSessionDeleting.includes(session.name)" class="bi bi-trash"></i>
                     </button>
                   </td>
@@ -559,7 +559,7 @@
                   <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteProfile(profile.name)" :disabled="isProfileDeleting.includes(profile.name)">
                       <span v-if="isProfileDeleting.includes(profile.name)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                      <span v-if="isProfileDeleting.includes(profile.name)" class="visually-hidden" role="status">Deleting...</span>
+                      <output v-if="isProfileDeleting.includes(profile.name)" class="visually-hidden">Deleting...</output>
                       <i v-if="!isProfileDeleting.includes(profile.name)" class="bi bi-trash"></i>
                     </button>
                   </td>
@@ -615,7 +615,7 @@
                   <td class="text-end" v-if="isWindows">
                     <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteHost(host.hostname)" :disabled="isHostsDeleting.includes(host.hostname)">
                       <span v-if="isHostsDeleting.includes(host.hostname)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                      <span v-if="isHostsDeleting.includes(host.hostname)" class="visually-hidden" role="status">Deleting...</span>
+                      <output v-if="isHostsDeleting.includes(host.hostname)" class="visually-hidden">Deleting...</output>
                       <i v-if="!isHostsDeleting.includes(host.hostname)" class="bi bi-trash"></i>
                     </button>
                   </td>
@@ -671,7 +671,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="startPortForwarding" :disabled="isPortForwardingStarting">
               <span v-if="isPortForwardingStarting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="isPortForwardingStarting" class="visually-hidden" role="status">Connecting...</span>
+              <output v-if="isPortForwardingStarting" class="visually-hidden">Connecting...</output>
               <span v-if="!isPortForwardingStarting">Connect</span>
             </button>
           </div>
@@ -760,7 +760,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="addSession" :disabled="isSessionAdding">
               <span v-if="isSessionAdding" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="isSessionAdding" class="visually-hidden" role="status">Adding...</span>
+              <output v-if="isSessionAdding" class="visually-hidden">Adding...</output>
               <span v-if="!isSessionAdding">Add</span>
             </button>
           </div>
@@ -789,7 +789,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="addProfile" :disabled="isProfileAdding">
               <span v-if="isProfileAdding" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="isProfileAdding" class="visually-hidden" role="status">Adding...</span>
+              <output v-if="isProfileAdding" class="visually-hidden">Adding...</output>
               <span v-if="!isProfileAdding">Add</span>
             </button>
           </div>
@@ -818,7 +818,7 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="addHost(addHostModalProperties.hostname, addHostModalProperties.ip)" :disabled="isHostsAdding">
               <span v-if="isHostsAdding" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="isHostsAdding" class="visually-hidden" role="status">Adding...</span>
+              <output v-if="isHostsAdding" class="visually-hidden">Adding...</output>
               <span v-if="!isHostsAdding">Add</span>
             </button>
           </div>
