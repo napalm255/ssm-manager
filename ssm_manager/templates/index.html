@@ -189,11 +189,15 @@
                       </div>
                     </button>
                     <div class="d-flex me-1">
-                      <button class="btn btn-sm start-shell me-2" title="Shell" @click="startShell(instance.id, instance.name)">
-                        <i class="bi bi-terminal"></i>
+                      <button class="btn btn-sm start-shell me-2" title="Shell" @click="startShell(instance.id, instance.name)" :disabled="isShellStarting.includes(instance.id)">
+                        <span v-if="isShellStarting.includes(instance.id)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        <output v-if="isShellStarting.includes(instance.id)" class="visually-hidden">Starting Shell...</output>
+                        <i v-if="!isShellStarting.includes(instance.id)" class="bi bi-terminal"></i>
                       </button>
-                      <button class="btn btn-sm start-rdp me-2" title="RDP" @click="startRdp(instance.id, instance.name)">
-                        <i class="bi bi-display"></i>
+                      <button class="btn btn-sm start-rdp me-2" title="RDP" @click="startRdp(instance.id, instance.name)" :disabled="isRdpStarting.includes(instance.id)">
+                        <span v-if="isRdpStarting.includes(instance.id)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        <output v-if="isRdpStarting.includes(instance.id)" class="visually-hidden">Starting RDP...</output>
+                        <i v-if="!isRdpStarting.includes(instance.id)" class="bi bi-display"></i>
                       </button>
                       <button class="btn btn-sm start-port-forward text-white me-2" title="Port Forwarding" @click="showPortForwardingModal(instance.id, instance.name)">
                         <i class="bi bi-arrow-left-right"></i>
@@ -309,9 +313,7 @@
                       </div>
                     </div>
                   </div>
-                  <button class="btn btn-sm btn-outline-danger" @click="disconnect(connection.connection_id)"
-                          style="--bs-btn-padding-y: .05rem; --bs-btn-padding-x: .15rem; --bs-btn-font-size: .20rem;"
-                    >
+                  <button class="btn btn-sm btn-outline-danger" @click="disconnect(connection.connection_id)">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 </li>

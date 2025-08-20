@@ -116,6 +116,8 @@ const app = createApp({
         const isSessionDeleting = ref([]);
         const isHostsAdding = ref(false);
         const isHostsDeleting = ref([]);
+        const isShellStarting = ref([]);
+        const isRdpStarting = ref([]);
         const isPortForwardingStarting = ref(false);
 
       // -----------------------------------------------
@@ -352,6 +354,7 @@ const app = createApp({
       // -----------------------------------------------
 
         const startShell = async (instanceId, name) => {
+          isShellStarting.value.push(instanceId);
           const instanceName = name || instanceId;
           await apiFetch(`/api/shell/${instanceId}`, {
             method: 'POST',
@@ -363,9 +366,11 @@ const app = createApp({
           });
           await getActiveConnections();
           toast('Successfully started shell', 'success');
+          removeByValue(isShellStarting.value, instanceId);
         };
 
         const startRdp = async (instanceId, name) => {
+          isRdpStarting.value.push(instanceId);
           const instanceName = name || instanceId;
           await apiFetch(`/api/rdp/${instanceId}`, {
             method: 'POST',
@@ -377,6 +382,7 @@ const app = createApp({
           });
           await getActiveConnections();
           toast('Successfully started RDP', 'success');
+          removeByValue(isRdpStarting.value, instanceId);
         };
 
         const startPortForwarding = async () => {
@@ -889,7 +895,8 @@ const app = createApp({
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
-          isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting, isPortForwardingStarting,
+          isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
+          isShellStarting, isRdpStarting, isPortForwardingStarting,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
           hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
