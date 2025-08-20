@@ -886,7 +886,7 @@ const app = createApp({
           isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting, isPortForwardingStarting,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
-          hosts, addHost, deleteHost, isHostsAdding, isHostsDeleting, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
+          hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties,
           showPortMappingsModal, portMappingsModalInstance, portMappingsModalProperties, savePortMappings, addPortMapping, removePortMapping, portMappingsModalDuplicatePort,
