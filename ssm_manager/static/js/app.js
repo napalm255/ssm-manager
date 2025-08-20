@@ -684,7 +684,7 @@ const app = createApp({
           toastInstance.show();
         };
 
-        const removeByValue = async (array, value) => {
+        const removeByValue = (array, value) => {
           const index = array.indexOf(value);
           if (index > -1) {
             array.splice(index, 1);
