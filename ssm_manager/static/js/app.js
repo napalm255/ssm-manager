@@ -102,6 +102,12 @@ const app = createApp({
           return false;
         });
 
+        const isWindows = computed(() => {
+          return operating_system.value === 'Windows';
+        });
+        const isLinux = computed(() => {
+          return operating_system.value === 'Linux';
+        });
         const isPreferencesSaving = ref(false);
         const isConnecting = ref(false);
         const isProfileAdding = ref(false);
@@ -879,11 +885,11 @@ const app = createApp({
         });
 
         return {
-          title, version, operating_system, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+          title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
-          isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting, isPortForwardingStarting,
+          isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting, isPortForwardingStarting,
           sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
           profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
           hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,

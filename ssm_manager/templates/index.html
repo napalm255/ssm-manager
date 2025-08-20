@@ -86,7 +86,7 @@
                 </div>
               </div>
             </div>
-            <div class="row align-items-md-stretch text-start" v-if="operating_system == 'Windows'">
+            <div class="row align-items-md-stretch text-start" v-if="isWindows">
               <div class="col-md-12 pb-4">
                 <div class="card h-100">
                   <h5 class="card-header">Install and Update on Windows</h5>
@@ -435,11 +435,11 @@
             </div>
             <div class="card-body">
               <p class="small text-muted">These credentials will be stored in a key ring on your system.</p>
-              <p class="small text-muted" v-if="operating_system == 'Windows'">
+              <p class="small text-muted" v-if="isWindows">
                 On Windows, these will be stored as generic credentials in the Windows Credential Manager.
                 They can be used to dynamically create Windows Credentials for tools such as SQL Server Management Studio (SSMS) or other applications that support Windows Authentication.
               </p>
-              <p class="small text-muted" v-if="operating_system == 'Linux'">
+              <p class="small text-muted" v-if="isLinux">
                 On Linux, there is currently no supported use for these credentials, but they can be used to store credentials for other applications that support key rings.
               </p>
               <p>
@@ -592,7 +592,7 @@
             </div>
             <span>
               <span class="badge" :class="hostsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="hostsCount + ' hosts'"></span>
-              <button v-if="operating_system == 'Windows'" type="button" class="btn btn-outline-success btn-sm ms-2" @click="showAddHostModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
+              <button v-if="isWindows" type="button" class="btn btn-outline-success btn-sm ms-2" @click="showAddHostModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -604,7 +604,7 @@
               <thead class="small text-uppercase">
                 <tr>
                   <th v-for="column in hostsTableColumns" v-html="column.title"></th>
-                  <th v-if="operating_system == 'Windows'"></th>
+                  <th v-if="isWindows"></th>
                 </tr>
               </thead>
               <tbody>
@@ -612,7 +612,7 @@
                   <td v-for="column in hostsTableColumns" :key="column.field">
                     <span v-html="host[column.field]"></span>
                   </td>
-                  <td class="text-end" v-if="operating_system == 'Windows'">
+                  <td class="text-end" v-if="isWindows">
                     <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteHost(host.hostname)">
                       <span v-if="isHostsDeleting.includes(host.hostname)" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                       <span v-if="isHostsDeleting.includes(host.hostname)" class="visually-hidden" role="status">Deleting...</span>
@@ -656,13 +656,13 @@
               <span class="input-group-text" id="portForwardingPortLabel">Remote Port</span>
               <input id="portForwardingPort" type="text" class="form-control" placeholder="80" aria-label="Port" aria-describedby="portForwardingPortLabel" max="65535" v-model="portForwardingModalProperties.remotePort">
             </div>
-            <div class="input-group mb-2" v-if="operating_system == 'Windows'">
+            <div class="input-group mb-2" v-if="isWindows">
               <label class="input-group-text" for="portForwardingUsername">Username</label>
               <select class="form-select" id="portForwardingUsername" v-model="portForwardingModalProperties.username">
                 <option v-for="cred in prefCredentials" :value="cred.username" v-html="cred.username"></option>
               </select>
             </div>
-            <div class="form-check form-switch" v-if="operating_system == 'Windows'">
+            <div class="form-check form-switch" v-if="isWindows">
               <input class="form-check-input" type="checkbox" role="switch" aria-checked="false" id="createHostEntry" v-model="portForwardingModalProperties.hostentry">
               <label class="form-check-label" for="createHostEntry">Create host entry</label>
             </div>
@@ -670,9 +670,9 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" @click="startPortForwarding">
-              <span v-if="portForwardingStarting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-              <span v-if="portForwardingStarting" class="visually-hidden" role="status">Connecting...</span>
-              <span v-if="!portForwardingStarting">Connect</span>
+              <span v-if="isPortForwardingStarting" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span v-if="isPortForwardingStarting" class="visually-hidden" role="status">Connecting...</span>
+              <span v-if="!isPortForwardingStarting">Connect</span>
             </button>
           </div>
         </div>
