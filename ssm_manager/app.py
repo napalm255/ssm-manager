@@ -14,7 +14,6 @@ import keyring
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
-from werkzeug.exceptions import BadRequest
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
@@ -171,7 +170,7 @@ def add_config_session():
     # Validate required fields
     for field in ['name', 'sso_start_url', 'sso_region', 'sso_registration_scopes']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            return logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_session(
@@ -200,7 +199,7 @@ def delete_config_session(session_name):
 
     session_exists = any(data['name'] == session_name for data in config.get_sessions())
     if not session_exists:
-        raise BadRequest(f"Session '{session_name}' does not exist.")
+        return logger.failed(f"Session '{session_name}' does not exist.", 404)
 
     config.delete_session(
         name = session_name
@@ -225,7 +224,7 @@ def add_config_profile():
     # Validate required fields
     for field in ['name', 'region', 'sso_account_id', 'sso_role_name', 'sso_session', 'output']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_profile(
@@ -257,7 +256,7 @@ def delete_config_profile(profile_name):
 
     profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
     if not profile_exists:
-        raise BadRequest(f"Profile '{profile_name}' does not exist.")
+        return logger.failed(f"Profile '{profile_name}' does not exist.", 404)
 
     config.delete_profile(
         profile_name
@@ -281,7 +280,7 @@ def get_config_hosts():
         with open(hosts_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
     except FileNotFoundError:
-        return logger.failed("Hosts file not found", 404)
+        return logger.failed(f"Hosts file not found: {hosts_file}", 404)
 
     for line in lines:
         if line.strip() and line.startswith('#'):
@@ -303,7 +302,7 @@ def update_config_hosts():
     Returns: JSON response with status
     """
     if system != 'Windows':
-        return logger.failed(f"This feature is not supported on {system}.")
+        return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_ip_exists(hostname, ip):
         """Check if a hostname with the given IP exists in the hosts file."""
@@ -317,7 +316,7 @@ def update_config_hosts():
     # Validate required fields
     for field in ['hostname', 'ip']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            return logger.failed(f"Missing required field: {field}", 400)
 
     hostname = data['hostname']
     ip = data['ip']
@@ -356,7 +355,7 @@ def delete_config_host(hostname):
     Returns: JSON response with status
     """
     if system != 'Windows':
-        return logger.failed(f"This feature is not supported on {system}.")
+        return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_exists(hostname):
         """Check if a hostname exists in the hosts file."""
@@ -400,7 +399,7 @@ def add_windows_credentials():
     """
     try:
         if system != 'Windows':
-            raise AssertionError(f"Windows credentials are not supported on {system}.  Skipping Windows credential creation.")
+            logger.failed(f"Windows credentials are not supported on {system}.")
 
         data = request.json
 
@@ -431,14 +430,11 @@ def add_windows_credentials():
         )
         run_cmd(command, skip_pid_wait=True)
 
-        logger.info(f"Windows Credentials added successfully for user: {username}")
-        return jsonify({'status': 'success'})
+        return logger.success(f"Windows Credentials added successfully for user: {username}")
     except AssertionError as e:
-        logger.error(f"Error: {str(e)}")
-        return jsonify({'message': str(e)}), 400
+        return logger.failed(f"Error: {str(e)}", 400)
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to add credentials: {str(e)}", exc_info=True)
-        return jsonify({'message': 'Failed to add credentials'}), 500
+        return logger.failed(f"Failed to add credentials: {str(e)}", 500)
 
 
 @app.route('/api/config/credential', methods=['DELETE'])
@@ -462,14 +458,11 @@ def delete_windows_credentials():
         )
         run_cmd(command, skip_pid_wait=True)
 
-        logger.info(f"Windows Credentials deleted successfully for target: {targetname}")
-        return jsonify({'status': 'success'})
+        return logger.success(f"Windows Credentials deleted successfully for target: {targetname}")
     except AssertionError as e:
-        logger.error(f"Error: {str(e)}")
-        return jsonify({'message': str(e)}), 400
+        return logger.failed(f"Error: {str(e)}", 400)
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Failed to delete credentials: {str(e)}", exc_info=True)
-        return jsonify({'message': 'Failed to delete credentials'}), 500
+        return logger.failed(f"Failed to delete credentials: {str(e)}", 500)
 
 
 @app.route('/api/connect', methods=['POST'])
@@ -483,7 +476,7 @@ def connect():
     # Validate required fields
     for field in ['profile', 'region']:
         if field not in data or not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            logger.failed(f"Missing required field: {field}", 400)
 
     profile = AWSProfile(
         name=data.get('profile'),
@@ -578,9 +571,8 @@ def start_shell(instance_id):
 
         logger.debug(f"Shell session started: {conn_state}")
         return jsonify(conn_state.dict())
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error starting Shell: {str(e)}")
-        return jsonify({'message': f'Error starting Shell connection: {instance_id}'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error starting Shell connection: {instance_id}", 500)
 
 
 @app.route('/api/rdp/<instance_id>', methods=['POST'])
@@ -618,8 +610,7 @@ def start_rdp(instance_id):
         ).local_port
 
         if local_port is None:
-            logger.error("Could not find available port for RDP connection")
-            return jsonify({'message': 'No available ports for RDP connection'}), 503
+            return logger.failed("No available ports for RDP connection", 503)
 
         command = SSMCommand(
             instance=instance,
@@ -654,9 +645,8 @@ def start_rdp(instance_id):
 
         logger.debug(f"RDP session started: {conn_state}")
         return jsonify(conn_state.dict())
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error starting RDP: {str(e)}")
-        return jsonify({'message': 'Error starting RDP connection: {instance_id}'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error starting RDP connection: {instance_id}", 500)
 
 
 @app.route('/api/custom-port/<instance_id>', methods=['POST'])
@@ -698,8 +688,7 @@ def start_custom_port(instance_id):
         ).local_port
 
         if local_port is None:
-            logger.error("Could not find available port for port forwarding")
-            return jsonify({'message': 'No available ports'}), 503
+            return logger.failed("No available ports for port forwarding")
 
         document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
         command = SSMCommand(
@@ -735,9 +724,8 @@ def start_custom_port(instance_id):
 
         logger.debug(f"Port forwarding session started: {conn_state}")
         return jsonify(conn_state.dict())
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error starting port forwarding: {str(e)}")
-        return jsonify({'message': f'Error starting port forwarding: {instance_id}'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed("Error starting port forwarding: {instance_id}", 500)
 
 
 @app.route('/api/instance-details/<instance_id>')
@@ -753,14 +741,12 @@ def get_instance_details(instance_id):
 
         details = aws_manager.get_instance_details(instance.id)
         if details is None:
-            logger.warning(f"Instance details not found: {instance.id}")
-            return jsonify({'message': 'Instance details not found'}), 404
+            return logger.failed(f"Instance details not found: {instance.id}")
 
         logger.debug(f"Instance details: {details}")
         return jsonify(details)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error getting instance details: {str(e)}")
-        return jsonify({'message': f'Error getting instance details: {instance_id}'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error getting instance details: {instance_id}", 500)
 
 
 @app.route('/api/preferences')
@@ -781,9 +767,8 @@ def update_preferences():
     try:
         assert preferences.update_preferences(request.json)
         logger.info("Preferences updated successfully")
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error updating preferences: {str(e)}")
-        return jsonify({'message': 'Error updating preferences'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed("Error updating preferences", 500)
     return jsonify({'status': 'success'})
 
 
@@ -797,11 +782,9 @@ def update_instance_preferences(instance_name):
     """
     try:
         assert preferences.update_instance_preferences(instance_name, request.json)
-        logger.info(f"Preferences updated for instance: {instance_name}")
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error updating instance preferences: {str(e)}")
-        return jsonify({'message': f'Error updating preferences for instance: {instance_name}'}), 500
-    return jsonify({'status': 'success'})
+        return logger.success(f"Preferences updated for instance: {instance_name}")
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error updating preferences for instance: {instance_name}", 500)
 
 @app.route('/api/refresh')
 def refresh_data():
@@ -816,9 +799,8 @@ def refresh_data():
             'status': 'success',
             'instances': instances
         })
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error refreshing data: {str(e)}")
-        return jsonify({'message': 'Error refreshing data'}), 500
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed("Error refreshing data", 500)
 
 
 @app.route('/api/active-connections')
@@ -836,8 +818,7 @@ def get_active_connections():
 
         active_connections = cache.get('active_connections')
         if not active_connections:
-            logger.debug("No active connections found")
-            return jsonify([])
+            raise AssertionError("No active connections found")
 
         logger.debug(f"Active connections: {len(active_connections)}")
         for conn in active_connections:
@@ -866,8 +847,7 @@ def terminate_connection(connection_id):
                 break
 
         if not connection:
-            logger.warning("Unable to terminate. Connection not found.")
-            return jsonify({"error": 'Connection not found'}), 404
+            return logger.failed("Connection not found", 404)
 
         try:
             process = psutil.Process(connection.pid)
@@ -884,10 +864,9 @@ def terminate_connection(connection_id):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
 
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error terminating connection: {str(e)}")
-        return jsonify({'message': f'Error terminating connection: {connection_id}'}), 500
+        return logger.success(f"Connection terminated: {connection_id}")
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error terminating connection: {connection_id}", 500)
 
 
 @app.route('/api/rdp/<local_port>')
@@ -902,10 +881,9 @@ def open_rdp_client(local_port):
     try:
         command = RDPCommand(local_port=local_port, system=system)
         subprocess.Popen(command.cmd)
-        return jsonify({'status': 'success'})
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error opening rdp client: {str(e)}")
-        return jsonify({'message': f'Error opening rdp client: {local_port}'}), 500
+        return logger.success(f"RDP client opened on port {local_port}")
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed(f"Error opening RDP client: {local_port}", 500)
 
 
 @app.route('/')
@@ -924,17 +902,6 @@ def favicon():
     Returns: Favicon image
     """
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-
-@app.errorhandler(BadRequest)
-def handle_bad_request(error):
-    """
-    Handle BadRequest errors
-    Args:
-        error: The error object
-    Returns: JSON response with error message
-    """
-    return jsonify({'status': 'error', 'message': error.description}), 400
 
 
 class ServerThread(threading.Thread):

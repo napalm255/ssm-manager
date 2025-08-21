@@ -18,6 +18,9 @@ const app = createApp({
         });
         const addSessionModal = ref(null);
         const addSessionModalProperties = ref({});
+        const addSessionModalValid = computed(() => {
+           return !addSessionModalProperties.value?.name?.includes(' ');
+        });
 
         const profiles = ref([]);
         const profilesCount = computed(() => {
@@ -25,6 +28,9 @@ const app = createApp({
         });
         const addProfileModal = ref(null);
         const addProfileModalProperties = ref({});
+        const addProfileModalValid = computed(() => {
+          return !addProfileModalProperties.value?.name?.includes(' ');
+        });
 
         const regionsAll = ref([]);
         const regionsSelected = ref([]);
@@ -110,10 +116,10 @@ const app = createApp({
         });
         const isPreferencesSaving = ref(false);
         const isConnecting = ref(false);
-        const isProfileAdding = ref(false);
-        const isProfileDeleting = ref([]);
         const isSessionAdding = ref(false);
         const isSessionDeleting = ref([]);
+        const isProfileAdding = ref(false);
+        const isProfileDeleting = ref([]);
         const isHostsAdding = ref(false);
         const isHostsDeleting = ref([]);
         const isShellStarting = ref([]);
@@ -265,13 +271,17 @@ const app = createApp({
             credentials_to_delete: prefCredentialsToDelete.value,
           };
 
-          await apiFetch("/api/preferences", {
-            method: 'POST',
-            body: JSON.stringify(newPreferences)
-          })
-          await getPreferences();
-          toast('Preferences saved successfully', 'success');
-          isPreferencesSaving.value = false;
+          try {
+            await apiFetch("/api/preferences", {
+              method: 'POST',
+              body: JSON.stringify(newPreferences)
+            })
+            toast('Preferences saved successfully', 'success');
+          } finally {
+            await getPreferences();
+            getRegionsSelected();
+            isPreferencesSaving.value = false;
+          }
         };
 
         const validatePortRange = (start, end) => {
@@ -319,10 +329,9 @@ const app = createApp({
             currentAccountId.value = data.account_id;
             await getInstances();
             toast('Connected to AWS successfully', 'success');
-          } catch (error) {
-            console.error('Connection error:', error);
+          } finally {
+            isConnecting.value = false;
           }
-          isConnecting.value = false;
         };
 
         const disconnect = async (connection_id) => {
@@ -339,7 +348,7 @@ const app = createApp({
 
         const getInstances = async () => {
           instances.value = await apiFetch("/api/instances");
-          instancesTimestamp.value = Date.now() + 5 * 60 * 1000; // Set timestamp to 5 minutes in the future
+          instancesTimestamp.value = Date.now() + 10 * 60 * 1000; // Set timestamp to 10 minutes in the future
           instancesDetails.value[instances.value.id] = {};
           toast(`Successfully discovered ${instancesCount.value} instances`, 'success');
         };
@@ -355,34 +364,38 @@ const app = createApp({
 
         const startShell = async (instanceId, name) => {
           isShellStarting.value.push(instanceId);
-          const instanceName = name || instanceId;
-          await apiFetch(`/api/shell/${instanceId}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              profile: currentProfile.value,
-              region: currentRegion.value,
-              name: instanceName,
-            })
-          });
-          await getActiveConnections();
-          toast('Successfully started shell', 'success');
-          removeByValue(isShellStarting.value, instanceId);
+          try {
+            await apiFetch(`/api/shell/${instanceId}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                profile: currentProfile.value,
+                region: currentRegion.value,
+                name: name || instanceId
+              })
+            });
+            toast('Successfully started shell', 'success');
+          } finally {
+            await getActiveConnections();
+            removeByValue(isShellStarting.value, instanceId);
+          }
         };
 
         const startRdp = async (instanceId, name) => {
           isRdpStarting.value.push(instanceId);
-          const instanceName = name || instanceId;
-          await apiFetch(`/api/rdp/${instanceId}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              profile: currentProfile.value,
-              region: currentRegion.value,
-              name: instanceName,
-            })
-          });
-          await getActiveConnections();
-          toast('Successfully started RDP', 'success');
-          removeByValue(isRdpStarting.value, instanceId);
+          try {
+            await apiFetch(`/api/rdp/${instanceId}`, {
+              method: 'POST',
+              body: JSON.stringify({
+                profile: currentProfile.value,
+                region: currentRegion.value,
+                name: name || instanceId
+              })
+            });
+            toast('Successfully started RDP', 'success');
+          } finally {
+            await getActiveConnections();
+            removeByValue(isRdpStarting.value, instanceId);
+          }
         };
 
         const startPortForwarding = async () => {
@@ -548,24 +561,30 @@ const app = createApp({
 
         const addSession = async () => {
           isSessionAdding.value = true;
-          await apiFetch("/api/config/session", {
-            method: 'POST',
-            body: JSON.stringify(addSessionModalProperties.value)
-          })
-          await getSessions();
-          addSessionModal.value.hide();
-          toast('Session added successfully', 'success');
-          isSessionAdding.value = false;
+          try {
+            await apiFetch("/api/config/session", {
+              method: 'POST',
+              body: JSON.stringify(addSessionModalProperties.value)
+            })
+            addSessionModal.value.hide();
+            toast('Session added successfully', 'success');
+          } finally {
+            await getSessions();
+            isSessionAdding.value = false;
+          }
         };
 
         const deleteSession = async (sessionName) => {
           isSessionDeleting.value.push(sessionName);
-          await apiFetch(`/api/config/session/${sessionName}`, {
-            method: 'DELETE'
-          })
-          await getSessions();
-          toast('Session deleted successfully', 'success');
-          removeByValue(isSessionDeleting.value, sessionName);
+          try {
+            await apiFetch(`/api/config/session/${sessionName}`, {
+              method: 'DELETE'
+            })
+            toast('Session deleted successfully', 'success');
+          } finally {
+            await getSessions();
+            removeByValue(isSessionDeleting.value, sessionName);
+          }
         };
 
         const showAddProfileModal = async (instanceId, name) => {
@@ -588,24 +607,30 @@ const app = createApp({
 
         const addProfile = async () => {
           isProfileAdding.value = true;
-          await apiFetch("/api/config/profile", {
-            method: 'POST',
-            body: JSON.stringify(addProfileModalProperties.value)
-          })
-          await getProfiles();
-          addProfileModal.value.hide();
-          toast('Profile added successfully', 'success');
-          isProfileAdding.value = false;
+          try {
+            await apiFetch("/api/config/profile", {
+              method: 'POST',
+              body: JSON.stringify(addProfileModalProperties.value)
+            })
+            addProfileModal.value.hide();
+            toast('Profile added successfully', 'success');
+          } finally {
+            await getProfiles();
+            isProfileAdding.value = false;
+          }
         };
 
         const deleteProfile = async (profileName) => {
           isProfileDeleting.value.push(profileName);
-          await apiFetch(`/api/config/profile/${profileName}`, {
-            method: 'DELETE'
-          })
-          await getProfiles();
-          toast('Profile deleted successfully', 'success');
-          removeByValue(isProfileDeleting.value, profileName);
+          try {
+            await apiFetch(`/api/config/profile/${profileName}`, {
+              method: 'DELETE'
+            })
+            toast('Profile deleted successfully', 'success');
+          } finally {
+            await getProfiles();
+            removeByValue(isProfileDeleting.value, profileName);
+          }
         };
 
         const showAddHostModal = async () => {
@@ -624,25 +649,30 @@ const app = createApp({
 
         const addHost = async () => {
           isHostsAdding.value = true;
-          await apiFetch("/api/config/host", {
-            method: 'POST',
-            body: JSON.stringify(addHostModalProperties.value)
-          });
-          await getHosts();
-          addHostModal.value.hide();
-          addHostModalProperties.value = {};
-          toast('Host added successfully', 'success');
-          isHostsAdding.value = false;
+          try {
+            await apiFetch("/api/config/host", {
+              method: 'POST',
+              body: JSON.stringify(addHostModalProperties.value)
+            });
+            addHostModal.value.hide();
+            toast('Host added successfully', 'success');
+          } finally {
+            await getHosts();
+            isHostsAdding.value = false;
+          }
         };
 
         const deleteHost = async (hostname) => {
           isHostsDeleting.value.push(hostname);
-          await apiFetch(`/api/config/host/${hostname}`, {
-            method: 'DELETE'
-          });
-          await getHosts();
-          toast('Host deleted successfully', 'success');
-          removeByValue(isHostsDeleting.value, hostname);
+          try {
+            await apiFetch(`/api/config/host/${hostname}`, {
+              method: 'DELETE'
+            });
+            toast('Host deleted successfully', 'success');
+          } finally {
+            await getHosts();
+            removeByValue(isHostsDeleting.value, hostname);
+          }
         };
 
       // -----------------------------------------------
@@ -897,8 +927,8 @@ const app = createApp({
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
           isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
           isShellStarting, isRdpStarting, isPortForwardingStarting,
-          sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties,
-          profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties,
+          sessions, addSession, deleteSession, sessionsCount, sessionsTableColumns, showAddSessionModal, addSessionModalProperties, addSessionModalValid,
+          profiles, addProfile, deleteProfile, profilesCount, profilesTableColumns, showAddProfileModal, addProfileModalProperties, addProfileModalValid,
           hosts, addHost, deleteHost, hostsCount, hostsTableColumns, showAddHostModal, addHostModalProperties,
           addCredential, removeCredential,
           showPortForwardingModal, portForwardingModalProperties,

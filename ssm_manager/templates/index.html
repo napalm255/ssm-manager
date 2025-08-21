@@ -759,8 +759,14 @@
             </div>
           </div>
           <div class="modal-footer">
+            <span v-if="!addSessionModalValid" class="text-danger me-4">
+              <small>
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span class="ps-2">Invalid session name.</span>
+              </small>
+            </span>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" @click="addSession" :disabled="isSessionAdding">
+            <button type="button" class="btn btn-primary" @click="addSession" :disabled="isSessionAdding || !addSessionModalValid">
               <span v-if="isSessionAdding" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
               <output v-if="isSessionAdding" class="visually-hidden">Adding...</output>
               <span v-if="!isSessionAdding">Add</span>
@@ -788,8 +794,14 @@
             </div>
           </div>
           <div class="modal-footer">
+            <span v-if="!addProfileModalValid" class="text-danger me-4">
+              <small>
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span class="ps-2">Invalid profile name.</span>
+              </small>
+            </span>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" @click="addProfile" :disabled="isProfileAdding">
+            <button type="button" class="btn btn-primary" @click="addProfile" :disabled="isProfileAdding || !addProfileModalValid">
               <span v-if="isProfileAdding" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
               <output v-if="isProfileAdding" class="visually-hidden">Adding...</output>
               <span v-if="!isProfileAdding">Add</span>
