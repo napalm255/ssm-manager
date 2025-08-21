@@ -279,7 +279,7 @@ const app = createApp({
             toast('Preferences saved successfully', 'success');
           } finally {
             await getPreferences();
-            await getRegionsSelected();
+            getRegionsSelected();
             isPreferencesSaving.value = false;
           }
         };
