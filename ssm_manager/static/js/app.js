@@ -276,9 +276,11 @@ const app = createApp({
               method: 'POST',
               body: JSON.stringify(newPreferences)
             })
-            await getPreferences();
             toast('Preferences saved successfully', 'success');
           } finally {
+            await getPreferences();
+            await getRegionsSelected();
+            await getCredentials();
             isPreferencesSaving.value = false;
           }
         };
