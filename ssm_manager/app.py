@@ -280,8 +280,8 @@ def get_config_hosts():
     try:
         with open(hosts_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-    except FileNotFoundError:
-        raise BadRequest(f"Hosts file not found: {hosts_file}")
+    except FileNotFoundError as exc:
+        raise BadRequest(f"Hosts file not found: {hosts_file}") from exc
 
     for line in lines:
         if line.strip() and line.startswith('#'):
@@ -646,7 +646,7 @@ def start_rdp(instance_id):
 
         logger.debug(f"RDP session started: {conn_state}")
         return jsonify(conn_state.dict())
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception:  # pylint: disable=broad-except
         return logger.failed(f"Error starting RDP connection: {instance_id}", 500)
 
 

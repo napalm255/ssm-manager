@@ -19,10 +19,7 @@ const app = createApp({
         const addSessionModal = ref(null);
         const addSessionModalProperties = ref({});
         const addSessionModalValid = computed(() => {
-          if (addSessionModalProperties.value?.name?.includes(' ')) {
-            return false;
-          }
-          return true;
+           return !addSessionModalProperties.value?.name?.includes(' ');
         });
 
         const profiles = ref([]);
@@ -32,10 +29,7 @@ const app = createApp({
         const addProfileModal = ref(null);
         const addProfileModalProperties = ref({});
         const addProfileModalValid = computed(() => {
-          if (addProfileModalProperties.value?.name?.includes(' ')) {
-            return false;
-          }
-          return true;
+          return !addProfileModalProperties.value?.name?.includes(' ');
         });
 
         const regionsAll = ref([]);
