@@ -56,6 +56,9 @@ main {
 #profiles {
   display: none;
 }
+#hosts {
+  display: none;
+}
 
 .nav-link {
   cursor: pointer;
