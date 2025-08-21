@@ -14,7 +14,6 @@ import keyring
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
-from werkzeug.exceptions import BadRequest
 from ssm_manager.preferences import PreferencesHandler
 from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
@@ -171,7 +170,7 @@ def add_config_session():
     # Validate required fields
     for field in ['name', 'sso_start_url', 'sso_region', 'sso_registration_scopes']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            return logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_session(
@@ -200,7 +199,7 @@ def delete_config_session(session_name):
 
     session_exists = any(data['name'] == session_name for data in config.get_sessions())
     if not session_exists:
-        raise BadRequest(f"Session '{session_name}' does not exist.")
+        return logger.failed(f"Session '{session_name}' does not exist.", 404)
 
     config.delete_session(
         name = session_name
@@ -225,7 +224,7 @@ def add_config_profile():
     # Validate required fields
     for field in ['name', 'region', 'sso_account_id', 'sso_role_name', 'sso_session', 'output']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_profile(
@@ -257,7 +256,7 @@ def delete_config_profile(profile_name):
 
     profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
     if not profile_exists:
-        raise BadRequest(f"Profile '{profile_name}' does not exist.")
+        return logger.failed(f"Profile '{profile_name}' does not exist.", 404)
 
     config.delete_profile(
         profile_name
@@ -280,8 +279,8 @@ def get_config_hosts():
     try:
         with open(hosts_file, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-    except FileNotFoundError as exc:
-        raise BadRequest(f"Hosts file not found: {hosts_file}") from exc
+    except FileNotFoundError:
+        return logger.failed(f"Hosts file not found: {hosts_file}", 404)
 
     for line in lines:
         if line.strip() and line.startswith('#'):
@@ -303,7 +302,7 @@ def update_config_hosts():
     Returns: JSON response with status
     """
     if system != 'Windows':
-        return BadRequest(f"This feature is not supported on {system}.")
+        return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_ip_exists(hostname, ip):
         """Check if a hostname with the given IP exists in the hosts file."""
@@ -317,7 +316,7 @@ def update_config_hosts():
     # Validate required fields
     for field in ['hostname', 'ip']:
         if not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            return logger.failed(f"Missing required field: {field}", 400)
 
     hostname = data['hostname']
     ip = data['ip']
@@ -356,7 +355,7 @@ def delete_config_host(hostname):
     Returns: JSON response with status
     """
     if system != 'Windows':
-        raise BadRequest(f"This feature is not supported on {system}.")
+        return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_exists(hostname):
         """Check if a hostname exists in the hosts file."""
@@ -400,7 +399,7 @@ def add_windows_credentials():
     """
     try:
         if system != 'Windows':
-            raise BadRequest(f"Windows credentials are not supported on {system}.")
+            logger.failed(f"Windows credentials are not supported on {system}.")
 
         data = request.json
 
@@ -477,7 +476,7 @@ def connect():
     # Validate required fields
     for field in ['profile', 'region']:
         if field not in data or not data.get(field, None):
-            raise BadRequest(f"Missing required field: {field}")
+            logger.failed(f"Missing required field: {field}", 400)
 
     profile = AWSProfile(
         name=data.get('profile'),
@@ -903,17 +902,6 @@ def favicon():
     Returns: Favicon image
     """
     return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
-
-
-@app.errorhandler(BadRequest)
-def handle_bad_request(error):
-    """
-    Handle BadRequest errors
-    Args:
-        error: The error object
-    Returns: JSON response with error message
-    """
-    return jsonify({'status': 'error', 'message': error.description}), 400
 
 
 class ServerThread(threading.Thread):
