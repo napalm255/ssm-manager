@@ -280,7 +280,6 @@ const app = createApp({
           } finally {
             await getPreferences();
             await getRegionsSelected();
-            await getCredentials();
             isPreferencesSaving.value = false;
           }
         };
