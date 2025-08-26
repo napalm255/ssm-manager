@@ -340,6 +340,40 @@ class AWSCommand(BaseModel):
         return self._build_cmd()
 
 
+class CLIVersionCommand(AWSCommand):
+    """
+    Model representing the AWS CLI version command.
+    """
+    profile: Optional[str] = 'default'
+    region: Optional[str] = 'us-east-1'
+    hide: Optional[bool] = True
+    wait: Optional[bool] = True
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = [self.exec, '--version']
+        return str(' '.join(cmd))
+
+
+class SSMVersionCommand(AWSCommand):
+    """
+    Model representing the AWS CLI version command.
+    """
+    profile: Optional[str] = 'default'
+    region: Optional[str] = 'us-east-1'
+    hide: Optional[bool] = True
+    wait: Optional[bool] = True
+
+    def _build_cmd(self) -> str:
+        """
+        Build the command string.
+        """
+        cmd = ['session-manager-plugin', '--version']
+        return str(' '.join(cmd))
+
+
 class SSOCommand(AWSCommand):
     """
     Model representing the SSO command.

@@ -7,6 +7,9 @@ const app = createApp({
         const operating_system = ref("");
         const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
+        const depAwsCliVersion = ref("");
+        const depSessionManagerPluginVersion = ref("");
+
         const currentHash = ref('#/start');
         const currentProfile = ref("");
         const currentRegion = ref("");
@@ -209,6 +212,8 @@ const app = createApp({
           version.value = data.version;
           title.value = data.name;
           operating_system.value = data.operating_system;
+          depAwsCliVersion.value = data.dependencies.awscli;
+          depSessionManagerPluginVersion.value = data.dependencies.session_manager_plugin;
           console.log('Version:', version.value);
         };
 
@@ -922,6 +927,7 @@ const app = createApp({
 
         return {
           title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+          depAwsCliVersion, depSessionManagerPluginVersion,
           hideTooltip, tooltipTriggerList, tooltipList,
           preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
           regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,

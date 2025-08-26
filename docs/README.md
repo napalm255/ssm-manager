@@ -128,7 +128,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/
 3. Ensure that AWS CLI and SSM Plugin are installed.
    ```powershell
    aws --version
-   aws ssm start-session --version
+   session-manager-plugin --version
    ```
 5. Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 6. Install the Session Manager plugin for AWS CLI. [**Instructions here**](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)

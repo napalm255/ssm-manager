@@ -21,7 +21,8 @@ from ssm_manager.config import AwsConfigManager
 from ssm_manager.logger import CustomLogger
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
+    AWSProfile, CLIVersionCommand, SSMVersionCommand,
+    SSMCommand, SSOCommand, RDPCommand,
     CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
     run_cmd, FreePort, open_browser, resolve_hostname
 )
@@ -96,19 +97,41 @@ def get_version():
     Endpoint to get the version of the application
     Returns: JSON response with version information
     """
+    version = {
+        'name': APP_NAME,
+        'operating_system': system,
+        'dependencies': {
+            'awscli': 'Not Installed',
+            'session_manager_plugin': 'Not Installed'
+        }
+    }
     try:
         logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
-        version = {
-            'name': APP_NAME,
-            'operating_system': system,
-        }
         with open(version_file, 'r', encoding='utf-8') as vfile:
             version['version'] = vfile.read().strip()
         logger.info(f"Version: {version}")
-        return jsonify(version)
     except FileNotFoundError:
         return logger.failed("Version file not found.")
+
+    try:
+        command = CLIVersionCommand(system=system)
+        awscli = subprocess.run(command.cmd, capture_output=True, check=True)
+        if awscli.returncode == 0:
+            match = re.search(r'aws-cli\/([0-9\.]+)', awscli.stdout.decode('utf-8'))
+            version['dependencies']['awscli'] = match.group(1) if match else 'Unknown version'
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.warning("AWS CLI not found or error getting version.")
+
+    try:
+        command = SSMVersionCommand(system=system)
+        ssm = subprocess.run(command.cmd, capture_output=True, check=True)
+        if ssm.returncode == 0:
+            version['dependencies']['session_manager_plugin'] = ssm.stdout.decode('utf-8').strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.warning("Session Manager Plugin not found or error getting version.")
+
+    return jsonify(version)
 
 
 @app.route('/api/profiles')
