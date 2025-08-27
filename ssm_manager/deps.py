@@ -22,7 +22,6 @@ class DependencyManager(BaseModel):
     model_config = ConfigDict(strict=True)
     system: Literal["Linux", "Windows"]
 
-    @computed_field
     @property
     def dependencies(self) -> dict:
         """
