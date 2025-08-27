@@ -19,10 +19,10 @@ from ssm_manager.manager import AWSManager
 from ssm_manager.cache import Cache
 from ssm_manager.config import AwsConfigManager
 from ssm_manager.logger import CustomLogger
+from ssm_manager.deps import DependencyManager
 from ssm_manager.utils import (
     Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, CLIVersionCommand, SSMVersionCommand,
-    SSMCommand, SSOCommand, RDPCommand,
+    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
     CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
     run_cmd, FreePort, open_browser, resolve_hostname
 )
@@ -75,6 +75,9 @@ logging.basicConfig(
 # Configure logger
 logger = logging.getLogger('ssm_manager')
 
+# Check dependencies
+deps = DependencyManager(system=system)
+
 # Setup preferences
 preferences = PreferencesHandler(
     config_file=preferences_file
@@ -99,14 +102,9 @@ def get_version():
     """
     version = {
         'name': APP_NAME,
-        'operating_system': system,
-        'dependencies': {
-            'awscli': 'Not Installed',
-            'session_manager_plugin': 'Not Installed'
-        }
+        'operating_system': system
     }
     try:
-        logger.debug("Getting version...")
         version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
         with open(version_file, 'r', encoding='utf-8') as vfile:
             version['version'] = vfile.read().strip()
@@ -114,24 +112,16 @@ def get_version():
     except FileNotFoundError:
         return logger.failed("Version file not found.")
 
-    try:
-        command = CLIVersionCommand(system=system)
-        awscli = subprocess.run(command.cmd, capture_output=True, check=True)
-        if awscli.returncode == 0:
-            match = re.search(r'aws-cli\/([0-9\.]+)', awscli.stdout.decode('utf-8'))
-            version['dependencies']['awscli'] = match.group(1) if match else 'Unknown version'
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.warning("AWS CLI not found or error getting version.")
-
-    try:
-        command = SSMVersionCommand(system=system)
-        ssm = subprocess.run(command.cmd, capture_output=True, check=True)
-        if ssm.returncode == 0:
-            version['dependencies']['session_manager_plugin'] = ssm.stdout.decode('utf-8').strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.warning("Session Manager Plugin not found or error getting version.")
-
     return jsonify(version)
+
+
+@app.route('/api/dependencies')
+def get_dependencies():
+    """
+    Endpoint to get the status of dependencies
+    Returns: JSON response with dependency status
+    """
+    return jsonify(deps.dependencies)
 
 
 @app.route('/api/profiles')
@@ -539,7 +529,6 @@ def get_instances():
     Endpoint to get a list of EC2 instances with SSM agent installed
     Returns: JSON list of instances
     """
-    logger.debug("Loading EC2 instances...")
     instances = aws_manager.list_ssm_instances()
     logger.info(f"Instances: {len(instances)} found.")
     return jsonify(instances)
@@ -682,7 +671,6 @@ def start_custom_port(instance_id):
     """
     # pylint: disable=line-too-long, too-many-locals
     try:
-        logger.debug(f"Starting port forwarding - Instance: {instance_id}")
         data = request.json
         mode = data.get('mode', 'local')  # Default to local mode
         method = 'PORT'
@@ -817,7 +805,6 @@ def refresh_data():
     """
     try:
         instances = aws_manager.list_ssm_instances()
-        logger.debug(f"Refreshing data - Instances: {len(instances)}")
         return jsonify({
             'status': 'success',
             'instances': instances
@@ -899,8 +886,6 @@ def open_rdp_client(local_port):
     Args:
         local_port (int): The local port to connect to
     """
-    logger.debug(f"Opening RDP client on port {local_port}")
-
     try:
         command = RDPCommand(local_port=local_port, system=system)
         subprocess.Popen(command.cmd)

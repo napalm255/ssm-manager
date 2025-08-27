@@ -72,13 +72,51 @@
                     </p>
                     <a class="btn btn-primary" type="button" href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank">Read More</a>
                   </div>
-                  <div class="card-footer text-body-secondary text-center">
-                      <span v-if="depAwsCliVersion != 'Not Installed'"
-                            v-html="'Installed (v' + depAwsCliVersion + ')'"
-                            class="text-success fw-bold"></span>
-                      <span v-if="depAwsCliVersion == 'Not Installed'"
-                            v-html="depAwsCliVersion"
-                            class="text-danger fw-bold"></span>
+                  <div class="card-footer text-body-secondary text-end" v-if="depAwsCli">
+                    <div class="container">
+                      <div class="row">
+                        <div class="col text-start">
+                          <span class="text-success">
+                            Installed
+                          </span>
+                        </div>
+                        <div class="col text-end" title="Install" v-if="!depAwsCliInstalling">
+                          <span class="text-success me-2" v-html="'v' + depAwsCliVersion"></span>
+                          <span class="text-primary" style="cursor: pointer;">
+                            <span @click="installAwsCli">
+                              <i class="bi bi-cloud-download"></i>
+                            </span>
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="depAwsCliInstalling">
+                          <small class="text-primary me-2">Updating...</small>
+                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depAwsCliInstalling"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-footer text-body-secondary" v-if="!depAwsCli">
+                    <div class="container">
+                      <div class="row">
+                        <div class="col text-start">
+                          <span class="text-info"
+                                :class="{ 'text-danger': depAwsCliVersion == 'Not Installed'}"
+                                v-html="depAwsCliVersion">
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="!depAwsCliInstalling">
+                          <span class="ms-2 text-primary" style="cursor: pointer;">
+                            <a @click="installAwsCli">
+                              <i class="bi bi-cloud-download"></i>
+                            </a>
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="depAwsCliInstalling">
+                          <small class="text-primary me-2">Installing...</small>
+                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depAwsCliInstalling"></span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -91,13 +129,50 @@
                     </p>
                     <a class="btn btn-primary" type="button" href="https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html" target="_blank">Read More</a>
                   </div>
-                  <div class="card-footer text-body-secondary text-center">
-                      <span v-if="depSessionManagerPluginVersion != 'Not Installed'"
-                            v-html="'Installed (v' + depSessionManagerPluginVersion + ')'"
-                          class="text-success fw-bold"></span>
-                      <span v-if="depSessionManagerPluginVersion == 'Not Installed'"
-                            v-html="depSessionManagerPluginVersion"
-                          class="text-danger fw-bold"></span>
+                  <div class="card-footer text-body-secondary text-end" v-if="depSessionManagerPlugin">
+                    <div class="container">
+                      <div class="row">
+                        <div class="col text-start">
+                          <span class="text-success">Installed</span>
+                        </div>
+                        <div class="col text-end" title="Install" v-if="!depSessionManagerPluginInstalling">
+                          <span class="text-success me-2" v-html="'v' + depSessionManagerPluginVersion"></span>
+                          <span class="text-primary" style="cursor: pointer;">
+                            <span @click="installSessionManagerPlugin">
+                              <i class="bi bi-cloud-download"></i>
+                            </span>
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="depSessionManagerPluginInstalling">
+                          <small class="text-primary me-2" v-if="depSessionManagerPluginVersion == 'Not Installed'">Installing...</small>
+                          <small class="text-primary me-2" v-if="depSessionManagerPluginVersion != 'Not Installed'">Updating...</small>
+                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depSessionManagerPluginInstalling"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-footer text-body-secondary" v-if="!depSessionManagerPlugin">
+                    <div class="container">
+                      <div class="row">
+                        <div class="col text-start">
+                          <span class="text-info"
+                                :class="{ 'text-danger': depSessionManagerPluginVersion == 'Not Installed'}"
+                                v-html="depSessionManagerPluginVersion">
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="!depSessionManagerPluginInstalling">
+                          <span class="ms-2 text-primary" style="cursor: pointer;">
+                            <a @click="installSessionManagerPlugin">
+                              <i class="bi bi-cloud-download"></i>
+                            </a>
+                          </span>
+                        </div>
+                        <div class="col text-end" v-if="depSessionManagerPluginInstalling">
+                          <small class="text-primary me-2">Installing...</small>
+                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depSessionManagerPluginInstalling"></span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

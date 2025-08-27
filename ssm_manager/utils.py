@@ -22,7 +22,7 @@ UNSUPPORTED_SYSTEM = "Unsupported system type"
 
 class AWSProfile(BaseModel):
     """
-    Model representing an AWS Profile
+    Model representing an AWS Profile.
     """
     name: str = Field(min_length=1)
     region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
