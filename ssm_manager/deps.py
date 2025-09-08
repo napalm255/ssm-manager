@@ -1,15 +1,14 @@
 """
 Dependency management.
 """
+
 # pylint: disable=logging-fstring-interpolation
 import re
 import logging
 import subprocess
-from typing import Optional, Literal, Any
-from pydantic import (
-    BaseModel, ConfigDict,
-    computed_field
-)
+from urllib import request, error
+from typing import Literal
+from pydantic import BaseModel, ConfigDict
 from ssm_manager.utils import CLIVersionCommand, SSMVersionCommand
 
 logger = logging.getLogger(__name__)
@@ -19,8 +18,10 @@ class DependencyManager(BaseModel):
     """
     Manages dependencies for the project.
     """
+
     model_config = ConfigDict(strict=True)
     system: Literal["Linux", "Windows"]
+    arch: Literal["x86_64", "aarch64"] = "x86_64"
 
     @property
     def dependencies(self) -> dict:
@@ -28,8 +29,16 @@ class DependencyManager(BaseModel):
         Returns a dict of dependencies and their versions
         """
         return {
-            "awscli": self.awscli,
-            "session_manager_plugin": self.ssmplugin
+            "awscli": {
+                "installed": self.awscli,
+                "latest": self.awscli_latest_version,
+                "urls": self.awscli_url,
+            },
+            "session_manager_plugin": {
+                "installed": self.ssmplugin,
+                "latest": self.ssmplugin_latest_version,
+                "urls": self.ssmplugin_url,
+            },
         }
 
     @property
@@ -48,11 +57,47 @@ class DependencyManager(BaseModel):
             command = CLIVersionCommand(system=self.system)
             version = subprocess.run(command.cmd, capture_output=True, check=True)
             if version.returncode == 0:
-                match = re.search(r'aws-cli\/([0-9\.]+)', version.stdout.decode('utf-8'))
-                return match.group(1) if match else 'Unknown'
+                match = re.search(
+                    r"aws-cli\/([0-9\.]+)", version.stdout.decode("utf-8")
+                )
+                return match.group(1) if match else "Unknown"
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning("AWS CLI not found or error getting version.")
         return "Not Installed"
+
+    @property
+    def awscli_url(self) -> list[str]:
+        """
+        Returns the download URL for AWS CLI based on the OS
+        """
+        base = "https://awscli.amazonaws.com"
+        url = [f"{base}/AWSCLIV2.msi"]
+        if self.system == "Linux":
+            url = [
+                {"link": f"{base}/awscli-exe-linux-{self.arch}.zip", "extension": "zip"}
+            ]
+        return url
+
+    @property
+    def awscli_latest_version(self) -> str:
+        """
+        Returns the latest version of AWS CLI from GitHub Changelog
+        """
+        try:
+            change_log_url = (
+                "https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst"
+            )
+            with request.urlopen(change_log_url) as response:
+                if response.status != 200:
+                    raise error.URLError(f"Error fetching changelog: {response.status}")
+                changelog = response.read().decode("utf-8")
+            pattern = re.compile(r"\d+\.\d+\.\d+")
+            match = pattern.search(changelog)
+            if match:
+                return match.group(0)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.warning(f"Error fetching latest AWS CLI version: {e}")
+        return "Unknown"
 
     @property
     def ssmplugin(self) -> str:
@@ -63,7 +108,45 @@ class DependencyManager(BaseModel):
             command = SSMVersionCommand(system=self.system)
             ssm = subprocess.run(command.cmd, capture_output=True, check=True)
             if ssm.returncode == 0:
-                return ssm.stdout.decode('utf-8').strip()
+                return ssm.stdout.decode("utf-8").strip()
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning("Session Manager Plugin not found or error getting version.")
         return "Not Installed"
+
+    @property
+    def ssmplugin_url(self) -> list[str]:
+        """
+        Returns the download URL for the Session Manager Plugin based on the OS
+        """
+        base = "https://s3.amazonaws.com/session-manager-downloads/plugin/latest"
+        url = [{"msi": f"{base}/windows_64bit/session-manager-plugin.msi"}]
+        if self.system == "Linux":
+            url = [
+                {
+                    "link": f"{base}/linux_64bit/session-manager-plugin.rpm",
+                    "extension": "rpm",
+                },
+                {
+                    "link": f"{base}/linux_64bit/session-manager-plugin.deb",
+                    "extension": "deb",
+                },
+            ]
+        return url
+
+    @property
+    def ssmplugin_latest_version(self) -> str:
+        """
+        Returns the latest version of Session Manager Plugin from GitHub Releases
+        """
+        try:
+            releases_url = "https://api.github.com/repos/aws/session-manager-plugin/releases/latest"
+            with request.urlopen(releases_url) as response:
+                if response.status != 200:
+                    raise error.URLError(f"Error fetching releases: {response.status}")
+                release_info = response.read().decode("utf-8")
+            match = re.search(r'"tag_name":\s*"v?([0-9\.]+)"', release_info)
+            if match:
+                return match.group(1)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.warning(f"Error fetching latest SSM Plugin version: {e}")
+        return "Unknown"

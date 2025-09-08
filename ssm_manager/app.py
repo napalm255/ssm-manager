@@ -1,6 +1,7 @@
 """
 SSM Manager
 """
+
 import os
 import re
 import sys
@@ -21,39 +22,54 @@ from ssm_manager.config import AwsConfigManager
 from ssm_manager.logger import CustomLogger
 from ssm_manager.deps import DependencyManager
 from ssm_manager.utils import (
-    Instance, Connection, ConnectionState, ConnectionScanner,
-    AWSProfile, SSMCommand, SSOCommand, RDPCommand,
-    CmdKeyAddCommand, CmdKeyDeleteCommand, HostsFileCommand,
-    run_cmd, FreePort, open_browser, resolve_hostname
+    Instance,
+    Connection,
+    ConnectionState,
+    ConnectionScanner,
+    AWSProfile,
+    SSMCommand,
+    SSOCommand,
+    RDPCommand,
+    CmdKeyAddCommand,
+    CmdKeyDeleteCommand,
+    HostsFileCommand,
+    run_cmd,
+    FreePort,
+    open_browser,
+    resolve_hostname,
 )
+
 # pylint: disable=logging-fstring-interpolation, consider-using-with
 # pylint: disable=line-too-long, too-many-lines
 
-APP_NAME = 'SSM Manager'
+APP_NAME = "SSM Manager"
 
 # Define home directory and app data directory
-HOME_DIR = os.path.expanduser('~')
-DATA_DIR = 'ssm_manager'
+HOME_DIR = os.path.expanduser("~")
+DATA_DIR = "ssm_manager"
 
 # Check if the system is Linux or Windows
 system = platform.system()
-if system not in ['Linux', 'Windows']:
+if system not in ["Linux", "Windows"]:
     print("Unsupported operating system")
     sys.exit(1)
+arch = platform.machine()
 
 # Set file paths
-preferences_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'preferences.json')
-cache_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'cache')
-temp_dir = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'temp')
-log_file = os.path.join(HOME_DIR, f'.{DATA_DIR}', 'ssm_manager.log')
-hosts_file = os.path.join('/', 'etc', 'hosts')
+preferences_file = os.path.join(HOME_DIR, f".{DATA_DIR}", "preferences.json")
+cache_dir = os.path.join(HOME_DIR, f".{DATA_DIR}", "cache")
+temp_dir = os.path.join(HOME_DIR, f".{DATA_DIR}", "temp")
+log_file = os.path.join(HOME_DIR, f".{DATA_DIR}", "ssm_manager.log")
+hosts_file = os.path.join("/", "etc", "hosts")
 
-if system == 'Windows':
-    preferences_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'preferences.json')
-    cache_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'cache')
-    temp_dir = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'temp')
-    log_file = os.path.join(HOME_DIR, 'AppData', 'Local', DATA_DIR, 'ssm_manager.log')
-    hosts_file = os.path.join('C:\\', 'Windows', 'System32', 'drivers', 'etc', 'hosts')
+if system == "Windows":
+    preferences_file = os.path.join(
+        HOME_DIR, "AppData", "Local", DATA_DIR, "preferences.json"
+    )
+    cache_dir = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "cache")
+    temp_dir = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "temp")
+    log_file = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "ssm_manager.log")
+    hosts_file = os.path.join("C:\\", "Windows", "System32", "drivers", "etc", "hosts")
 
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
@@ -65,49 +81,41 @@ os.makedirs(os.path.dirname(log_file), exist_ok=True)
 logging.setLoggerClass(CustomLogger)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s:%(name)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, mode='w'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
+    handlers=[logging.FileHandler(log_file, mode="w"), logging.StreamHandler()],
 )
 
 # Configure logger
-logger = logging.getLogger('ssm_manager')
+logger = logging.getLogger("ssm_manager")
 
 # Check dependencies
-deps = DependencyManager(system=system)
+deps = DependencyManager(system=system, arch=arch)
 
 # Setup preferences
-preferences = PreferencesHandler(
-    config_file=preferences_file
-)
+preferences = PreferencesHandler(config_file=preferences_file)
 
 # Setup cache
-cache = Cache(
-    cache_dir=cache_dir
-)
+cache = Cache(cache_dir=cache_dir)
 
 # Setup Flask
-app = Flask(__name__, static_folder='static', static_url_path='/', template_folder='templates')
+app = Flask(
+    __name__, static_folder="static", static_url_path="/", template_folder="templates"
+)
 
 aws_manager = AWSManager()
 
 
-@app.route('/api/version')
+@app.route("/api/version")
 def get_version():
     """
     Endpoint to get the version of the application
     Returns: JSON response with version information
     """
-    version = {
-        'name': APP_NAME,
-        'operating_system': system
-    }
+    version = {"name": APP_NAME, "operating_system": system}
     try:
-        version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
-        with open(version_file, 'r', encoding='utf-8') as vfile:
-            version['version'] = vfile.read().strip()
+        version_file = os.path.join(os.path.dirname(__file__), "VERSION")
+        with open(version_file, "r", encoding="utf-8") as vfile:
+            version["version"] = vfile.read().strip()
         logger.info(f"Version: {version}")
     except FileNotFoundError:
         return logger.failed("Version file not found.")
@@ -115,7 +123,7 @@ def get_version():
     return jsonify(version)
 
 
-@app.route('/api/dependencies')
+@app.route("/api/dependencies")
 def get_dependencies():
     """
     Endpoint to get the status of dependencies
@@ -124,7 +132,7 @@ def get_dependencies():
     return jsonify(deps.dependencies)
 
 
-@app.route('/api/profiles')
+@app.route("/api/profiles")
 def get_profiles():
     """
     Endpoint to get available AWS profiles
@@ -135,7 +143,7 @@ def get_profiles():
     return jsonify(profiles)
 
 
-@app.route('/api/regions')
+@app.route("/api/regions")
 def get_regions():
     """
     Endpoint to get available AWS regions
@@ -149,7 +157,7 @@ def get_regions():
     return jsonify(regions)
 
 
-@app.route('/api/regions/all')
+@app.route("/api/regions/all")
 def get_all_regions():
     """
     Endpoint to get all AWS regions
@@ -160,7 +168,7 @@ def get_all_regions():
     return jsonify(regions)
 
 
-@app.route('/api/config/sessions')
+@app.route("/api/config/sessions")
 def get_config_sessions():
     """
     Endpoint to get AWS configuration sessions
@@ -172,7 +180,7 @@ def get_config_sessions():
     return jsonify(sessions)
 
 
-@app.route('/api/config/session', methods=['POST'])
+@app.route("/api/config/session", methods=["POST"])
 def add_config_session():
     """
     Endpoint to add a new AWS configuration session
@@ -181,26 +189,28 @@ def add_config_session():
     data = request.json
 
     # Validate required fields
-    for field in ['name', 'sso_start_url', 'sso_region', 'sso_registration_scopes']:
+    for field in ["name", "sso_start_url", "sso_region", "sso_registration_scopes"]:
         if not data.get(field, None):
             return logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_session(
-        name=data.get('name'),
-        start_url=data.get('sso_start_url'),
-        region=data.get('sso_region'),
-        registration_scopes=data.get('sso_registration_scopes')
+        name=data.get("name"),
+        start_url=data.get("sso_start_url"),
+        region=data.get("sso_region"),
+        registration_scopes=data.get("sso_registration_scopes"),
     )
 
-    session_exists = any(data['name'] == data.get('name') for data in config.get_sessions())
+    session_exists = any(
+        data["name"] == data.get("name") for data in config.get_sessions()
+    )
     if not session_exists:
         return logger.failed(f"Failed to add session: {data.get('name')}")
 
     return logger.success(f"Session added successfully: {data.get('name')}")
 
 
-@app.route('/api/config/session/<session_name>', methods=['DELETE'])
+@app.route("/api/config/session/<session_name>", methods=["DELETE"])
 def delete_config_session(session_name):
     """
     Endpoint to delete an AWS configuration session
@@ -210,53 +220,60 @@ def delete_config_session(session_name):
     """
     config = AwsConfigManager()
 
-    session_exists = any(data['name'] == session_name for data in config.get_sessions())
+    session_exists = any(data["name"] == session_name for data in config.get_sessions())
     if not session_exists:
         return logger.failed(f"Session '{session_name}' does not exist.", 404)
 
-    config.delete_session(
-        name = session_name
-    )
+    config.delete_session(name=session_name)
 
-    session_exists = any(data['name'] == session_name for data in config.get_sessions())
+    session_exists = any(data["name"] == session_name for data in config.get_sessions())
     if session_exists:
         return logger.failed(f"Failed to delete session: {session_name}")
 
     return logger.success(f"Session deleted successfully: {session_name}")
 
 
-@app.route('/api/config/profile', methods=['POST'])
+@app.route("/api/config/profile", methods=["POST"])
 def add_config_profile():
     """
     Endpoint to add a new AWS configuration profile
     Returns: JSON response with status
     """
     data = request.json
-    profile_name = data.get('name', None)
+    profile_name = data.get("name", None)
 
     # Validate required fields
-    for field in ['name', 'region', 'sso_account_id', 'sso_role_name', 'sso_session', 'output']:
+    for field in [
+        "name",
+        "region",
+        "sso_account_id",
+        "sso_role_name",
+        "sso_session",
+        "output",
+    ]:
         if not data.get(field, None):
             logger.failed(f"Missing required field: {field}", 400)
 
     config = AwsConfigManager()
     config.add_profile(
         name=profile_name,
-        region = data.get('region', None),
-        sso_account_id = data.get('sso_account_id', None),
-        sso_role_name = data.get('sso_role_name', None),
-        sso_session = data.get('sso_session', None),
-        output = data.get('output', None)
+        region=data.get("region", None),
+        sso_account_id=data.get("sso_account_id", None),
+        sso_role_name=data.get("sso_role_name", None),
+        sso_session=data.get("sso_session", None),
+        output=data.get("output", None),
     )
 
-    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    profile_exists = any(
+        data["name"] == profile_name for data in aws_manager.get_profiles()
+    )
     if not profile_exists:
         return logger.failed(f"Failed to add profile: {profile_name}")
 
     return logger.success(f"Profile added successfully: {profile_name}")
 
 
-@app.route('/api/config/profile/<profile_name>', methods=['DELETE'])
+@app.route("/api/config/profile/<profile_name>", methods=["DELETE"])
 def delete_config_profile(profile_name):
     """
     Endpoint to delete an AWS configuration profile
@@ -267,22 +284,24 @@ def delete_config_profile(profile_name):
     config = AwsConfigManager()
     profile_name = str(profile_name)
 
-    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    profile_exists = any(
+        data["name"] == profile_name for data in aws_manager.get_profiles()
+    )
     if not profile_exists:
         return logger.failed(f"Profile '{profile_name}' does not exist.", 404)
 
-    config.delete_profile(
-        profile_name
-    )
+    config.delete_profile(profile_name)
 
-    profile_exists = any(data['name'] == profile_name for data in aws_manager.get_profiles())
+    profile_exists = any(
+        data["name"] == profile_name for data in aws_manager.get_profiles()
+    )
     if profile_exists:
         return logger.failed(f"Failed to delete profile: {profile_name}")
 
     return logger.success(f"Profile deleted successfully: {profile_name}")
 
 
-@app.route('/api/config/hosts')
+@app.route("/api/config/hosts")
 def get_config_hosts():
     """
     Endpoint to get system hosts file
@@ -290,61 +309,64 @@ def get_config_hosts():
     """
     hosts = []
     try:
-        with open(hosts_file, 'r', encoding='utf-8') as file:
+        with open(hosts_file, "r", encoding="utf-8") as file:
             lines = file.readlines()
     except FileNotFoundError:
         return logger.failed(f"Hosts file not found: {hosts_file}", 404)
 
     for line in lines:
-        if line.strip() and line.startswith('#'):
+        if line.strip() and line.startswith("#"):
             continue
         parts = line.split()
         if len(parts) >= 2:
             ip = parts[0]
             hostname = parts[1:]
-            hosts.append({'ip': ip, 'hostname': hostname})
+            hosts.append({"ip": ip, "hostname": hostname})
 
     logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
     return jsonify(hosts)
 
 
-@app.route('/api/config/host', methods=['POST'])
+@app.route("/api/config/host", methods=["POST"])
 def update_config_hosts():
     """
     Endpoint to update system hosts file
     Returns: JSON response with status
     """
-    if system != 'Windows':
+    if system != "Windows":
         return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_ip_exists(hostname, ip):
         """Check if a hostname with the given IP exists in the hosts file."""
-        pattern = re.compile(rf"^{re.escape(ip)}\s+{re.escape(hostname)}$", re.MULTILINE)
-        with open(hosts_file, 'r', encoding='utf-8') as file:
+        pattern = re.compile(
+            rf"^{re.escape(ip)}\s+{re.escape(hostname)}$", re.MULTILINE
+        )
+        with open(hosts_file, "r", encoding="utf-8") as file:
             content = file.read()
         return bool(pattern.search(content))
 
     data = request.json
 
     # Validate required fields
-    for field in ['hostname', 'ip']:
+    for field in ["hostname", "ip"]:
         if not data.get(field, None):
             return logger.failed(f"Missing required field: {field}", 400)
 
-    hostname = data['hostname']
-    ip = data['ip']
-    record = f'{ip}`t{hostname}'
+    hostname = data["hostname"]
+    ip = data["ip"]
+    record = f"{ip}`t{hostname}"
 
     if host_ip_exists(hostname, ip):
-        return logger.success(f"Host {hostname} with IP {ip} already exists in the hosts file.")
+        return logger.success(
+            f"Host {hostname} with IP {ip} already exists in the hosts file."
+        )
 
-    hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
+    hosts_file_escaped = hosts_file.replace(
+        "\\", "\\\\"
+    )  # Escape backslashes for Windows paths
     pscmd = f'(Add-Content -Path "{hosts_file_escaped}" -Value "{record}")'
 
-    command = HostsFileCommand(
-        runAs=True,
-        command=pscmd
-    )
+    command = HostsFileCommand(runAs=True, command=pscmd)
     run_cmd(command, skip_pid_wait=True)
     added = False
     for _ in range(16):
@@ -354,12 +376,14 @@ def update_config_hosts():
             added = True
             break
     if not added:
-        return logger.failed("Failed to add host to hosts file.<br>Host still resolvable.")
+        return logger.failed(
+            "Failed to add host to hosts file.<br>Host still resolvable."
+        )
 
     return logger.success("Host added successfully")
 
 
-@app.route('/api/config/host/<hostname>', methods=['DELETE'])
+@app.route("/api/config/host/<hostname>", methods=["DELETE"])
 def delete_config_host(hostname):
     """
     Endpoint to delete a host from the system hosts file
@@ -367,28 +391,29 @@ def delete_config_host(hostname):
         hostname (str): Hostname to delete
     Returns: JSON response with status
     """
-    if system != 'Windows':
+    if system != "Windows":
         return logger.failed(f"This feature is not supported on {system}.", 400)
 
     def host_exists(hostname):
         """Check if a hostname exists in the hosts file."""
         pattern = re.compile(rf"^[0-9]+.*{re.escape(hostname)}$", re.MULTILINE)
-        with open(hosts_file, 'r', encoding='utf-8') as file:
+        with open(hosts_file, "r", encoding="utf-8") as file:
             content = file.read()
         return bool(pattern.search(content))
 
     if not host_exists(hostname):
         return logger.failed("Hostname not found in hosts file.")
 
-    hosts_file_escaped = hosts_file.replace('\\', '\\\\')  # Escape backslashes for Windows paths
+    hosts_file_escaped = hosts_file.replace(
+        "\\", "\\\\"
+    )  # Escape backslashes for Windows paths
     pscmd = f'(Get-Content -Path "{hosts_file_escaped}")'
-    pscmd += " | Where-Object { $_ -notmatch ''^[0-9]+.*" + re.escape(hostname) + "$'' }"
+    pscmd += (
+        " | Where-Object { $_ -notmatch ''^[0-9]+.*" + re.escape(hostname) + "$'' }"
+    )
     pscmd += f' | Set-Content -Path "{hosts_file_escaped}"'
 
-    command = HostsFileCommand(
-        runAs=True,
-        command=pscmd
-    )
+    command = HostsFileCommand(runAs=True, command=pscmd)
     run_cmd(command, skip_pid_wait=True)
 
     deleted = False
@@ -399,86 +424,93 @@ def delete_config_host(hostname):
             deleted = True
             break
     if not deleted:
-        return logger.failed("Failed to delete host from hosts file.<br>Host still exists in the file.")
+        return logger.failed(
+            "Failed to delete host from hosts file.<br>Host still exists in the file."
+        )
 
     return logger.success("Host deleted successfully")
 
 
-@app.route('/api/config/credential', methods=['POST'])
+@app.route("/api/config/credential", methods=["POST"])
 def add_windows_credentials():
     """
     Endpoint to add Windows credentials
     Returns: JSON response with status
     """
     try:
-        if system != 'Windows':
+        if system != "Windows":
             logger.failed(f"Windows credentials are not supported on {system}.")
 
         data = request.json
 
         instance = Instance(
-            name=data.get('instance_name', None),
-            id=data.get('instance_id', None)
+            name=data.get("instance_name", None), id=data.get("instance_id", None)
         )
-        username = data.get('username', None)
-        local_port = data.get('local_port', None)
+        username = data.get("username", None)
+        local_port = data.get("local_port", None)
 
         if not (username and instance.name and instance.id and local_port):
-            raise AssertionError("Username, instance name, instance id, and local port are required.")
+            raise AssertionError(
+                "Username, instance name, instance id, and local port are required."
+            )
 
-        password = keyring.get_password('ssm_manager', username)
+        password = keyring.get_password("ssm_manager", username)
         if not password:
-            raise AssertionError("Password not found in keyring for the provided username.")
+            raise AssertionError(
+                "Password not found in keyring for the provided username."
+            )
 
         domain = ""
-        if '\\' in username:
-            domain, _ = username.split('\\', 1)
-        targetname = f'{instance.name}.{domain}' if domain else instance.name
-        targetname = f'{targetname}:{local_port}'
+        if "\\" in username:
+            domain, _ = username.split("\\", 1)
+        targetname = f"{instance.name}.{domain}" if domain else instance.name
+        targetname = f"{targetname}:{local_port}"
 
         command = CmdKeyAddCommand(
-            targetname=targetname,
-            username=username,
-            password=password
+            targetname=targetname, username=username, password=password
         )
         run_cmd(command, skip_pid_wait=True)
 
-        return logger.success(f"Windows Credentials added successfully for user: {username}")
+        return logger.success(
+            f"Windows Credentials added successfully for user: {username}"
+        )
     except AssertionError as e:
         return logger.failed(f"Error: {str(e)}", 400)
     except Exception as e:  # pylint: disable=broad-except
         return logger.failed(f"Failed to add credentials: {str(e)}", 500)
 
 
-@app.route('/api/config/credential', methods=['DELETE'])
+@app.route("/api/config/credential", methods=["DELETE"])
 def delete_windows_credentials():
     """
     Endpoint to delete Windows credentials
     Returns: JSON response with status
     """
     try:
-        if system != 'Windows':
-            raise AssertionError(f"Windows credentials are not supported on {system}.  Skipping Windows credential deletion.")
+        if system != "Windows":
+            raise AssertionError(
+                f"Windows credentials are not supported on {system}.  Skipping Windows credential deletion."
+            )
 
         data = request.json
-        targetname = data.get('targetname', None)
+        targetname = data.get("targetname", None)
 
         if not targetname:
             raise AssertionError("Target name is required.")
 
-        command = CmdKeyDeleteCommand(
-            targetname=targetname
-        )
+        command = CmdKeyDeleteCommand(targetname=targetname)
         run_cmd(command, skip_pid_wait=True)
 
-        return logger.success(f"Windows Credentials deleted successfully for target: {targetname}")
+        return logger.success(
+            f"Windows Credentials deleted successfully for target: {targetname}"
+        )
     except AssertionError as e:
         return logger.failed(f"Error: {str(e)}", 400)
     except Exception as e:  # pylint: disable=broad-except
         return logger.failed(f"Failed to delete credentials: {str(e)}", 500)
 
 
-@app.route('/api/connect', methods=['POST'])
+@app.route("/api/connect", methods=["POST"])
 def connect():
     """
     Endpoint to connect to AWS using the specified profile and region
@@ -487,16 +519,15 @@ def connect():
     data = request.json
 
     # Validate required fields
-    for field in ['profile', 'region']:
+    for field in ["profile", "region"]:
         if field not in data or not data.get(field, None):
             logger.failed(f"Missing required field: {field}", 400)
 
-    profile = AWSProfile(
-        name=data.get('profile'),
-        region=data.get('region')
-    )
+    profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
 
-    logger.debug(f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}")
+    logger.debug(
+        f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}"
+    )
     result = aws_manager.set_profile_and_region(profile.name, profile.region)
     max_retries = 2
     retries = 0
@@ -508,8 +539,8 @@ def connect():
             region=profile.region,
             profile=profile.name,
             system=system,
-            action='login',
-            timeout=60
+            action="login",
+            timeout=60,
         )
         run_cmd(command)
         result = aws_manager.set_profile_and_region(profile.name, profile.region)
@@ -517,13 +548,10 @@ def connect():
             time.sleep(delay)
 
     logger.info(f"Connected to AWS - Profile: {profile.name}, Region: {profile.region}")
-    return jsonify({
-        'status': 'success',
-        'account_id': aws_manager.account_id
-    })
+    return jsonify({"status": "success", "account_id": aws_manager.account_id})
 
 
-@app.route('/api/instances')
+@app.route("/api/instances")
 def get_instances():
     """
     Endpoint to get a list of EC2 instances with SSM agent installed
@@ -534,7 +562,7 @@ def get_instances():
     return jsonify(instances)
 
 
-@app.route('/api/shell/<instance_id>', methods=['POST'])
+@app.route("/api/shell/<instance_id>", methods=["POST"])
 def start_shell(instance_id):
     """
     Endpoint to start an Shell session with an EC2 instance
@@ -545,17 +573,10 @@ def start_shell(instance_id):
     try:
         data = request.json
 
-        profile = AWSProfile(
-            name=data.get('profile'),
-            region=data.get('region')
-        )
-        instance = Instance(
-            name=data.get('name'),
-            id=instance_id)
+        profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
+        instance = Instance(name=data.get("name"), id=instance_id)
         connection = Connection(
-            method='Shell',
-            instance=instance,
-            timestamp=time.time()
+            method="Shell", instance=instance, timestamp=time.time()
         )
         command = SSMCommand(
             instance=instance,
@@ -563,22 +584,22 @@ def start_shell(instance_id):
             profile=profile.name,
             reason=connection,
             system=system,
-            hide=False
+            hide=False,
         )
 
         logger.info(f"Starting Shell - Instance: {instance.id}")
         pid = run_cmd(command)
 
         conn_state = ConnectionState(
-            connection_id = str(connection),
-            instance = instance,
-            name = instance.name,
-            type = connection.method,
-            profile = command.profile,
-            region = command.region,
-            pid = pid,
-            timestamp = connection.timestamp,
-            status = 'active'
+            connection_id=str(connection),
+            instance=instance,
+            name=instance.name,
+            type=connection.method,
+            profile=command.profile,
+            region=command.region,
+            pid=pid,
+            timestamp=connection.timestamp,
+            status="active",
         )
 
         logger.debug(f"Shell session started: {conn_state}")
@@ -587,7 +608,7 @@ def start_shell(instance_id):
         return logger.failed(f"Error starting Shell connection: {instance_id}", 500)
 
 
-@app.route('/api/rdp/<instance_id>', methods=['POST'])
+@app.route("/api/rdp/<instance_id>", methods=["POST"])
 def start_rdp(instance_id):
     """
     Start an RDP session with an EC2 instance
@@ -598,27 +619,15 @@ def start_rdp(instance_id):
     # pylint: disable=line-too-long, too-many-locals
     try:
         data = request.json
-        method = 'RDP'
+        method = "RDP"
 
-        profile = AWSProfile(
-            name=data.get('profile'),
-            region=data.get('region')
-        )
-        instance = Instance(
-            name=data.get('name'),
-            id=instance_id
-        )
-        connection = Connection(
-            method=method,
-            instance=instance,
-            timestamp=time.time()
-        )
+        profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
+        instance = Instance(name=data.get("name"), id=instance_id)
+        connection = Connection(method=method, instance=instance, timestamp=time.time())
 
         remote_port = 3389
         local_port = FreePort(
-            name=instance.name,
-            remote_port=remote_port,
-            preferences=preferences
+            name=instance.name, remote_port=remote_port, preferences=preferences
         ).local_port
 
         if local_port is None:
@@ -631,28 +640,30 @@ def start_rdp(instance_id):
             reason=connection,
             system=system,
             hide=True,
-            document_name='AWS-StartPortForwardingSession',
+            document_name="AWS-StartPortForwardingSession",
             remote_port=remote_port,
-            local_port=local_port
+            local_port=local_port,
         )
 
-        logger.info(f"Starting RDP session - Instance: {instance.id}, Port: {command.local_port}")
+        logger.info(
+            f"Starting RDP session - Instance: {instance.id}, Port: {command.local_port}"
+        )
         pid = run_cmd(command)
 
         logger.info("Opening RDP client...")
         open_rdp_client(command.local_port)
 
         conn_state = ConnectionState(
-            connection_id = str(connection),
-            instance = instance,
-            name = instance.name,
-            type = connection.method,
-            profile = command.profile,
-            region = command.region,
-            pid = pid,
-            timestamp = connection.timestamp,
-            status = 'active',
-            local_port = command.local_port
+            connection_id=str(connection),
+            instance=instance,
+            name=instance.name,
+            type=connection.method,
+            profile=command.profile,
+            region=command.region,
+            pid=pid,
+            timestamp=connection.timestamp,
+            status="active",
+            local_port=command.local_port,
         )
 
         logger.debug(f"RDP session started: {conn_state}")
@@ -661,7 +672,7 @@ def start_rdp(instance_id):
         return logger.failed(f"Error starting RDP connection: {instance_id}", 500)
 
 
-@app.route('/api/custom-port/<instance_id>', methods=['POST'])
+@app.route("/api/custom-port/<instance_id>", methods=["POST"])
 def start_custom_port(instance_id):
     """
     Start custom port forwarding to an EC2 instance
@@ -672,36 +683,30 @@ def start_custom_port(instance_id):
     # pylint: disable=line-too-long, too-many-locals
     try:
         data = request.json
-        mode = data.get('mode', 'local')  # Default to local mode
-        method = 'PORT'
+        mode = data.get("mode", "local")  # Default to local mode
+        method = "PORT"
 
-        profile = AWSProfile(
-            name=data.get('profile'),
-            region=data.get('region')
-        )
-        instance = Instance(
-            name=data.get('name'),
-            id=instance_id
-        )
-        connection = Connection(
-            method=method,
-            instance=instance,
-            timestamp=time.time()
-        )
+        profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
+        instance = Instance(name=data.get("name"), id=instance_id)
+        connection = Connection(method=method, instance=instance, timestamp=time.time())
 
-        remote_host = data.get('remote_host', None)
-        remote_port = int(data.get('remote_port'))
+        remote_host = data.get("remote_host", None)
+        remote_port = int(data.get("remote_port"))
         local_port = FreePort(
             name=instance.name,
             remote_port=remote_port,
             remote_host=remote_host,
-            preferences=preferences
+            preferences=preferences,
         ).local_port
 
         if local_port is None:
             return logger.failed("No available ports for port forwarding")
 
-        document_name = 'AWS-StartPortForwardingSessionToRemoteHost' if mode != 'local' else 'AWS-StartPortForwardingSession'
+        document_name = (
+            "AWS-StartPortForwardingSessionToRemoteHost"
+            if mode != "local"
+            else "AWS-StartPortForwardingSession"
+        )
         command = SSMCommand(
             instance=instance,
             region=profile.region,
@@ -712,25 +717,27 @@ def start_custom_port(instance_id):
             document_name=document_name,
             remote_host=remote_host,
             remote_port=remote_port,
-            local_port=local_port
+            local_port=local_port,
         )
 
-        logger.info(f"Starting {mode} port forwarding - Instance: {instance.id}, Local Port: {command.local_port}")
+        logger.info(
+            f"Starting {mode} port forwarding - Instance: {instance.id}, Local Port: {command.local_port}"
+        )
         pid = run_cmd(command)
 
         conn_state = ConnectionState(
-            connection_id = str(connection),
-            instance = instance,
-            name = instance.name,
-            type = 'Custom Port' if mode == 'local' else 'Remote Host Port',
-            profile = command.profile,
-            region = command.region,
-            pid = pid,
-            timestamp = connection.timestamp,
-            status = 'active',
-            local_port = command.local_port,
-            remote_port = command.remote_port,
-            remote_host = command.remote_host if mode != 'local' else None
+            connection_id=str(connection),
+            instance=instance,
+            name=instance.name,
+            type="Custom Port" if mode == "local" else "Remote Host Port",
+            profile=command.profile,
+            region=command.region,
+            pid=pid,
+            timestamp=connection.timestamp,
+            status="active",
+            local_port=command.local_port,
+            remote_port=command.remote_port,
+            remote_host=command.remote_host if mode != "local" else None,
         )
 
         logger.debug(f"Port forwarding session started: {conn_state}")
@@ -739,7 +746,7 @@ def start_custom_port(instance_id):
         return logger.failed("Error starting port forwarding: {instance_id}", 500)
 
 
-@app.route('/api/instance-details/<instance_id>')
+@app.route("/api/instance-details/<instance_id>")
 def get_instance_details(instance_id):
     """
     Get details of an EC2 instance
@@ -760,7 +767,7 @@ def get_instance_details(instance_id):
         return logger.failed(f"Error getting instance details: {instance_id}", 500)
 
 
-@app.route('/api/preferences')
+@app.route("/api/preferences")
 def get_preferences():
     """
     Get application preferences
@@ -769,7 +776,7 @@ def get_preferences():
     return jsonify(preferences.preferences)
 
 
-@app.route('/api/preferences', methods=['POST'])
+@app.route("/api/preferences", methods=["POST"])
 def update_preferences():
     """
     Update application preferences
@@ -780,10 +787,10 @@ def update_preferences():
         logger.info("Preferences updated successfully")
     except Exception:  # pylint: disable=broad-except
         return logger.failed("Error updating preferences", 500)
-    return jsonify({'status': 'success'})
+    return jsonify({"status": "success"})
 
 
-@app.route('/api/preferences/<instance_name>', methods=['POST'])
+@app.route("/api/preferences/<instance_name>", methods=["POST"])
 def update_instance_preferences(instance_name):
     """
     Update preferences for a specific instance
@@ -795,9 +802,12 @@ def update_instance_preferences(instance_name):
         assert preferences.update_instance_preferences(instance_name, request.json)
         return logger.success(f"Preferences updated for instance: {instance_name}")
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error updating preferences for instance: {instance_name}", 500)
+        return logger.failed(
+            f"Error updating preferences for instance: {instance_name}", 500
+        )
 
-@app.route('/api/refresh')
+
+@app.route("/api/refresh")
 def refresh_data():
     """
     Refresh instance data
@@ -805,15 +815,12 @@ def refresh_data():
     """
     try:
         instances = aws_manager.list_ssm_instances()
-        return jsonify({
-            'status': 'success',
-            'instances': instances
-        })
+        return jsonify({"status": "success", "instances": instances})
     except Exception:  # pylint: disable=broad-except
         return logger.failed("Error refreshing data", 500)
 
 
-@app.route('/api/active-connections')
+@app.route("/api/active-connections")
 def get_active_connections():
     """
     Get active connections with port information
@@ -826,7 +833,7 @@ def get_active_connections():
         scanner = ConnectionScanner(cache)
         scanner.scan()
 
-        active_connections = cache.get('active_connections')
+        active_connections = cache.get("active_connections")
         if not active_connections:
             raise AssertionError("No active connections found")
 
@@ -841,7 +848,7 @@ def get_active_connections():
         return jsonify([])
 
 
-@app.route('/api/terminate-connection/<connection_id>', methods=['POST'])
+@app.route("/api/terminate-connection/<connection_id>", methods=["POST"])
 def terminate_connection(connection_id):
     """
     Terminate an active connection
@@ -851,7 +858,7 @@ def terminate_connection(connection_id):
     """
     try:
         connection = None
-        for conn in cache.get('active_connections'):
+        for conn in cache.get("active_connections"):
             if conn.connection_id == str(connection_id):
                 connection = conn
                 break
@@ -869,7 +876,7 @@ def terminate_connection(connection_id):
             for p in alive:
                 p.kill()
 
-            cache.remove('active_connections', connection)
+            cache.remove("active_connections", connection)
             logger.info(f"Connection terminated: {connection}")
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
@@ -879,7 +886,7 @@ def terminate_connection(connection_id):
         return logger.failed(f"Error terminating connection: {connection_id}", 500)
 
 
-@app.route('/api/rdp/<local_port>')
+@app.route("/api/rdp/<local_port>")
 def open_rdp_client(local_port):
     """
     Open the RDP client with the specified local port
@@ -894,28 +901,29 @@ def open_rdp_client(local_port):
         return logger.failed(f"Error opening RDP client: {local_port}", 500)
 
 
-@app.route('/')
+@app.route("/")
 def home():
     """
     Home page route
     Returns: Rendered HTML template
     """
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/favicon.ico')
+@app.route("/favicon.ico")
 def favicon():
     """
     Favicon route
     Returns: Favicon image
     """
-    return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_file("static/favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 
 class ServerThread(threading.Thread):
     """
     Thread class for running the Flask server
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._stop_event = threading.Event()
@@ -944,10 +952,10 @@ class ServerThread(threading.Thread):
             logging.info("Starting server...")
             try:
                 app.run(
-                    host='127.0.0.1',
+                    host="127.0.0.1",
                     port=self.port,
                     debug=self.debug,
-                    use_reloader=self.debug
+                    use_reloader=self.debug,
                 )
             except Exception as e:  # pylint: disable=broad-except
                 logging.error(f"Unexpected error: {str(e)}")
@@ -956,13 +964,14 @@ class ServerThread(threading.Thread):
                 logging.info("Exiting...")
 
 
-class TrayIcon():
+class TrayIcon:
     """
     System tray icon class
     """
+
     def __init__(self, icon_file, **kwargs):
         self.server = ServerThread()
-        self.server.port = kwargs.get('server_port', 5000)
+        self.server.port = kwargs.get("server_port", 5000)
         self.server.daemon = True
         self.icon = None
         self.icon_file = self.get_resource_path(icon_file)
@@ -976,7 +985,7 @@ class TrayIcon():
             image = Image.open(self.icon_file)
         except FileNotFoundError:
             logger.warning("Icon file not found, generating fallback image")
-            image = self.create_icon(32, 32, 'black', 'white')
+            image = self.create_icon(32, 32, "black", "white")
         return image
 
     @property
@@ -985,8 +994,8 @@ class TrayIcon():
         Create the system tray menu
         """
         return Menu(
-            MenuItem('Open', self.open_app, default=True),
-            MenuItem('Exit', self.exit_app)
+            MenuItem("Open", self.open_app, default=True),
+            MenuItem("Exit", self.exit_app),
         )
 
     def get_resource_path(self, relative_path):
@@ -999,7 +1008,9 @@ class TrayIcon():
         """
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = os.path.join(sys._MEIPASS, 'ssm_manager')  # pylint: disable=protected-access
+            base_path = os.path.join(
+                sys._MEIPASS, "ssm_manager"
+            )  # pylint: disable=protected-access
         except AttributeError:
             base_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1016,7 +1027,7 @@ class TrayIcon():
         Returns:
             Image: The generated image
         """
-        image = Image.new('RGB', (width, height), color1)
+        image = Image.new("RGB", (width, height), color1)
         dc = ImageDraw.Draw(image)
         dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
         dc.rectangle((0, height // 2, width // 2, height), fill=color2)
@@ -1037,7 +1048,7 @@ class TrayIcon():
         """
         # pylint: disable=unused-argument
         logger.info("Opening application...")
-        open_browser(f'http://127.0.0.1:{self.server.port}/')
+        open_browser(f"http://127.0.0.1:{self.server.port}/")
 
     def run(self):
         """

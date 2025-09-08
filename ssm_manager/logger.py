@@ -1,14 +1,17 @@
 """
 Custom Logger
 """
+
 import logging
 from flask import jsonify
+
 
 class CustomLogger(logging.Logger):
     """
     Custom logger that extends the standard logging.Logger class to provide
     additional functionality for logging success and failure messages.
     """
+
     def __init__(self, name, level=logging.NOTSET):
         super().__init__(name, level)
         # You can add a custom log level here if needed, e.g., for 'success'
@@ -22,7 +25,7 @@ class CustomLogger(logging.Logger):
         self.log(logging.INFO, f"success: {msg}", *args, **kwargs)
 
         # Return a Flask response
-        return jsonify({'status': 'success', 'message': msg}), 200
+        return jsonify({"status": "success", "message": msg}), 200
 
     def failed(self, msg, *args, **kwargs):
         """
@@ -32,4 +35,4 @@ class CustomLogger(logging.Logger):
         self.log(logging.ERROR, f"error: {msg}", *args, **kwargs)
 
         # Return a Flask response
-        return jsonify({'status': 'error', 'message': msg}), 500
+        return jsonify({"status": "error", "message": msg}), 500

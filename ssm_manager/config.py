@@ -3,6 +3,7 @@ AWS Config Manager
 This module provides a class to manage AWS configuration files in a cross-platform manner.
 It allows reading and writing values to the AWS config file, handling errors gracefully.
 """
+
 # pylint: disable=logging-fstring-interpolation
 import logging
 import configparser
@@ -10,17 +11,19 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 class AwsConfigManager:
     """
     A class to read and write to the AWS config file in a cross-platform manner.
     """
+
     def __init__(self):
         """
         Initializes the manager by finding the AWS config file path.
         """
         self._config_path = self._get_aws_config_path()
-        self.session_prefix = 'sso-session '
-        self.profile_prefix = 'profile '
+        self.session_prefix = "sso-session "
+        self.profile_prefix = "profile "
 
     def _get_aws_config_path(self):
         """
@@ -94,9 +97,11 @@ class AwsConfigManager:
         config.set(section, key, value)
 
         try:
-            with open(self._config_path, 'w', encoding='utf-8') as configfile:
+            with open(self._config_path, "w", encoding="utf-8") as configfile:
                 config.write(configfile)
-            logger.info(f"Successfully wrote '{value}' to section '{section}', key '{key}'")
+            logger.info(
+                f"Successfully wrote '{value}' to section '{section}', key '{key}'"
+            )
         except IOError as e:
             logger.error(f"An I/O error occurred while writing to the file: {e}")
 
@@ -114,19 +119,23 @@ class AwsConfigManager:
             session_names = []
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise ValueError(f"Error: AWS config file not found at {self._config_path}")
+                raise ValueError(
+                    f"Error: AWS config file not found at {self._config_path}"
+                )
 
             config.read(self._config_path)
             for section in config.sections():
                 if section.startswith(self.session_prefix):
-                    session_names.append(section[len(self.session_prefix):])
+                    session_names.append(section[len(self.session_prefix) :])
 
             for name in session_names:
                 section_name = self.session_prefix + name
-                session = {'name': name}
-                for prop in ['sso_start_url', 'sso_region', 'sso_registration_scopes']:
+                session = {"name": name}
+                for prop in ["sso_start_url", "sso_region", "sso_registration_scopes"]:
                     if not config.has_option(section_name, prop):
-                        logger.warning(f"Warning: '{prop}' not found in section '{section_name}'")
+                        logger.warning(
+                            f"Warning: '{prop}' not found in section '{section_name}'"
+                        )
                         continue
                     session[prop] = config.get(section_name, prop, fallback=None)
                 sessions.append(session)
@@ -137,7 +146,9 @@ class AwsConfigManager:
 
         return sessions
 
-    def add_session(self, name: str, start_url: str, region: str, registration_scopes: str):
+    def add_session(
+        self, name: str, start_url: str, region: str, registration_scopes: str
+    ):
         """
         Adds a new SSO session to the AWS config file.
 
@@ -148,9 +159,9 @@ class AwsConfigManager:
             registration_scopes (str): The registration scopes for the session.
         """
         section_name = self.session_prefix + name
-        self.write_value(section_name, 'sso_start_url', start_url)
-        self.write_value(section_name, 'sso_region', region)
-        self.write_value(section_name, 'sso_registration_scopes', registration_scopes)
+        self.write_value(section_name, "sso_start_url", start_url)
+        self.write_value(section_name, "sso_region", region)
+        self.write_value(section_name, "sso_registration_scopes", registration_scopes)
 
     def delete_session(self, name: str):
         """
@@ -162,21 +173,22 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(
+                    f"Error: AWS config file not found at {self._config_path}"
+                )
 
             config.read(self._config_path)
             section_name = self.session_prefix + name
             assert config.has_section(section_name), f"Session '{name}' does not exist"
 
             config.remove_section(section_name)
-            with open(self._config_path, 'w', encoding='utf-8') as configfile:
+            with open(self._config_path, "w", encoding="utf-8") as configfile:
                 config.write(configfile)
             logger.info(f"Successfully deleted session '{name}'")
         except configparser.Error as e:
             logger.error(f"Error deleting session: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting session: {e}")
-
 
     def add_profile(self, name: str, **kwargs):
         """
@@ -190,11 +202,17 @@ class AwsConfigManager:
             account_id (str): The SSO account ID for the profile.
             role_name (str): The SSO role name for the profile.
         """
-        section_name = 'profile ' + name if name != 'default' else 'default'
+        section_name = "profile " + name if name != "default" else "default"
         if not kwargs:
             logger.error("No properties provided to add to the profile.")
             return
-        for prop in ['region', 'output', 'sso_session', 'sso_account_id', 'sso_role_name']:
+        for prop in [
+            "region",
+            "output",
+            "sso_session",
+            "sso_account_id",
+            "sso_role_name",
+        ]:
             if prop not in kwargs:
                 logger.warning(f"Warning: '{prop}' not provided for profile '{name}'")
                 continue
@@ -210,14 +228,18 @@ class AwsConfigManager:
         try:
             config = configparser.ConfigParser()
             if not self._config_path.is_file():
-                raise FileNotFoundError(f"Error: AWS config file not found at {self._config_path}")
+                raise FileNotFoundError(
+                    f"Error: AWS config file not found at {self._config_path}"
+                )
 
             config.read(self._config_path)
-            section_name = self.profile_prefix + name if name != 'default' else 'default'
+            section_name = (
+                self.profile_prefix + name if name != "default" else "default"
+            )
             assert config.has_section(section_name), f"Profile '{name}' does not exist"
 
             config.remove_section(section_name)
-            with open(self._config_path, 'w', encoding='utf-8') as configfile:
+            with open(self._config_path, "w", encoding="utf-8") as configfile:
                 config.write(configfile)
             logger.info(f"Successfully deleted profile '{name}'")
         except configparser.Error as e:

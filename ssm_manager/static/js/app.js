@@ -8,11 +8,18 @@ const app = createApp({
     const githubUrl = ref('https://github.com/napalm255/ssm-manager');
 
     const depAwsCli = ref(false);
-    const depAwsCliVersion = ref("Checking...");
+    const depAwsCliInstalled = ref("Checking...");
+    const depAwsCliLatest = ref("Checking...");
     const depAwsCliInstalling = ref(false);
+    const depAwsCliUpdateAvailable = ref(false);
+    const depAwsCliUrls = ref([]);
+
     const depSessionManagerPlugin = ref(false);
-    const depSessionManagerPluginVersion = ref("Checking...");
+    const depSessionManagerPluginInstalled = ref("Checking...");
+    const depSessionManagerPluginLatest = ref("Checking...");
     const depSessionManagerPluginInstalling = ref(false);
+    const depSessionManagerPluginUpdateAvailable = ref(false);
+    const depSessionManagerPluginUrls = ref([]);
 
     const currentHash = ref('#/start');
     const currentProfile = ref("");
@@ -221,13 +228,19 @@ const app = createApp({
 
     const getDepVersions = async () => {
       const data = await apiFetch("/api/dependencies");
-      depAwsCliVersion.value = data.awscli;
-      depSessionManagerPluginVersion.value = data.session_manager_plugin;
-      if (depAwsCliVersion.value !== 'Not Installed') {
+      depAwsCliInstalled.value = data.awscli.installed;
+      depAwsCliLatest.value = data.awscli.latest;
+      depAwsCliUrls.value = data.awscli.urls;
+      depSessionManagerPluginInstalled.value = data.session_manager_plugin.installed;
+      depSessionManagerPluginLatest.value = data.session_manager_plugin.latest;
+      depSessionManagerPluginUrls.value = data.session_manager_plugin.urls;
+      if (depAwsCliInstalled.value !== 'Not Installed') {
         depAwsCli.value = true;
+        depAwsCliUpdateAvailable.value = await compareVersions(depAwsCliInstalled.value, depAwsCliLatest.value) < 0;
       }
-      if (depSessionManagerPluginVersion.value !== 'Not Installed') {
+      if (depSessionManagerPluginInstalled.value !== 'Not Installed') {
         depSessionManagerPlugin.value = true;
+        depSessionManagerPluginUpdateAvailable.value = await compareVersions(depSessionManagerPluginInstalled.value, depSessionManagerPluginLatest.value) < 0;
       }
     };
 
@@ -250,22 +263,6 @@ const app = createApp({
     const getHosts = async () => {
       hosts.value = await apiFetch("/api/config/hosts");
     }
-
-    // -----------------------------------------------
-    // Dependency Management
-    // -----------------------------------------------
-
-    const installAwsCli = async () => {
-      depAwsCliInstalling.value = true;
-      console.log('Install AWS CLI clicked');
-      // depAwsCliInstalling.value = false;
-    };
-
-    const installSessionManagerPlugin = async () => {
-      depSessionManagerPluginInstalling.value = true;
-      console.log('Install Session Manager Plugin clicked');
-      // depSessionManagerPluginInstalling.value = false;
-    };
 
     // -----------------------------------------------
     // Preferences Management
@@ -958,8 +955,8 @@ const app = createApp({
 
     return {
       title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
-      depAwsCli, depAwsCliVersion, depAwsCliInstalling, depSessionManagerPlugin, depSessionManagerPluginVersion, depSessionManagerPluginInstalling,
-      installAwsCli, installSessionManagerPlugin,
+      depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
+      depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
       hideTooltip, tooltipTriggerList, tooltipList,
       preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,

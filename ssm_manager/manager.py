@@ -1,20 +1,26 @@
 """
 AWS Manager class to handle AWS connections and operations
 """
+
 # pylint: disable=logging-fstring-interpolation
 import logging
 import boto3
 from botocore.exceptions import (
-    ProfileNotFound, BotoCoreError, SSOTokenLoadError,
-    TokenRetrievalError, ClientError
+    ProfileNotFound,
+    BotoCoreError,
+    SSOTokenLoadError,
+    TokenRetrievalError,
+    ClientError,
 )
 
 logger = logging.getLogger(__name__)
+
 
 class AWSManager:
     """
     AWS Manager class to handle AWS connections and operations
     """
+
     def __init__(self):
         self.ssm_client = None
         self.ec2_client = None
@@ -37,8 +43,8 @@ class AWSManager:
             _profiles = boto3.Session().available_profiles
             for _profile in _profiles:
                 session = boto3.Session(profile_name=_profile)
-                config = session._session.full_config['profiles'].get(_profile, {})
-                profile = {'name': _profile, **config}
+                config = session._session.full_config["profiles"].get(_profile, {})
+                profile = {"name": _profile, **config}
                 profiles.append(profile)
             logger.info(f"Successfully loaded {len(profiles)} AWS profiles")
             return profiles
@@ -55,7 +61,7 @@ class AWSManager:
         """
         regions = []
         try:
-            regions = boto3.Session().get_available_regions('ec2')
+            regions = boto3.Session().get_available_regions("ec2")
             logger.info(f"Successfully loaded {len(regions)} AWS regions")
             return regions
         except BotoCoreError as e:
@@ -72,12 +78,12 @@ class AWSManager:
         self.is_connected = False
         try:
             aws_session = boto3.Session(profile_name=profile, region_name=region)
-            self.ssm_client = aws_session.client('ssm')
-            self.ec2_client = aws_session.client('ec2')
-            self.sts_client = aws_session.client('sts')
+            self.ssm_client = aws_session.client("ssm")
+            self.ec2_client = aws_session.client("ec2")
+            self.sts_client = aws_session.client("sts")
 
             account_info = self.sts_client.get_caller_identity()
-            self.account_id = account_info['Account']
+            self.account_id = account_info["Account"]
 
             self.profile = profile
             self.region = region
@@ -124,47 +130,56 @@ class AWSManager:
 
         try:
             # Get all instances with SSM
-            paginator = self.ssm_client.get_paginator('describe_instance_information')
+            paginator = self.ssm_client.get_paginator("describe_instance_information")
             ssm_instance_ids = set()
             for page in paginator.paginate():
-                for instance in page.get('InstanceInformationList', []):
-                    ssm_instance_ids.add(instance['InstanceId'])
+                for instance in page.get("InstanceInformationList", []):
+                    ssm_instance_ids.add(instance["InstanceId"])
 
             # Get all EC2 instances
             instances = []
-            paginator = self.ec2_client.get_paginator('describe_instances')
+            paginator = self.ec2_client.get_paginator("describe_instances")
 
             for page in paginator.paginate():
-                for reservation in page['Reservations']:
-                    for instance in reservation['Instances']:
-                        instance_id = instance['InstanceId']
+                for reservation in page["Reservations"]:
+                    for instance in reservation["Instances"]:
+                        instance_id = instance["InstanceId"]
                         # Explicitly check if the instance ID is in the SSM set
                         has_ssm = instance_id in ssm_instance_ids
 
                         instance_data = {
-                            'id': instance_id,
-                            'name': next((tag['Value'] for tag in instance.get('Tags', []) if tag['Key'] == 'Name'), 'N/A'),
-                            'profile': self.profile,
-                            'region': self.region,
-                            'type': instance['InstanceType'],
-                            'os': instance.get('PlatformDetails', 'N/A'),
-                            'state': instance['State']['Name'],
-                            'has_ssm': has_ssm
+                            "id": instance_id,
+                            "name": next(
+                                (
+                                    tag["Value"]
+                                    for tag in instance.get("Tags", [])
+                                    if tag["Key"] == "Name"
+                                ),
+                                "N/A",
+                            ),
+                            "profile": self.profile,
+                            "region": self.region,
+                            "type": instance["InstanceType"],
+                            "os": instance.get("PlatformDetails", "N/A"),
+                            "state": instance["State"]["Name"],
+                            "has_ssm": has_ssm,
                         }
                         logger.debug(f"Instance {instance_id} has_ssm: {has_ssm}")
                         instances.append(instance_data)
 
             # Sort instances: SSM instances first, then by name
-            instances.sort(key=lambda x: (not x['has_ssm'], x.get('name', '').lower()))
+            instances.sort(key=lambda x: (not x["has_ssm"], x.get("name", "").lower()))
 
-            logger.info(f"Successfully listed {len(instances)} instances (with SSM: {len(ssm_instance_ids)})")
+            logger.info(
+                f"Successfully listed {len(instances)} instances (with SSM: {len(ssm_instance_ids)})"
+            )
             return instances
 
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error listing instances: {str(e)}")
-            if 'ExpiredTokenException' in str(e):
+            if "ExpiredTokenException" in str(e):
                 self.is_connected = False
-                return {'error': 'Authentication token expired. Please reconnect.'}
+                return {"error": "Authentication token expired. Please reconnect."}
             return []
 
     def get_instance_details(self, instance_id: str):
@@ -179,30 +194,41 @@ class AWSManager:
         try:
             response = self.ec2_client.describe_instances(InstanceIds=[instance_id])
 
-            if not response['Reservations']:
+            if not response["Reservations"]:
                 logger.warning(f"No instance found with ID: {instance_id}")
                 return None
 
-            instance = response['Reservations'][0]['Instances'][0]
+            instance = response["Reservations"][0]["Instances"][0]
 
-            iam_role = ''
-            if instance.get('IamInstanceProfile'):
-                iam_role = instance['IamInstanceProfile'].get('Arn', '').split('/')[-1]
+            iam_role = ""
+            if instance.get("IamInstanceProfile"):
+                iam_role = instance["IamInstanceProfile"].get("Arn", "").split("/")[-1]
 
-            security_groups = [sg['GroupName'] for sg in instance.get('SecurityGroups', [])]
+            security_groups = [
+                sg["GroupName"] for sg in instance.get("SecurityGroups", [])
+            ]
 
             instance_details = {
-                'id': instance['InstanceId'],
-                'name': next((tag['Value'] for tag in instance.get('Tags', []) if tag['Key'] == 'Name'), 'N/A'),
-                'platform': instance.get('PlatformDetails', 'N/A'),
-                'public_ip': instance.get('PublicIpAddress', 'N/A'),
-                'private_ip': instance.get('PrivateIpAddress', 'N/A'),
-                'vpc_id': instance.get('VpcId', 'N/A'),
-                'subnet_id': instance.get('SubnetId', 'N/A'),
-                'iam_role': iam_role,
-                'ami_id': instance.get('ImageId', 'N/A'),
-                'key_name': instance.get('KeyName', 'N/A'),
-                'security_groups': ', '.join(security_groups) if security_groups else 'N/A'
+                "id": instance["InstanceId"],
+                "name": next(
+                    (
+                        tag["Value"]
+                        for tag in instance.get("Tags", [])
+                        if tag["Key"] == "Name"
+                    ),
+                    "N/A",
+                ),
+                "platform": instance.get("PlatformDetails", "N/A"),
+                "public_ip": instance.get("PublicIpAddress", "N/A"),
+                "private_ip": instance.get("PrivateIpAddress", "N/A"),
+                "vpc_id": instance.get("VpcId", "N/A"),
+                "subnet_id": instance.get("SubnetId", "N/A"),
+                "iam_role": iam_role,
+                "ami_id": instance.get("ImageId", "N/A"),
+                "key_name": instance.get("KeyName", "N/A"),
+                "security_groups": (
+                    ", ".join(security_groups) if security_groups else "N/A"
+                ),
             }
 
             logger.debug(f"Successfully retrieved details for instance {instance_id}")

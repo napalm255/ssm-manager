@@ -74,46 +74,56 @@
                   </div>
                   <div class="card-footer text-body-secondary text-end" v-if="depAwsCli">
                     <div class="container">
-                      <div class="row">
+                      <div class="row d-flex align-items-center">
                         <div class="col text-start">
-                          <span class="text-success">
-                            Installed
-                          </span>
+                          <span class="text-success" v-if="!depAwsCliUpdateAvailable">Installed</span>
+                          <span class="text-warning" v-if="depAwsCliUpdateAvailable">Update Available</span>
                         </div>
-                        <div class="col text-end" title="Install" v-if="!depAwsCliInstalling">
-                          <span class="text-success me-2" v-html="'v' + depAwsCliVersion"></span>
-                          <span class="text-primary" style="cursor: pointer;">
-                            <span @click="installAwsCli">
-                              <i class="bi bi-cloud-download"></i>
+                        <div class="col text-end">
+                          <span class="me-2" :class="depAwsCliUpdateAvailable ? 'text-warning' : 'text-success'" v-html="'v' + depAwsCliInstalled"></span>
+                          <span class="ms-2 text-primary">
+                            <a type="button"
+                              class="btn btn-warning d-inline-flex align-items-center"
+                              style="--bs-btn-padding-y: .1rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem; margin-right: .15rem;"
+                              v-for="url in depAwsCliUrls"
+                              :href="url.link"
+                              :title="'Download AWS CLI v' + depAwsCliLatest"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              v-if="depAwsCliUpdateAvailable"
+                            >
+                              <span><i class="bi bi-cloud-download" style="font-size:.75rem;"></i></span>
+                              <span v-html="url.extension.toUpperCase()" class="ms-1"></span>
+                            </a>
+                            <span v-if="!depAwsCliUpdateAvailable" title="Up to date">
+                              <i class="bi bi-check-circle text-success"></i>
                             </span>
                           </span>
-                        </div>
-                        <div class="col text-end" v-if="depAwsCliInstalling">
-                          <small class="text-primary me-2">Updating...</small>
-                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depAwsCliInstalling"></span>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="card-footer text-body-secondary" v-if="!depAwsCli">
                     <div class="container">
-                      <div class="row">
+                      <div class="row d-flex align-items-center">
                         <div class="col text-start">
-                          <span class="text-info"
-                                :class="{ 'text-danger': depAwsCliVersion == 'Not Installed'}"
-                                v-html="depAwsCliVersion">
-                          </span>
+                          <span class="text-info" :class="{'text-danger': depAwsCliInstalled == 'Not Installed'}" v-html="depAwsCliInstalled"></span>
                         </div>
-                        <div class="col text-end" v-if="!depAwsCliInstalling">
-                          <span class="ms-2 text-primary" style="cursor: pointer;">
-                            <a @click="installAwsCli">
-                              <i class="bi bi-cloud-download"></i>
+                        <div class="col text-end">
+                          <span class="ms-2 text-primary">
+                            <a type="button"
+                              class="btn btn-primary d-inline-flex align-items-center"
+                              style="--bs-btn-padding-y: .1rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem; margin-right: .15rem;"
+                              v-for="url in depAwsCliUrls"
+                              :href="url.link"
+                              :title="'Download AWS CLI v' + depAwsCliLatest"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <span><i class="bi bi-cloud-download" style="font-size:.75rem;"></i></span>
+                              <span v-html="url.extension.toUpperCase()" class="ms-1"></span>
                             </a>
                           </span>
-                        </div>
-                        <div class="col text-end" v-if="depAwsCliInstalling">
-                          <small class="text-primary me-2">Installing...</small>
-                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depAwsCliInstalling"></span>
                         </div>
                       </div>
                     </div>
@@ -131,22 +141,32 @@
                   </div>
                   <div class="card-footer text-body-secondary text-end" v-if="depSessionManagerPlugin">
                     <div class="container">
-                      <div class="row">
+                      <div class="row d-flex align-items-center">
                         <div class="col text-start">
-                          <span class="text-success">Installed</span>
+                          <span class="text-success" v-if="!depSessionManagerPluginUpdateAvailable">Installed</span>
+                          <span class="text-warning" v-if="depSessionManagerPluginUpdateAvailable">Update Available</span>
                         </div>
-                        <div class="col text-end" title="Install" v-if="!depSessionManagerPluginInstalling">
-                          <span class="text-success me-2" v-html="'v' + depSessionManagerPluginVersion"></span>
-                          <span class="text-primary" style="cursor: pointer;">
-                            <span @click="installSessionManagerPlugin">
-                              <i class="bi bi-cloud-download"></i>
+                        <div class="col text-end d-flex align-items-center justify-content-end">
+                          <span class="me-2" :class="depSessionManagerPluginUpdateAvailable ?  'text-warning' : 'text-success'" v-html="'v' + depSessionManagerPluginInstalled"></span>
+                          <span class="ms-2 text-primary d-flex align-items-center
+                            justify-content-end">
+                            <a type="button"
+                              class="btn btn-warning d-inline-flex align-items-center"
+                              style="--bs-btn-padding-y: .1rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem; margin-right: .15rem;"
+                              v-for="url in depSessionManagerPluginUrls"
+                              :href="url.link"
+                              :title="'Download Session Manager Plugin v' + depSessionManagerPluginLatest"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              v-if="depSessionManagerPluginUpdateAvailable"
+                            >
+                              <span><i class="bi bi-cloud-download" style="font-size:.75rem;"></i></span>
+                              <span v-html="url.extension.toUpperCase()" class="ms-1"></span>
+                            </a>
+                            <span v-if="!depSessionManagerPluginUpdateAvailable" title="Up to date">
+                              <i class="bi bi-check-circle text-success"></i>
                             </span>
                           </span>
-                        </div>
-                        <div class="col text-end" v-if="depSessionManagerPluginInstalling">
-                          <small class="text-primary me-2" v-if="depSessionManagerPluginVersion == 'Not Installed'">Installing...</small>
-                          <small class="text-primary me-2" v-if="depSessionManagerPluginVersion != 'Not Installed'">Updating...</small>
-                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depSessionManagerPluginInstalling"></span>
                         </div>
                       </div>
                     </div>
@@ -155,21 +175,23 @@
                     <div class="container">
                       <div class="row">
                         <div class="col text-start">
-                          <span class="text-info"
-                                :class="{ 'text-danger': depSessionManagerPluginVersion == 'Not Installed'}"
-                                v-html="depSessionManagerPluginVersion">
-                          </span>
+                          <span class="text-info" :class="{ 'text-danger': depSessionManagerPluginInstalled == 'Not Installed'}" v-html="depSessionManagerPluginInstalled"></span>
                         </div>
-                        <div class="col text-end" v-if="!depSessionManagerPluginInstalling">
-                          <span class="ms-2 text-primary" style="cursor: pointer;">
-                            <a @click="installSessionManagerPlugin">
-                              <i class="bi bi-cloud-download"></i>
+                        <div class="col text-end">
+                          <span class="ms-2 text-primary">
+                            <a type="button"
+                              class="btn btn-primary d-inline-flex align-items-center"
+                              style="--bs-btn-padding-y: .1rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem; margin-right: .15rem;"
+                              v-for="url in depSessionManagerPluginUrls"
+                              :href="url.link"
+                              :title="'Download Session Manager Plugin v' + depSessionManagerPluginLatest"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <span><i class="bi bi-cloud-download" style="font-size:.75rem;"></i></span>
+                              <span v-html="url.extension.toUpperCase()" class="ms-1"></span>
                             </a>
                           </span>
-                        </div>
-                        <div class="col text-end" v-if="depSessionManagerPluginInstalling">
-                          <small class="text-primary me-2">Installing...</small>
-                          <span class="spinner-border spinner-border-sm text-primary text-end" v-if="depSessionManagerPluginInstalling"></span>
                         </div>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 """
 Utilities for SSM-Manager.
 """
+
 # pylint: disable=logging-fstring-interpolation
 import logging
 import base64
@@ -24,6 +25,7 @@ class AWSProfile(BaseModel):
     """
     Model representing an AWS Profile.
     """
+
     name: str = Field(min_length=1)
     region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
 
@@ -32,6 +34,7 @@ class Instance(BaseModel):
     """
     Model representing an instance with a name and ID.
     """
+
     name: Optional[str] = None
     id: str = Field(pattern=r"^i-[0-9a-f]{8,17}$")
 
@@ -40,6 +43,7 @@ class Connection(BaseModel):
     """
     Model representing a connection with a method and an Instance.
     """
+
     method: Literal["Shell", "RDP", "PORT", "MANUAL"]
     instance: Instance
     timestamp: float
@@ -55,6 +59,7 @@ class ConnectionState(BaseModel):
     """
     Model representing the state of a connection.
     """
+
     # pylint: disable=too-many-instance-attributes
     model_config = ConfigDict(strict=True)
 
@@ -84,26 +89,26 @@ class ConnectionState(BaseModel):
         Parse parameters from a string.
         """
         _params = {}
-        for param in params.split(','):
-            key, value = param.split('=')
+        for param in params.split(","):
+            key, value = param.split("=")
             _params[key] = value
 
-        self.local_port = _params.get('localPortNumber', None)
+        self.local_port = _params.get("localPortNumber", None)
         if self.local_port:
             self.local_port = int(self.local_port)
 
-        self.remote_port = _params.get('portNumber', None)
+        self.remote_port = _params.get("portNumber", None)
         if self.remote_port:
             self.remote_port = int(self.remote_port)
 
-        self.remote_host = _params.get('host', None)
+        self.remote_host = _params.get("host", None)
 
         if self.remote_port == 3389:
-            self.type = 'RDP'
+            self.type = "RDP"
         elif self.remote_host and self.remote_port:
-            self.type = 'Remote Host Port'
+            self.type = "Remote Host Port"
         elif self.remote_port and not self.remote_host:
-            self.type = 'Custom Port'
+            self.type = "Custom Port"
 
         return _params
 
@@ -111,6 +116,7 @@ class ConnectionState(BaseModel):
         """
         Load data into the model.
         """
+
         def get_arg(name: str, default: Any = None) -> str | None:
             try:
                 return cmd[cmd.index(name) + 1]
@@ -118,47 +124,48 @@ class ConnectionState(BaseModel):
                 return default
 
         try:
-            if '--target' not in cmd:
+            if "--target" not in cmd:
                 raise ValueError("No instance id found")
             connection = Connection(
-                method='MANUAL',
-                instance=Instance(id=get_arg('--target')),
-                timestamp=self.timestamp
+                method="MANUAL",
+                instance=Instance(id=get_arg("--target")),
+                timestamp=self.timestamp,
             )
-            self.status = 'active'
-            self.connection_id = get_arg('--reason', str(connection))
-            self.region = get_arg('--region', '')
-            self.profile = get_arg('--profile', '')
-            self.document_name = get_arg('--document-name')
+            self.status = "active"
+            self.connection_id = get_arg("--reason", str(connection))
+            self.region = get_arg("--region", "")
+            self.profile = get_arg("--profile", "")
+            self.document_name = get_arg("--document-name")
             self.name = self.name if self.name else connection.instance.id
 
-            parameters = get_arg('--parameters', None)
+            parameters = get_arg("--parameters", None)
             if parameters:
                 self._parse_params(parameters)
 
-            if self.connection_id.startswith(('shell_', 'rdp_', 'port_')):
-                conn_id = self.connection_id.split('_')
+            if self.connection_id.startswith(("shell_", "rdp_", "port_")):
+                conn_id = self.connection_id.split("_")
                 if not self.type:
                     self.type = conn_id[0].upper()
                 self.name = conn_id[1]
                 self.timestamp = float(conn_id[-1])
 
             if not self.document_name and not parameters:
-                self.type = 'Shell'
+                self.type = "Shell"
         except ValueError:
             return False
 
 
-class ConnectionScanner():
+class ConnectionScanner:
     """
     Class to scan for active connections
     """
+
     def __init__(self, cache, interval=1):
         self.cache = cache
         self.interval = interval
         self.existing_pids = []
 
-    def get_arg(self, cmd: str, name: str, default = None):
+    def get_arg(self, cmd: str, name: str, default=None):
         """
         Get the argument from the command line
         Args:
@@ -186,10 +193,7 @@ class ConnectionScanner():
             is_active.append(process.is_running())
             cmdline = process.cmdline()
 
-            validate = [
-                'ssm', 'start-session',
-                conn.instance.id
-            ]
+            validate = ["ssm", "start-session", conn.instance.id]
             for item in validate:
                 is_active.append(item in cmdline)
 
@@ -199,12 +203,11 @@ class ConnectionScanner():
             return False
         return all(is_active)
 
-
     def remove_inactive(self):
         """
         Remove inactive connections from the cache
         """
-        active_connections = self.cache.get('active_connections')
+        active_connections = self.cache.get("active_connections")
         if not active_connections:
             return
 
@@ -219,7 +222,7 @@ class ConnectionScanner():
 
         for conn in to_remove:
             try:
-                self.cache.remove('active_connections', conn)
+                self.cache.remove("active_connections", conn)
             except ValueError:
                 pass
 
@@ -228,26 +231,24 @@ class ConnectionScanner():
         Get active connections
         Returns: A generator of ConnectionState objects
         """
-        current_connections = self.cache.get('active_connections')
+        current_connections = self.cache.get("active_connections")
         if not current_connections:
             current_connections = []
 
         pids = [conn.pid for conn in current_connections]
-        for proc in psutil.process_iter(['pid', 'name', 'create_time']):
+        for proc in psutil.process_iter(["pid", "name", "create_time"]):
             try:
-                if proc.info['pid'] in pids:
+                if proc.info["pid"] in pids:
                     continue
-                if proc.name().lower() not in ('aws', 'aws.exe'):
+                if proc.name().lower() not in ("aws", "aws.exe"):
                     continue
-                if self.get_arg(proc.cmdline(), 'sso') == 'login':
+                if self.get_arg(proc.cmdline(), "sso") == "login":
                     continue
-                instance = Instance(
-                    id=self.get_arg(proc.cmdline(), '--target')
-                )
+                instance = Instance(id=self.get_arg(proc.cmdline(), "--target"))
                 connection_state = ConnectionState(
-                    pid=int(proc.info['pid']),
+                    pid=int(proc.info["pid"]),
                     instance=instance,
-                    timestamp=proc.info['create_time']
+                    timestamp=proc.info["create_time"],
                 )
                 connection_state.load(proc.cmdline())
                 if connection_state in current_connections:
@@ -264,13 +265,14 @@ class ConnectionScanner():
         """
         self.remove_inactive()
         for connection in self.get_connections():
-            self.cache.append('active_connections', connection)
+            self.cache.append("active_connections", connection)
 
 
 class RDPCommand(BaseModel):
     """
     Model representing the RDP command.
     """
+
     local_port: int
     system: Literal["Linux", "Windows"]
 
@@ -279,13 +281,15 @@ class RDPCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        if self.system == 'Linux':
+        if self.system == "Linux":
             remmina = shutil.which("remmina")
             if remmina:
-                return shlex.split(f'{remmina} -c rdp://127.0.0.1:{self.local_port} --no-tray-icon')
+                return shlex.split(
+                    f"{remmina} -c rdp://127.0.0.1:{self.local_port} --no-tray-icon"
+                )
             raise ValueError("No linux RDP client found")
-        if self.system == 'Windows':
-            return f'mstsc /v:127.0.0.1:{self.local_port}'
+        if self.system == "Windows":
+            return f"mstsc /v:127.0.0.1:{self.local_port}"
         raise ValueError(UNSUPPORTED_SYSTEM)
 
 
@@ -293,6 +297,7 @@ class AWSCommand(BaseModel):
     """
     Model representing the AWS command.
     """
+
     region: str = Field(pattern=r"^[a-z]{2}-[a-z]+-\d{1}$")
     profile: str = Field(min_length=1)
     system: Literal["Linux", "Windows"]
@@ -303,7 +308,7 @@ class AWSCommand(BaseModel):
         """
         Return startupinfo for Windows.
         """
-        if self.system == 'Windows':
+        if self.system == "Windows":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
@@ -315,10 +320,10 @@ class AWSCommand(BaseModel):
         """
         Determine the executable based on the system type.
         """
-        if self.system == 'Linux':
-            return 'aws'
-        if self.system == 'Windows':
-            return 'aws.exe'
+        if self.system == "Linux":
+            return "aws"
+        if self.system == "Windows":
+            return "aws.exe"
         raise ValueError(UNSUPPORTED_SYSTEM)
 
     @property
@@ -326,14 +331,14 @@ class AWSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        if self.system == 'Linux':
+        if self.system == "Linux":
             if self.hide:
                 return shlex.split(self._build_cmd())
             return f'gnome-terminal -- bash -c "{self._build_cmd()}"'
-        if self.system == 'Windows':
+        if self.system == "Windows":
             if self.hide:
                 return shlex.split(f'powershell -Command "{self._build_cmd()}"')
-            return f'start cmd /k {self._build_cmd()}'
+            return f"start cmd /k {self._build_cmd()}"
         raise ValueError(UNSUPPORTED_SYSTEM)
 
     def __str__(self) -> str:
@@ -344,8 +349,9 @@ class CLIVersionCommand(AWSCommand):
     """
     Model representing the AWS CLI version command.
     """
-    profile: Optional[str] = 'default'
-    region: Optional[str] = 'us-east-1'
+
+    profile: Optional[str] = "default"
+    region: Optional[str] = "us-east-1"
     hide: Optional[bool] = True
     wait: Optional[bool] = True
 
@@ -353,16 +359,17 @@ class CLIVersionCommand(AWSCommand):
         """
         Build the command string.
         """
-        cmd = [self.exec, '--version']
-        return str(' '.join(cmd))
+        cmd = [self.exec, "--version"]
+        return str(" ".join(cmd))
 
 
 class SSMVersionCommand(AWSCommand):
     """
     Model representing the AWS CLI version command.
     """
-    profile: Optional[str] = 'default'
-    region: Optional[str] = 'us-east-1'
+
+    profile: Optional[str] = "default"
+    region: Optional[str] = "us-east-1"
     hide: Optional[bool] = True
     wait: Optional[bool] = True
 
@@ -370,14 +377,15 @@ class SSMVersionCommand(AWSCommand):
         """
         Build the command string.
         """
-        cmd = ['session-manager-plugin', '--version']
-        return str(' '.join(cmd))
+        cmd = ["session-manager-plugin", "--version"]
+        return str(" ".join(cmd))
 
 
 class SSOCommand(AWSCommand):
     """
     Model representing the SSO command.
     """
+
     action: Literal["login", "logout"]
     hide: Optional[bool] = True
     wait: Optional[bool] = True
@@ -386,20 +394,31 @@ class SSOCommand(AWSCommand):
         """
         Build the command string.
         """
-        cmd = [self.exec, 'sso', self.action,
-               '--region', self.region,
-               '--profile', self.profile]
-        return str(' '.join(cmd))
+        cmd = [
+            self.exec,
+            "sso",
+            self.action,
+            "--region",
+            self.region,
+            "--profile",
+            self.profile,
+        ]
+        return str(" ".join(cmd))
 
 
 class SSMCommand(AWSCommand):
     """
     Model representing the SSM command.
     """
+
     instance: Instance
     reason: Connection
-    document_name: Optional[Literal["AWS-StartPortForwardingSession",
-                                    "AWS-StartPortForwardingSessionToRemoteHost"]] = None
+    document_name: Optional[
+        Literal[
+            "AWS-StartPortForwardingSession",
+            "AWS-StartPortForwardingSessionToRemoteHost",
+        ]
+    ] = None
     local_port: Optional[int] = None
     remote_host: Optional[str] = None
     remote_port: Optional[int] = None
@@ -410,23 +429,35 @@ class SSMCommand(AWSCommand):
         """
         Build the command string.
         """
-        cmd = [self.exec, 'ssm', 'start-session',
-               '--target', self.instance.id,
-               '--region', self.region,
-               '--profile', self.profile,
-               '--reason', str(self.reason)]
+        cmd = [
+            self.exec,
+            "ssm",
+            "start-session",
+            "--target",
+            self.instance.id,
+            "--region",
+            self.region,
+            "--profile",
+            self.profile,
+            "--reason",
+            str(self.reason),
+        ]
         if self.document_name:
-            cmd += ['--document-name', self.document_name]
+            cmd += ["--document-name", self.document_name]
         if self.local_port and self.remote_port and not self.remote_host:
-            params = [f'portNumber={self.remote_port}',
-                      f'localPortNumber={self.local_port}']
-            cmd += ['--parameters', ','.join(params)]
+            params = [
+                f"portNumber={self.remote_port}",
+                f"localPortNumber={self.local_port}",
+            ]
+            cmd += ["--parameters", ",".join(params)]
         if self.local_port and self.remote_host and self.remote_port:
-            params = [f'localPortNumber={self.local_port}',
-                      f'host={self.remote_host}',
-                      f'portNumber={self.remote_port}']
-            cmd += ['--parameters', ','.join(params)]
-        return str(' '.join(cmd))
+            params = [
+                f"localPortNumber={self.local_port}",
+                f"host={self.remote_host}",
+                f"portNumber={self.remote_port}",
+            ]
+            cmd += ["--parameters", ",".join(params)]
+        return str(" ".join(cmd))
 
 
 class PSCommand(BaseModel):
@@ -434,6 +465,7 @@ class PSCommand(BaseModel):
     Model representing the powershell command.
     Note: Windows only.
     """
+
     hide: Optional[bool] = True
     wait: Optional[bool] = True
     runAs: Optional[bool] = False
@@ -454,14 +486,17 @@ class PSCommand(BaseModel):
         """
         Build the command to run based on the system type.
         """
-        encoded_cmd = base64.b64encode(self._build_cmd().encode('utf-16le')).decode('utf-8')
-        return shlex.split(f'powershell -EncodedCommand {encoded_cmd}')
+        encoded_cmd = base64.b64encode(self._build_cmd().encode("utf-16le")).decode(
+            "utf-8"
+        )
+        return shlex.split(f"powershell -EncodedCommand {encoded_cmd}")
 
 
 class CmdKeyAddCommand(PSCommand):
     """
     Model representing the credential command.
     """
+
     targetname: str = Field(min_length=1)
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
@@ -470,54 +505,57 @@ class CmdKeyAddCommand(PSCommand):
         """
         Build the command string.
         """
-        cmd = ['cmdkey.exe']
-        cmd.extend([
-            f'/add:"{self.targetname}"',
-            f'/user:"{self.username}"',
-            f'/pass:"{self.password}"'])
-        return str(' '.join(cmd))
+        cmd = ["cmdkey.exe"]
+        cmd.extend(
+            [
+                f'/add:"{self.targetname}"',
+                f'/user:"{self.username}"',
+                f'/pass:"{self.password}"',
+            ]
+        )
+        return str(" ".join(cmd))
 
 
 class CmdKeyDeleteCommand(PSCommand):
     """
     Model representing the credential delete command.
     """
+
     targetname: str = Field(min_length=1)
 
     def _build_cmd(self) -> str:
         """
         Build the command string.
         """
-        cmd = ['cmdkey.exe']
+        cmd = ["cmdkey.exe"]
         cmd.append(f'/delete:"{self.targetname}"')
-        return str(' '.join(cmd))
+        return str(" ".join(cmd))
 
 
 class HostsFileCommand(PSCommand):
     """
     Model representing the powershell command
     """
+
     command: str
 
     def _build_cmd(self) -> str:
         """
         Build the command string.
         """
-        cmd = ['Start-Process',
-               'powershell.exe',
-               f"-ArgumentList '{self.command}'"
-        ]
+        cmd = ["Start-Process", "powershell.exe", f"-ArgumentList '{self.command}'"]
         if self.hide:
-            cmd.append('-WindowStyle Hidden')
+            cmd.append("-WindowStyle Hidden")
         if self.runAs:
-            cmd.append('-Verb RunAs')
-        return str(' '.join(cmd))
+            cmd.append("-Verb RunAs")
+        return str(" ".join(cmd))
 
 
 class FreePort(BaseModel):
     """
     Class to find a free port
     """
+
     name: str
     remote_port: int
     remote_host: str | None = None
@@ -590,7 +628,7 @@ def socket_is_open(port):
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        result = sock.connect_ex(('127.0.0.1', port))
+        result = sock.connect_ex(("127.0.0.1", port))
         return result == 0
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error checking socket: {str(e)}")
@@ -608,10 +646,10 @@ def get_pid(executable: str, command: str):
     Returns:
         int: The PID of the process
     """
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
             if proc.name().lower() == executable:
-                cmdline = ' '.join(proc.cmdline()).lower()
+                cmdline = " ".join(proc.cmdline()).lower()
                 if command.lower() in cmdline:
                     return proc.pid
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -643,10 +681,11 @@ def run_cmd(cmd, skip_pid_wait=False, pid_max_retries=10, pid_retry_delay=2):
 
     process = None
     if cmd.hide:
-        process = subprocess.Popen(cmd.cmd,
+        process = subprocess.Popen(
+            cmd.cmd,
             startupinfo=cmd.startupinfo,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         )
     else:
         process = subprocess.Popen(cmd.cmd, shell=True)
