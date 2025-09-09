@@ -1,7 +1,5 @@
 """
 AWS Config Manager
-This module provides a class to manage AWS configuration files in a cross-platform manner.
-It allows reading and writing values to the AWS config file, handling errors gracefully.
 """
 
 # pylint: disable=logging-fstring-interpolation
