@@ -447,27 +447,24 @@ const app = createApp({
           })
         });
         toast('Successfully started port forwarding', 'success');
-      } catch (error) {
+
+        if (portForwardingModalProperties.value.username && data.local_port) {
+          await addWindowsCredential(
+            portForwardingModalProperties.value.instanceId,
+            portForwardingModalProperties.value.instanceName,
+            portForwardingModalProperties.value.username,
+            data.local_port
+          );
+        }
+
+        if (portForwardingModalProperties.value.hostentry) {
+          await portForwardingAddHost();
+        }
+      } finally {
+        await getActiveConnections();
+        portForwardingModal.value.hide();
         isPortForwardingStarting.value = false;
-        return;
       }
-
-      if (portForwardingModalProperties.value.username && data.local_port) {
-        await addWindowsCredential(
-          portForwardingModalProperties.value.instanceId,
-          portForwardingModalProperties.value.instanceName,
-          portForwardingModalProperties.value.username,
-          data.local_port
-        );
-      }
-
-      if (portForwardingModalProperties.value.hostentry) {
-        await portForwardingAddHost();
-      }
-
-      await getActiveConnections();
-      portForwardingModal.value.hide();
-      isPortForwardingStarting.value = false;
     };
 
     const addWindowsCredential = async (instanceId, instanceName, username, localPort) => {
