@@ -834,8 +834,7 @@ def get_active_connections():
         scanner.scan()
 
         active_connections = cache.get("active_connections")
-        if not active_connections:
-            raise AssertionError("No active connections found")
+        assert active_connections is not None, "No active connections"
 
         logger.debug(f"Active connections: {len(active_connections)}")
         for conn in active_connections:
@@ -843,8 +842,7 @@ def get_active_connections():
             active.append(conn.dict())
 
         return jsonify(active)
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error(f"Error getting active connections: {str(e)}")
+    except AssertionError:
         return jsonify([])
 
 
