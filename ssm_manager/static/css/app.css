@@ -29,11 +29,19 @@ main {
 
 .page {
   margin-top: 20px;
+  overflow-y: auto;
 }
 
 .page-body {
   max-height: calc(100vh - 100px);
   overflow-y: auto;
+}
+.instances-card-body {
+  max-height: calc(100vh - 170px);
+}
+
+.active-connections-card-body {
+  max-height: calc(100vh - 170px);
 }
 
 [data-bs-theme="light"] .logo {
