@@ -96,10 +96,10 @@ class DependencyManager(BaseModel):
                 if response.status != 200:
                     raise error.URLError(f"Error fetching changelog: {response.status}")
                 changelog = response.read().decode("utf-8")
-            pattern = re.compile(r"\d{1,5}\.\d{1,5}\.\d{1,5}\n")
+            pattern = re.compile(r"(\d{1,5}\.\d{1,5}\.\d{1,5})\n")
             match = pattern.search(changelog)
             if match:
-                return match.group(0)
+                return match.group(1)
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f"Error fetching latest AWS CLI version: {e}")
         return self.message_unknown
