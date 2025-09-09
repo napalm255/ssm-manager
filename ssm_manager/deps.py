@@ -148,8 +148,10 @@ class DependencyManager(BaseModel):
         """
         Returns the latest version of Session Manager Plugin from GitHub Releases
         """
+        releases_url = (
+            "https://api.github.com/repos/aws/session-manager-plugin/releases/latest"
+        )
         try:
-            releases_url = "https://api.github.com/repos/aws/session-manager-plugin/releases/latest"
             with request.urlopen(releases_url) as response:
                 if response.status != 200:
                     raise error.URLError(f"Error fetching releases: {response.status}")
