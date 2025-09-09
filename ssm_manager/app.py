@@ -755,6 +755,8 @@ def get_instance_details(instance_id):
     Returns: JSON response with instance details
     """
     try:
+        if not instance_id:
+            return logger.failed("Instance ID is required", 400)
         instance = Instance(id=instance_id)
 
         details = aws_manager.get_instance_details(instance.id)
@@ -1006,9 +1008,8 @@ class TrayIcon:
         """
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = os.path.join(
-                sys._MEIPASS, "ssm_manager"
-            )  # pylint: disable=protected-access
+            # pylint: disable=protected-access
+            base_path = os.path.join(sys._MEIPASS, "ssm_manager")
         except AttributeError:
             base_path = os.path.dirname(os.path.realpath(__file__))
 

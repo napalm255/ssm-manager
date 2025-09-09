@@ -242,8 +242,15 @@ class ConnectionScanner:
                     continue
                 if proc.name().lower() not in ("aws", "aws.exe"):
                     continue
-                if self.get_arg(proc.cmdline(), "sso") == "login":
+
+                cmd = proc.cmdline()
+                if self.get_arg(cmd, "sso") == "login":
                     continue
+                if self.get_arg(cmd, "aws") == "--version":
+                    continue
+                if self.get_arg(cmd, "session-manager-plugin") == "--version":
+                    continue
+
                 instance = Instance(id=self.get_arg(proc.cmdline(), "--target"))
                 connection_state = ConnectionState(
                     pid=int(proc.info["pid"]),
