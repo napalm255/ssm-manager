@@ -17,25 +17,33 @@
     directories require them.
 #>
 
-# ==============================================================================
+# =============================================================================
 # Define Parameters
-# ==============================================================================
+# =============================================================================
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
     [string]$destinationBaseDir = "C:\Program Files (x86)"
 )
 
-# ==============================================================================
+# =============================================================================
 # Define Variables
-# ==============================================================================
+# =============================================================================
 $gitHubRepo = "napalm255/ssm-manager"
 $appDir = "$destinationBaseDir\ssm_manager"
 $tempDir = "$env:TEMP\ssm_manager_update"
 
-# ==============================================================================
+# =============================================================================
+# Check for administrative privileges
+# =============================================================================
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Host "This script must be run as an administrator. Please restart PowerShell with elevated privileges." -ForegroundColor Red
+    exit 1
+}
+
+# =============================================================================
 # Get the latest release information
-# ==============================================================================
+# =============================================================================
 Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Cyan
 try {
     # Use Invoke-RestMethod for easier JSON parsing from the GitHub API
@@ -60,9 +68,9 @@ try {
     exit
 }
 
-# ==============================================================================
+# =============================================================================
 # Create necessary directories
-# ==============================================================================
+# =============================================================================
 # Ensure the temporary directory exists and is clean
 if (Test-Path $tempDir) {
     Remove-Item $tempDir -Recurse -Force
@@ -75,9 +83,9 @@ if (-not (Test-Path $destinationBaseDir)) {
     New-Item -ItemType Directory -Path $destinationBaseDir | Out-Null
 }
 
-# ==============================================================================
+# =============================================================================
 # Delete the old application folder
-# ==============================================================================
+# =============================================================================
 if (-not (Test-Path $appDir)) {
     Write-Host "No existing application folder found. Proceeding with update." -ForegroundColor Green
 }
@@ -94,9 +102,9 @@ else {
     }
 }
 
-# ==============================================================================
+# =============================================================================
 # Download the latest release
-# ==============================================================================
+# =============================================================================
 try {
     Write-Host "Downloading new release..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $zipDownloadUrl -OutFile $zipFilePath -ErrorAction Stop
@@ -106,9 +114,9 @@ try {
     exit 1
 }
 
-# ==============================================================================
+# =============================================================================
 # Extract the downloaded zip file
-# ==============================================================================
+# =============================================================================
 
 try {
     Write-Host "Extracting files to $destinationBaseDir..." -ForegroundColor Cyan
@@ -119,9 +127,9 @@ try {
     exit 1
 }
 
-# ==============================================================================
+# =============================================================================
 # Remove the compatibility setting to run as administrator
-# ==============================================================================
+# =============================================================================
 try {
     $exePath = "$appDir\ssm_manager.exe"
     Write-Host "Setting compatibility for $exePath to run as administrator..." -ForegroundColor Cyan
@@ -130,9 +138,9 @@ try {
     Write-Host "Failed to set compatibility settings. You may need to set this manually." -ForegroundColor Red
 }
 
-# ==============================================================================
+# =============================================================================
 # Create desktop shortcut
-# ==============================================================================
+# =============================================================================
 try {
     Write-Host "Creating desktop shortcut..." -ForegroundColor Cyan
     $targetPath = "$appDir\ssm_manager.exe"
@@ -149,9 +157,9 @@ try {
     Write-Host "Failed to create desktop shortcut. You may need to create it manually." -ForegroundColor Red
 }
 
-# ==============================================================================
+# =============================================================================
 # Clean up and finish
-# ==============================================================================
+# =============================================================================
 Write-Host "Cleaning up temporary files..." -ForegroundColor Cyan
 Remove-Item -Path $tempDir -Recurse -Force
 Write-Host "Update finished successfully!" -ForegroundColor Green
