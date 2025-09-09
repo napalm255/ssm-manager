@@ -55,7 +55,7 @@
           <img src="/favicon.ico" class="d-block mx-auto mb-4 logo" alt="SSM Manager" width="200">
         </div>
         <h1 class="display-5 fw-bold" v-html="title + ' v' + version"></h1>
-        <div class="col-lg-6 mx-auto">
+        <div class="col-xl-6 mx-auto">
           <p class="lead mb-4">
             SSM Manager is a cross-platform desktop application that provides a web interface for managing AWS Systems Manager sessions.
             It simplifies the process of connecting to EC2 instances through AWS Systems Manager by providing an intuitive interface for Shell sessions, RDP connections, custom port forwarding, and host port forwarding.
@@ -72,7 +72,7 @@
                     </p>
                     <a class="btn btn-primary" type="button" href="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" target="_blank">Read More</a>
                   </div>
-                  <div class="card-footer text-body-secondary text-end" v-if="depAwsCli">
+                  <div class="card-footer text-body-secondary text-end d-inline-flex w-100" v-if="depAwsCli">
                     <div class="container">
                       <div class="row d-flex align-items-center">
                         <div class="col text-start">
@@ -254,10 +254,10 @@
           </div>
         </div>
       </div>
-      <div class="row page-body">
-        <div class="col-md-7 order-2 order-md-1">
+      <div class="row page-body d-flex flex flex-md-row">
+        <div class="col-md-7 order-2 order-md-1 d-md-flex flex-md-row h-100">
           <!-- Instances card-->
-          <div class="card mb-4 shadow-sm">
+          <div class="card mb-4 shadow-sm instances-card flex-grow-1 overflow-y-auto w-100">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-hdd-rack-fill"></i>
@@ -269,7 +269,7 @@
                 <span class="badge" :class="instancesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="instancesCount + ' instances'"></span>
               </div>
             </div>
-            <div class="card-body-flush overflow-y-auto w-100 position-relative">
+            <div class="card-body-flush overflow-y-auto w-100 position-relative instances-card-body">
               <!-- Instances Table -->
               <div class="text-center text-muted p-4 h-100" v-if="instancesCount == 0">
                 <i class="bi bi-hdd-rack fs-3"></i>
@@ -340,6 +340,9 @@
                       <div class="row border-top">
                         <div class="col-3 text-end fw-bold"><small>Port Mappings</small></div>
                         <div class="col-6 text-start text-muted">
+                          <div class="row" v-if="!portMappings[instance.name] || portMappings[instance.name].length === 0">
+                            <div class="col-12 text-start"><small class="text-secondary">No port mappings configured</small></div>
+                          </div>
                           <div class="row" v-for="port in portMappings[instance.name]" v-if="instance.name in portMappings">
                             <div class="col-5 text-start"><span v-html="port.local_port"></span></div>
                             <div class="col-1"><i class="bi bi-arrow-right-short"></i></div>
@@ -381,7 +384,7 @@
         </div>
         <div class="col-md-5 order-1 order-md-2">
           <!-- Active Connections card-->
-          <div class="card mb-4 shadow-sm">
+          <div class="card mb-4 shadow-sm active-connections-card flex-grow-1 overflow-y-auto w-100">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-diagram-2-fill"></i>
@@ -389,14 +392,14 @@
               </div>
               <span class="badge" :class="activeConnectionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="activeConnectionsCount + ' active'"></span>
             </div>
-            <div class="card-body">
+            <div class="card-body-flush active-connections-card-body overflow-y-auto w-100 position-relative">
               <!-- Active Connections Table -->
               <div class="text-center text-muted p-4 h-100" v-if="activeConnectionsCount == 0">
                 <i class="bi bi-diagram-2 fs-3"></i>
                 <p class="mt-2">No active connections</p>
               </div>
-              <ol class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-start ps-0 pe-2 py-2" v-for="connection in activeConnections">
+              <ol class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-start ps-1 pe-2 py-3 m-0" v-for="connection in activeConnections">
                   <div class="text-start d-flex w-100">
                     <div class="row d-flex w-100">
                       <div class="col-3 align-middle text-center" style="width:50px;">

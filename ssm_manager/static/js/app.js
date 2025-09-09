@@ -433,19 +433,24 @@ const app = createApp({
     const startPortForwarding = async () => {
       isPortForwardingStarting.value = true;
 
-      const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          profile: currentProfile.value,
-          region: currentRegion.value,
-          name: portForwardingModalProperties.value.instanceName,
-          mode: portForwardingModalProperties.value.mode,
-          remote_port: portForwardingModalProperties.value.remotePort,
-          remote_host: portForwardingModalProperties.value.remoteHost,
-          username: portForwardingModalProperties.value.username
-        })
-      });
-      toast('Successfully started port forwarding', 'success');
+      try {
+        const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            profile: currentProfile.value,
+            region: currentRegion.value,
+            name: portForwardingModalProperties.value.instanceName,
+            mode: portForwardingModalProperties.value.mode,
+            remote_port: portForwardingModalProperties.value.remotePort,
+            remote_host: portForwardingModalProperties.value.remoteHost,
+            username: portForwardingModalProperties.value.username
+          })
+        });
+        toast('Successfully started port forwarding', 'success');
+      } catch (error) {
+        isPortForwardingStarting.value = false;
+        return;
+      }
 
       if (portForwardingModalProperties.value.username && data.local_port) {
         await addWindowsCredential(
@@ -560,7 +565,9 @@ const app = createApp({
         body: JSON.stringify(newMappings)
       })
       getPreferences();
-      portMappingsModal.value.hide();
+      if (portMappingsModal.value) {
+        portMappingsModal.value.hide();
+      }
       toast('Port mappings saved successfully', 'success');
     };
 
