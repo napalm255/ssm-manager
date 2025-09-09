@@ -71,7 +71,7 @@ class DependencyManager(BaseModel):
         Returns the download URL for AWS CLI based on the OS
         """
         base = "https://awscli.amazonaws.com"
-        url = [f"{base}/AWSCLIV2.msi"]
+        url = [{"link": f"{base}/AWSCLIV2.msi", "extension": "msi"}]
         if self.system == "Linux":
             url = [
                 {"link": f"{base}/awscli-exe-linux-{self.arch}.zip", "extension": "zip"}
@@ -119,7 +119,12 @@ class DependencyManager(BaseModel):
         Returns the download URL for the Session Manager Plugin based on the OS
         """
         base = "https://s3.amazonaws.com/session-manager-downloads/plugin/latest"
-        url = [{"msi": f"{base}/windows_64bit/session-manager-plugin.msi"}]
+        url = [
+            {
+                "link": f"{base}/windows_64bit/session-manager-plugin.msi",
+                "extension": "msi",
+            }
+        ]
         if self.system == "Linux":
             url = [
                 {
