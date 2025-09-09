@@ -243,21 +243,18 @@ class ConnectionScanner:
                 if proc.name().lower() not in ("aws", "aws.exe"):
                     continue
 
-                cmd = proc.cmdline()
-                if self.get_arg(cmd, "sso") == "login":
-                    continue
-                if self.get_arg(cmd, "aws") == "--version":
-                    continue
-                if self.get_arg(cmd, "session-manager-plugin") == "--version":
+                cmdline = proc.cmdline()
+                instance_id = self.get_arg(cmdline, "--target")
+                if not instance_id:
                     continue
 
-                instance = Instance(id=self.get_arg(proc.cmdline(), "--target"))
+                instance = Instance(id=instance_id)
                 connection_state = ConnectionState(
                     pid=int(proc.info["pid"]),
                     instance=instance,
                     timestamp=proc.info["create_time"],
                 )
-                connection_state.load(proc.cmdline())
+                connection_state.load(cmdline)
                 if connection_state in current_connections:
                     logger.warning(f"Connection already exists: {connection_state}")
                     continue
