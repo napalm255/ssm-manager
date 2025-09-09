@@ -96,7 +96,7 @@ class DependencyManager(BaseModel):
                 if response.status != 200:
                     raise error.URLError(f"Error fetching changelog: {response.status}")
                 changelog = response.read().decode("utf-8")
-            pattern = re.compile(r"^\d{1,5}\.\d{1,5}\.\d{1,5}$")
+            pattern = re.compile(r"\d{1,5}\.\d{1,5}\.\d{1,5}\n")
             match = pattern.search(changelog)
             if match:
                 return match.group(0)
