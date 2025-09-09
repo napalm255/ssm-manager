@@ -22,6 +22,8 @@ class DependencyManager(BaseModel):
     model_config = ConfigDict(strict=True)
     system: Literal["Linux", "Windows"]
     arch: Literal["x86_64", "aarch64"] = "x86_64"
+    message_not_installed: str = "Not Installed"
+    message_unknown: str = "Unknown"
 
     @property
     def dependencies(self) -> dict:
@@ -46,7 +48,10 @@ class DependencyManager(BaseModel):
         """
         Returns True if all dependencies are installed
         """
-        return all(version != "Not Installed" for version in self.dependencies.values())
+        return all(
+            version != self.message_not_installed
+            for version in self.dependencies.values()
+        )
 
     @property
     def awscli(self) -> str:
@@ -60,10 +65,10 @@ class DependencyManager(BaseModel):
                 match = re.search(
                     r"aws-cli\/([0-9\.]+)", version.stdout.decode("utf-8")
                 )
-                return match.group(1) if match else "Unknown"
+                return match.group(1) if match else self.message_unknown
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning("AWS CLI not found or error getting version.")
-        return "Not Installed"
+        return self.message_not_installed
 
     @property
     def awscli_url(self) -> list[str]:
@@ -97,7 +102,7 @@ class DependencyManager(BaseModel):
                 return match.group(0)
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f"Error fetching latest AWS CLI version: {e}")
-        return "Unknown"
+        return self.message_unknown
 
     @property
     def ssmplugin(self) -> str:
@@ -111,7 +116,7 @@ class DependencyManager(BaseModel):
                 return ssm.stdout.decode("utf-8").strip()
         except (subprocess.CalledProcessError, FileNotFoundError):
             logger.warning("Session Manager Plugin not found or error getting version.")
-        return "Not Installed"
+        return self.message_not_installed
 
     @property
     def ssmplugin_url(self) -> list[str]:
@@ -154,4 +159,4 @@ class DependencyManager(BaseModel):
                 return match.group(1)
         except Exception as e:  # pylint: disable=broad-except
             logger.warning(f"Error fetching latest SSM Plugin version: {e}")
-        return "Unknown"
+        return self.message_unknown
