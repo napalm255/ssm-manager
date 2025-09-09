@@ -21,7 +21,7 @@ class DependencyManager(BaseModel):
 
     model_config = ConfigDict(strict=True)
     system: Literal["Linux", "Windows"]
-    arch: Literal["x86_64", "aarch64"] = "x86_64"
+    arch: Literal["x86_64", "AMD64"]
     message_not_installed: str = "Not Installed"
     message_unknown: str = "Unknown"
 
