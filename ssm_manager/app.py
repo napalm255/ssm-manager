@@ -323,7 +323,6 @@ def get_config_hosts():
             hostname = parts[1:]
             hosts.append({"ip": ip, "hostname": hostname})
 
-    logger.debug(f"Hosts file loaded: {len(hosts)} entries found.")
     return jsonify(hosts)
 
 
@@ -487,16 +486,11 @@ def delete_windows_credentials():
     Returns: JSON response with status
     """
     try:
-        if system != "Windows":
-            raise AssertionError(
-                f"Windows credentials are not supported on {system}.  Skipping Windows credential deletion."
-            )
+        assert system == "Windows", "Windows credentials are only supported on Windows."
 
         data = request.json
         targetname = data.get("targetname", None)
-
-        if not targetname:
-            raise AssertionError("Target name is required.")
+        assert targetname is not None, "Target name is required."
 
         command = CmdKeyDeleteCommand(targetname=targetname)
         run_cmd(command, skip_pid_wait=True)
@@ -525,9 +519,6 @@ def connect():
 
     profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
 
-    logger.debug(
-        f"Connecting to AWS - Profile: {profile.name}, Region: {profile.region}"
-    )
     result = aws_manager.set_profile_and_region(profile.name, profile.region)
     max_retries = 2
     retries = 0
@@ -602,10 +593,9 @@ def start_shell(instance_id):
             status="active",
         )
 
-        logger.debug(f"Shell session started: {conn_state}")
         return jsonify(conn_state.dict())
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error starting Shell connection: {instance_id}", 500)
+        return logger.failed("Error starting Shell connection", 500)
 
 
 @app.route("/api/rdp/<instance_id>", methods=["POST"])
@@ -666,10 +656,9 @@ def start_rdp(instance_id):
             local_port=command.local_port,
         )
 
-        logger.debug(f"RDP session started: {conn_state}")
         return jsonify(conn_state.dict())
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error starting RDP connection: {instance_id}", 500)
+        return logger.failed("Error starting RDP connection", 500)
 
 
 @app.route("/api/custom-port/<instance_id>", methods=["POST"])
@@ -740,10 +729,9 @@ def start_custom_port(instance_id):
             remote_host=command.remote_host if mode != "local" else None,
         )
 
-        logger.debug(f"Port forwarding session started: {conn_state}")
         return jsonify(conn_state.dict())
     except Exception:  # pylint: disable=broad-except
-        return logger.failed("Error starting port forwarding: {instance_id}", 500)
+        return logger.failed("Error starting port forwarding", 500)
 
 
 @app.route("/api/instance-details/<instance_id>")
@@ -763,10 +751,9 @@ def get_instance_details(instance_id):
         if details is None:
             return logger.failed(f"Instance details not found: {instance.id}")
 
-        logger.debug(f"Instance details: {details}")
         return jsonify(details)
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error getting instance details: {instance_id}", 500)
+        return logger.failed("Error getting instance details", 500)
 
 
 @app.route("/api/preferences")
@@ -802,11 +789,9 @@ def update_instance_preferences(instance_name):
     """
     try:
         assert preferences.update_instance_preferences(instance_name, request.json)
-        return logger.success(f"Preferences updated for instance: {instance_name}")
+        return logger.success("Preferences updated for instance")
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(
-            f"Error updating preferences for instance: {instance_name}", 500
-        )
+        return logger.failed("Error updating preferences for instance", 500)
 
 
 @app.route("/api/refresh")
@@ -838,9 +823,7 @@ def get_active_connections():
         active_connections = cache.get("active_connections")
         assert active_connections is not None, "No active connections"
 
-        logger.debug(f"Active connections: {len(active_connections)}")
         for conn in active_connections:
-            logger.debug(f"Active connection: {conn}")
             active.append(conn.dict())
 
         return jsonify(active)
@@ -881,9 +864,9 @@ def terminate_connection(connection_id):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
 
-        return logger.success(f"Connection terminated: {connection_id}")
+        return logger.success("Connection terminated")
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error terminating connection: {connection_id}", 500)
+        return logger.failed("Error terminating connection", 500)
 
 
 @app.route("/api/rdp/<local_port>")
@@ -896,9 +879,9 @@ def open_rdp_client(local_port):
     try:
         command = RDPCommand(local_port=local_port, system=system)
         subprocess.Popen(command.cmd)
-        return logger.success(f"RDP client opened on port {local_port}")
+        return logger.success("RDP client opened")
     except Exception:  # pylint: disable=broad-except
-        return logger.failed(f"Error opening RDP client: {local_port}", 500)
+        return logger.failed("Error opening RDP client", 500)
 
 
 @app.route("/")
