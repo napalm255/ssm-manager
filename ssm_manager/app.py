@@ -40,7 +40,6 @@ from ssm_manager.utils import (
 # pylint: disable=logging-fstring-interpolation, consider-using-with
 # pylint: disable=too-many-lines
 
-# Setup Flask
 app = Flask(
     __name__, static_folder="static", static_url_path="/", template_folder="templates"
 )
