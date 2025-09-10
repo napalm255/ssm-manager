@@ -60,7 +60,7 @@ try:
 except AttributeError:
     base_path = os.path.dirname(os.path.realpath(__file__))
 
-icon_file = os.path.join(base_path, "static/ssm-manager.ico")
+logo_file = os.path.join(base_path, "static/ssm-manager.png")
 
 
 # Make sure directories exist

@@ -8,15 +8,14 @@ import signal
 import tkinter as tk
 from tkinter import messagebox
 from filelock import FileLock, Timeout
-from ssm_manager import logger, app_name, port, lock_file, pid_file, icon_file
+from ssm_manager import logger, app_name, port, lock_file, pid_file, logo_file
 from ssm_manager.client import ServerThread, TrayIcon
 from ssm_manager.utils import open_browser
 
 # pylint: disable=logging-fstring-interpolation
 
 server = ServerThread()
-# tray = TrayIcon("static/favicon.ico", server_port=port)
-tray = TrayIcon("static/ssm-manager.png", server_port=port)
+tray = TrayIcon("static/favicon.ico", server_port=port)
 
 
 def start(debug: bool, use_reloader: bool) -> None:
@@ -43,20 +42,6 @@ def cleanup(*args) -> None:
     logger.info("Exiting...")
 
 
-def center_window(window: tk.Toplevel) -> None:
-    """
-    Center the window on the screen
-    """
-    window.update_idletasks()
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    window_width = window.winfo_width()
-    window_height = window.winfo_height()
-    x = (screen_width // 2) - (window_width // 2)
-    y = (screen_height // 2) - (window_height // 2)
-    window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-
 def show_window(pid: int) -> None:
     """
     Displays a dialog box to manage the running application instance.
@@ -65,7 +50,7 @@ def show_window(pid: int) -> None:
     root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
     root.title(f"{app_name}")
     # root.iconbitmap(icon_file)
-    root.iconphoto(True, tk.PhotoImage(file=icon_file))
+    root.iconphoto(True, tk.PhotoImage(file=logo_file))
     root.resizable(False, False)
 
     message = f"{app_name} is already running."
@@ -85,7 +70,6 @@ def show_window(pid: int) -> None:
             messagebox.showerror(app_name, f"Error terminating application: {e}")
             sys.exit(1)
 
-    # Create buttons
     button_frame = tk.Frame(root)
     button_frame.pack(pady=5)
 
@@ -100,19 +84,14 @@ def show_window(pid: int) -> None:
     )
     cancel_btn.pack(side="left", padx=5)
 
-    # Run the dialog
     root.withdraw()  # Hide the main window initially
     root.geometry("600x100")
     root.update_idletasks()
-    # center_window(root)
 
     root.geometry("600x100")
     x = (root.winfo_screenwidth() // 2) - (600 // 2)
     y = (root.winfo_screenheight() // 2) - (100 // 2)
     root.geometry(f"600x100+{x}+{y}")
-    print(root.winfo_screenwidth(), root.winfo_reqwidth())
-    print(root.winfo_screenheight(), root.winfo_reqheight())
-    print(x, y)
     root.deiconify()  # Show the main window again
 
     root.mainloop()
