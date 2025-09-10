@@ -34,8 +34,8 @@ from ssm_manager.utils import (
     CmdKeyAddCommand,
     CmdKeyDeleteCommand,
     HostsFileCommand,
-    run_cmd,
     FreePort,
+    run_cmd,
     resolve_hostname,
 )
 
@@ -848,47 +848,47 @@ def favicon():
     return send_file("static/favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 
-class ServerThread(threading.Thread):
-    """
-    Thread class for running the Flask server
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._stop_event = threading.Event()
-        self.daemon = True
-        self.target = self.run
-        self.debug = False
-        self.port = 5000
-        self.use_reloader = False
-
-    def stop(self):
-        """
-        Stop the server
-        """
-        self._stop_event.set()
-
-    def stopped(self):
-        """
-        Check if the server is stopped
-        """
-        return self._stop_event.is_set()
-
-    def run(self):
-        """
-        Run the server
-        """
-        while not self.stopped():
-            logging.info("Starting server...")
-            try:
-                app.run(
-                    host="127.0.0.1",
-                    port=self.port,
-                    debug=self.debug,
-                    use_reloader=self.use_reloader,
-                )
-            except Exception as e:  # pylint: disable=broad-except
-                logging.error(f"Unexpected error: {str(e)}")
-            finally:
-                self.stop()
-                logging.info("Exiting...")
+# class ServerThread(threading.Thread):
+#     """
+#     Thread class for running the Flask server
+#     """
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self._stop_event = threading.Event()
+#         self.daemon = True
+#         self.target = self.run
+#         self.debug = False
+#         self.port = 5000
+#         self.use_reloader = False
+#
+#     def stop(self):
+#         """
+#         Stop the server
+#         """
+#         self._stop_event.set()
+#
+#     def stopped(self):
+#         """
+#         Check if the server is stopped
+#         """
+#         return self._stop_event.is_set()
+#
+#     def run(self):
+#         """
+#         Run the server
+#         """
+#         while not self.stopped():
+#             logging.info("Starting server...")
+#             try:
+#                 app.run(
+#                     host="127.0.0.1",
+#                     port=self.port,
+#                     debug=self.debug,
+#                     use_reloader=self.use_reloader,
+#                 )
+#             except Exception as e:  # pylint: disable=broad-except
+#                 logging.error(f"Unexpected error: {str(e)}")
+#             finally:
+#                 self.stop()
+#                 logging.info("Exiting...")

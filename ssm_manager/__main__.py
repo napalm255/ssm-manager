@@ -9,17 +9,19 @@ import tkinter as tk
 from tkinter import messagebox
 from filelock import FileLock, Timeout
 from ssm_manager import logger, app_name, port, lock_file, pid_file
-from ssm_manager.app import ServerThread
+from ssm_manager.client import ServerThread, TrayIcon
 from ssm_manager.utils import open_browser
 
 # pylint: disable=logging-fstring-interpolation
+
+server = ServerThread()
+tray = TrayIcon("static/favicon.ico", server_port=port)
 
 
 def start(debug: bool, use_reloader: bool) -> None:
     """
     Start the server
     """
-    server = ServerThread()
     server.port = port
     server.debug = debug
     server.use_reloader = use_reloader
@@ -35,7 +37,9 @@ def cleanup(*args) -> None:
         os.remove(pid_file)
     if os.path.exists(lock_file):
         os.remove(lock_file)
-    sys.exit(0)
+    server.stop()
+    tray.stop()
+    logger.info("Cleanup complete. Exiting...")
 
 
 def show_dialog(pid: int) -> None:
@@ -107,20 +111,21 @@ def main() -> None:
 
     debug = False
     use_reloader = False
-    dev_mode = False
-    if len(sys.argv) > 1 and sys.argv[1] == "--dev":
-        dev_mode = True
+    api_only = False
+    if len(sys.argv) > 1 and sys.argv[1] == "--api":
+        api_only = True
         debug = True
         use_reloader = True
 
-    lock = FileLock(lock_file, timeout=2)
+    lock = FileLock(lock_file, timeout=0)
     try:
         with lock:
             with open(pid_file, "w", encoding="utf-8") as f:
                 f.write(str(os.getpid()))
-            if not dev_mode:
-                open_browser(url="http://127.0.0.1:5000")
-            start(debug=debug, use_reloader=use_reloader)
+            if not api_only:
+                tray.run()
+            else:
+                start(debug=debug, use_reloader=use_reloader)
     except Timeout:
         with open(pid_file, "r", encoding="utf-8") as f:
             pid = f.read().strip()
