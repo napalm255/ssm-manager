@@ -25,6 +25,7 @@ class ServerThread(threading.Thread):
         self.daemon = True
         self.target = self.run
         self.debug = False
+        self.use_reloader = False
         self.port = 5000
 
     def stop(self):
@@ -50,7 +51,7 @@ class ServerThread(threading.Thread):
                     host="127.0.0.1",
                     port=self.port,
                     debug=self.debug,
-                    use_reloader=self.debug,
+                    use_reloader=self.use_reloader,
                 )
             except FileNotFoundError:
                 pass
