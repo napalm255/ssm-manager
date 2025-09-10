@@ -42,6 +42,28 @@ def cleanup(*args) -> None:
     logger.info("Exiting...")
 
 
+def exit_dialog(dialog: tk.Toplevel) -> None:
+    """
+    Exit the dialog and application
+    """
+    dialog.destroy()
+    sys.exit(0)
+
+
+def center_dialog(dialog: tk.Toplevel) -> None:
+    """
+    Center the dialog on the screen
+    """
+    dialog.update_idletasks()
+    screen_width = dialog.winfo_screenwidth()
+    screen_height = dialog.winfo_screenheight()
+    dialog_width = dialog.winfo_width()
+    dialog_height = dialog.winfo_height()
+    x = (screen_width // 2) - (dialog_width // 2)
+    y = (screen_height // 2) - (dialog_height // 2)
+    dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
+
+
 def show_dialog(pid: int) -> None:
     """
     Displays a dialog box to manage the running application instance.
@@ -53,50 +75,28 @@ def show_dialog(pid: int) -> None:
 
     dialog = tk.Toplevel(root)
     dialog.title(f"{app_name}")
+    dialog.protocol("WM_DELETE_WINDOW", lambda: exit_dialog(dialog))
     dialog.geometry("600x100")
     dialog.resizable(False, False)
 
-    # Get screen dimensions
-    screen_width = dialog.winfo_screenwidth()
-    screen_height = dialog.winfo_screenheight()
+    center_dialog(dialog)
 
-    # Wait for the window to update its size
-    dialog.update_idletasks()
-
-    # Get dialog dimensions
-    dialog_width = dialog.winfo_width()
-    dialog_height = dialog.winfo_height()
-
-    # Calculate position to center the dialog
-    x = (screen_width // 2) - (dialog_width // 2)
-    y = (screen_height // 2) - (dialog_height // 2)
-
-    # Set the position of the dialog
-    dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
-
-    # Show the window after centering
-    dialog.deiconify()
+    dialog.grab_set()
 
     label = tk.Label(dialog, text=message, wraplength=400)
     label.pack(pady=10)
 
     def open_app():
         open_browser(url="http://127.0.0.1:5000")
-        dialog.destroy()
-        sys.exit(0)
+        exit_dialog(dialog)
 
-    def terminate_app():
+    def exit_app():
         try:
             os.kill(pid, signal.SIGTERM)
-            dialog.destroy()
-            sys.exit(0)
+            exit_dialog(dialog)
         except Exception as e:  # pylint: disable=broad-except
             messagebox.showerror(app_name, f"Error terminating application: {e}")
             sys.exit(1)
-
-    def cancel():
-        dialog.destroy()
-        sys.exit(0)
 
     # Create buttons
     button_frame = tk.Frame(dialog)
@@ -105,14 +105,17 @@ def show_dialog(pid: int) -> None:
     open_btn = tk.Button(button_frame, text="Open", command=open_app)
     open_btn.pack(side="left", padx=5)
 
-    quit_btn = tk.Button(button_frame, text="Terminate", command=terminate_app)
+    quit_btn = tk.Button(button_frame, text="Terminate", command=exit_app)
     quit_btn.pack(side="left", padx=5)
 
-    cancel_btn = tk.Button(button_frame, text="Cancel", command=cancel)
+    cancel_btn = tk.Button(
+        button_frame, text="Cancel", command=lambda: exit_dialog(dialog)
+    )
     cancel_btn.pack(side="left", padx=5)
 
     # Run the dialog
     root.mainloop()
+    exit_dialog(dialog)
 
 
 def main() -> None:
