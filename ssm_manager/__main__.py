@@ -74,6 +74,9 @@ def show_dialog(pid: int) -> None:
     # Set the position of the dialog
     dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
 
+    # Show the window after centering
+    dialog.deiconify()
+
     label = tk.Label(dialog, text=message, wraplength=400)
     label.pack(pady=10)
 
