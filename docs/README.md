@@ -1,4 +1,10 @@
-# SSM Manager (AWS)
+<div>
+  <span><img src="images/logo.png" alt="Logo" width="200"/></span>
+  <span><h1>SSM Manager</h1></span>
+</div>
+
+<hr>
+
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager/releases)
@@ -13,10 +19,6 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
-
-<div align="center">
-  <img src="images/logo.png" alt="Logo" width="200"/>
-</div>
 
 ![Screenshot](images/screenshot.jpg)
 
