@@ -53,6 +53,16 @@ if system == "Windows":
     log_file = os.path.join(home_dir, "AppData", "Local", data_dir, "ssm_manager.log")
     hosts_file = os.path.join("C:\\", "Windows", "System32", "drivers", "etc", "hosts")
 
+try:
+    # PyInstaller creates a temp folder and stores path in _MEIPASS
+    # pylint: disable=protected-access
+    base_path = os.path.join(sys._MEIPASS, "ssm_manager")
+except AttributeError:
+    base_path = os.path.dirname(os.path.realpath(__file__))
+
+icon_file = os.path.join(base_path, "static/ssm-manager.png")
+
+
 # Make sure directories exist
 os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
 os.makedirs(cache_dir, exist_ok=True)
