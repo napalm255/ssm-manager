@@ -1,5 +1,5 @@
 <div>
-  <span><img src="images/logo.png" alt="Logo" width="200"/></span>
+  <span><img src="images/logo.png" alt="Logo" width="64"/></span>
   <span><h1>SSM Manager</h1></span>
 </div>
 
