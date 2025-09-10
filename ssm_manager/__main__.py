@@ -103,12 +103,13 @@ def show_window(pid: int) -> None:
     root.update_idletasks()
     # center_window(root)
 
+    root.geometry("600x100")
     x = (root.winfo_screenwidth() // 2) - root.winfo_reqwidth() // 2
     y = (root.winfo_screenheight() // 2) - root.winfo_reqheight() // 2
     root.geometry(f"600x100+{x}+{y}")
     print(root.winfo_screenwidth(), root.winfo_reqwidth())
     print(root.winfo_screenheight(), root.winfo_reqheight())
-    print(root.winfo_width(), root.winfo_height())
+    print(x, y)
     root.deiconify()  # Show the main window again
 
     root.mainloop()
