@@ -1,4 +1,4 @@
-<div>
+<div style="display: flex; align-items: center; gap: 10px;">
   <span><img src="images/logo.png" alt="Logo" width="64"/></span>
   <span>SSM Manager</span>
 </div>
