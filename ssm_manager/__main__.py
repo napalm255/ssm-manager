@@ -26,14 +26,16 @@ def start(debug: bool, use_reloader: bool) -> None:
     server.run()
 
 
-def cleanup() -> None:
+def cleanup(*args) -> None:
     """
     Cleanup function to remove PID and lock files
     """
+    # pylint: disable=unused-argument
     if os.path.exists(pid_file):
         os.remove(pid_file)
     if os.path.exists(lock_file):
         os.remove(lock_file)
+    sys.exit(0)
 
 
 def show_dialog(pid: int) -> None:
@@ -61,7 +63,6 @@ def show_dialog(pid: int) -> None:
     def terminate_app():
         try:
             os.kill(pid, signal.SIGTERM)
-            cleanup()
             dialog.destroy()
             sys.exit(0)
         except Exception as e:  # pylint: disable=broad-except
@@ -93,6 +94,9 @@ def main() -> None:
     """
     Main function to start the application
     """
+    signal.signal(signal.SIGTERM, cleanup)
+    signal.signal(signal.SIGINT, cleanup)
+
     # Check if the app is being run by the reloader
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         logger.info("Reloader process detected. Starting server.")
@@ -117,7 +121,6 @@ def main() -> None:
             if not dev_mode:
                 open_browser(url="http://127.0.0.1:5000")
             start(debug=debug, use_reloader=use_reloader)
-            cleanup()
     except Timeout:
         with open(pid_file, "r", encoding="utf-8") as f:
             pid = f.read().strip()
