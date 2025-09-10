@@ -103,6 +103,9 @@ def show_window(pid: int) -> None:
     root.update_idletasks()
     # center_window(root)
 
+    print(root.winfo_screenwidth(), root.winfo_reqwidth())
+    print(root.winfo_screenheight(), root.winfo_reqheight())
+    print(root.winfo_width(), root.winfo_height())
     x = (root.winfo_screenwidth() // 2) - root.winfo_reqwidth() // 2
     y = (root.winfo_screenheight() // 2) - root.winfo_reqheight() // 2
     root.geometry(f"+{x}+{y}")
