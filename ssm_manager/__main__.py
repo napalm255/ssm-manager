@@ -71,16 +71,16 @@ def show_dialog(pid: int) -> None:
     root = tk.Tk()
     root.withdraw()  # Hide the main window
 
-    message = "An instance of the application is already running."
+    message = f"{app_name} is already running."
 
     dialog = tk.Toplevel(root)
     dialog.title(f"{app_name}")
     dialog.protocol("WM_DELETE_WINDOW", lambda: exit_dialog(dialog))
     dialog.geometry("600x100")
-    dialog.resizable(False, False)
 
     center_dialog(dialog)
 
+    dialog.resizable(False, False)
     dialog.grab_set()
 
     label = tk.Label(dialog, text=message, wraplength=400)
@@ -133,13 +133,9 @@ def main() -> None:
         start(debug=True, use_reloader=True)
         return
 
-    debug = False
-    use_reloader = False
     api_only = False
     if len(sys.argv) > 1 and sys.argv[1] == "--api":
         api_only = True
-        debug = True
-        use_reloader = True
 
     lock = FileLock(lock_file, timeout=0)
     try:
@@ -149,7 +145,7 @@ def main() -> None:
             if not api_only:
                 tray.run()
             else:
-                start(debug=debug, use_reloader=use_reloader)
+                start(debug=api_only, use_reloader=api_only)
     except Timeout:
         with open(pid_file, "r", encoding="utf-8") as f:
             pid = f.read().strip()
