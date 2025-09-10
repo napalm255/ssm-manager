@@ -1,4 +1,4 @@
-<h1><img src="images/logo.png" alt="Logo" width="64"/>SSM Manager</h1>
+# SSM Manager
 
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 

@@ -8,7 +8,7 @@ import signal
 import tkinter as tk
 from tkinter import messagebox
 from filelock import FileLock, Timeout
-from ssm_manager import logger, app_name, port, lock_file, pid_file, logo_file
+from ssm_manager import logger, app_name, port, lock_file, pid_file
 from ssm_manager.client import ServerThread, TrayIcon
 from ssm_manager.utils import open_browser
 
@@ -52,7 +52,6 @@ def show_window(pid: int) -> None:
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
     root.title(app_name)
-    root.iconphoto(True, tk.PhotoImage(file=logo_file))
     root.resizable(False, False)
 
     message = f"{app_name} is already running."
