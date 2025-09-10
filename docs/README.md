@@ -1,9 +1,4 @@
-<div style="display: flex; align-items: center; gap: 10px;">
-  <span style="vertical-align: middle;"><img src="images/logo.png" alt="Logo" width="64"/></span>
-  <span style="font-size: 50px;">SSM Manager</span>
-</div>
-
-<hr>
+<h1><img src="images/logo.png" alt="Logo" width="64"/>SSM Manager</h1>
 
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 
