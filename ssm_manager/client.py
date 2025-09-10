@@ -4,7 +4,6 @@ Client application helpers.
 
 import os
 import sys
-import time
 import threading
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
