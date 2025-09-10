@@ -63,7 +63,6 @@ def show_window(pid: int) -> None:
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
     root.title(f"{app_name}")
-    root.geometry("600x100")
     root.resizable(False, False)
 
     message = f"{app_name} is already running."
@@ -100,15 +99,16 @@ def show_window(pid: int) -> None:
 
     # Run the dialog
     root.withdraw()  # Hide the main window initially
+    # root.geometry("600x100")
     root.update_idletasks()
     # center_window(root)
 
+    x = (root.winfo_screenwidth() // 2) - root.winfo_reqwidth() // 2
+    y = (root.winfo_screenheight() // 2) - root.winfo_reqheight() // 2
+    root.geometry(f"600x100+{x}+{y}")
     print(root.winfo_screenwidth(), root.winfo_reqwidth())
     print(root.winfo_screenheight(), root.winfo_reqheight())
     print(root.winfo_width(), root.winfo_height())
-    x = (root.winfo_screenwidth() // 2) - root.winfo_reqwidth() // 2
-    y = (root.winfo_screenheight() // 2) - root.winfo_reqheight() // 2
-    root.geometry(f"+{x}+{y}")
     root.deiconify()  # Show the main window again
 
     root.mainloop()
