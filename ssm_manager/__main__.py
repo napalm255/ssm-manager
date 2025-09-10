@@ -15,7 +15,8 @@ from ssm_manager.utils import open_browser
 # pylint: disable=logging-fstring-interpolation
 
 server = ServerThread()
-tray = TrayIcon("static/favicon.ico", server_port=port)
+# tray = TrayIcon("static/favicon.ico", server_port=port)
+tray = TrayIcon("static/ssm-manager.png", server_port=port)
 
 
 def start(debug: bool, use_reloader: bool) -> None:
