@@ -39,7 +39,7 @@ def cleanup(*args) -> None:
         os.remove(lock_file)
     server.stop()
     tray.stop()
-    logger.info("Cleanup complete. Exiting...")
+    logger.info("Exiting...")
 
 
 def show_dialog(pid: int) -> None:
