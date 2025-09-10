@@ -51,7 +51,7 @@ def show_window(pid: int) -> None:
 
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
-    root.title(f"{app_name}")
+    root.title(app_name)
     root.iconphoto(True, tk.PhotoImage(file=logo_file))
     root.resizable(False, False)
 
