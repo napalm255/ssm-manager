@@ -4,23 +4,22 @@ SSM Manager
 
 import os
 import re
-import sys
-import logging
-import threading
-import platform
 import time
 import subprocess
 import psutil
 import keyring
-from pystray import Icon, Menu, MenuItem
-from PIL import Image, ImageDraw
 from flask import Flask, jsonify, request, render_template, send_file
-from ssm_manager.preferences import PreferencesHandler
-from ssm_manager.manager import AWSManager
-from ssm_manager.cache import Cache
+from ssm_manager import (
+    app_name,
+    system,
+    hosts_file,
+    logger,
+    cache,
+    deps,
+    aws_manager,
+    preferences,
+)
 from ssm_manager.config import AwsConfigManager
-from ssm_manager.logger import CustomLogger
-from ssm_manager.deps import DependencyManager
 from ssm_manager.utils import (
     Instance,
     Connection,
@@ -33,76 +32,17 @@ from ssm_manager.utils import (
     CmdKeyAddCommand,
     CmdKeyDeleteCommand,
     HostsFileCommand,
-    run_cmd,
     FreePort,
-    open_browser,
+    run_cmd,
     resolve_hostname,
 )
 
 # pylint: disable=logging-fstring-interpolation, consider-using-with
-# pylint: disable=line-too-long, too-many-lines
+# pylint: disable=too-many-lines
 
-APP_NAME = "SSM Manager"
-
-# Define home directory and app data directory
-HOME_DIR = os.path.expanduser("~")
-DATA_DIR = "ssm_manager"
-
-# Check if the system is Linux or Windows
-system = platform.system()
-if system not in ["Linux", "Windows"]:
-    print("Unsupported operating system")
-    sys.exit(1)
-arch = platform.machine()
-
-# Set file paths
-preferences_file = os.path.join(HOME_DIR, f".{DATA_DIR}", "preferences.json")
-cache_dir = os.path.join(HOME_DIR, f".{DATA_DIR}", "cache")
-temp_dir = os.path.join(HOME_DIR, f".{DATA_DIR}", "temp")
-log_file = os.path.join(HOME_DIR, f".{DATA_DIR}", "ssm_manager.log")
-hosts_file = os.path.join("/", "etc", "hosts")
-
-if system == "Windows":
-    preferences_file = os.path.join(
-        HOME_DIR, "AppData", "Local", DATA_DIR, "preferences.json"
-    )
-    cache_dir = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "cache")
-    temp_dir = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "temp")
-    log_file = os.path.join(HOME_DIR, "AppData", "Local", DATA_DIR, "ssm_manager.log")
-    hosts_file = os.path.join("C:\\", "Windows", "System32", "drivers", "etc", "hosts")
-
-# Make sure directories exist
-os.makedirs(os.path.dirname(preferences_file), exist_ok=True)
-os.makedirs(cache_dir, exist_ok=True)
-os.makedirs(temp_dir, exist_ok=True)
-os.makedirs(os.path.dirname(log_file), exist_ok=True)
-
-# Configure detailed logging
-logging.setLoggerClass(CustomLogger)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s:%(name)s - %(message)s",
-    handlers=[logging.FileHandler(log_file, mode="w"), logging.StreamHandler()],
-)
-
-# Configure logger
-logger = logging.getLogger("ssm_manager")
-
-# Check dependencies
-deps = DependencyManager(system=system, arch=arch)
-
-# Setup preferences
-preferences = PreferencesHandler(config_file=preferences_file)
-
-# Setup cache
-cache = Cache(cache_dir=cache_dir)
-
-# Setup Flask
 app = Flask(
     __name__, static_folder="static", static_url_path="/", template_folder="templates"
 )
-
-aws_manager = AWSManager()
 
 
 @app.route("/api/version")
@@ -111,7 +51,7 @@ def get_version():
     Endpoint to get the version of the application
     Returns: JSON response with version information
     """
-    version = {"name": APP_NAME, "operating_system": system}
+    version = {"name": app_name, "operating_system": system}
     try:
         version_file = os.path.join(os.path.dirname(__file__), "VERSION")
         with open(version_file, "r", encoding="utf-8") as vfile:
@@ -189,7 +129,8 @@ def add_config_session():
     data = request.json
 
     # Validate required fields
-    for field in ["name", "sso_start_url", "sso_region", "sso_registration_scopes"]:
+    fields = ("name", "sso_start_url", "sso_region", "sso_registration_scopes")
+    for field in fields:
         if not data.get(field, None):
             return logger.failed(f"Missing required field: {field}", 400)
 
@@ -243,14 +184,15 @@ def add_config_profile():
     profile_name = data.get("name", None)
 
     # Validate required fields
-    for field in [
+    fields = (
         "name",
         "region",
         "sso_account_id",
         "sso_role_name",
         "sso_session",
         "output",
-    ]:
+    )
+    for field in fields:
         if not data.get(field, None):
             logger.failed(f"Missing required field: {field}", 400)
 
@@ -347,7 +289,8 @@ def update_config_hosts():
     data = request.json
 
     # Validate required fields
-    for field in ["hostname", "ip"]:
+    fields = ("hostname", "ip")
+    for field in fields:
         if not data.get(field, None):
             return logger.failed(f"Missing required field: {field}", 400)
 
@@ -513,7 +456,7 @@ def connect():
     data = request.json
 
     # Validate required fields
-    for field in ["profile", "region"]:
+    for field in ("profile", "region"):
         if field not in data or not data.get(field, None):
             logger.failed(f"Missing required field: {field}", 400)
 
@@ -900,145 +843,3 @@ def favicon():
     Returns: Favicon image
     """
     return send_file("static/favicon.ico", mimetype="image/vnd.microsoft.icon")
-
-
-class ServerThread(threading.Thread):
-    """
-    Thread class for running the Flask server
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._stop_event = threading.Event()
-        self.daemon = True
-        self.target = self.run
-        self.debug = False
-        self.port = 5000
-
-    def stop(self):
-        """
-        Stop the server
-        """
-        self._stop_event.set()
-
-    def stopped(self):
-        """
-        Check if the server is stopped
-        """
-        return self._stop_event.is_set()
-
-    def run(self):
-        """
-        Run the server
-        """
-        while not self.stopped():
-            logging.info("Starting server...")
-            try:
-                app.run(
-                    host="127.0.0.1",
-                    port=self.port,
-                    debug=self.debug,
-                    use_reloader=self.debug,
-                )
-            except Exception as e:  # pylint: disable=broad-except
-                logging.error(f"Unexpected error: {str(e)}")
-            finally:
-                self.stop()
-                logging.info("Exiting...")
-
-
-class TrayIcon:
-    """
-    System tray icon class
-    """
-
-    def __init__(self, icon_file, **kwargs):
-        self.server = ServerThread()
-        self.server.port = kwargs.get("server_port", 5000)
-        self.server.daemon = True
-        self.icon = None
-        self.icon_file = self.get_resource_path(icon_file)
-
-    @property
-    def image(self):
-        """
-        Load the icon image
-        """
-        try:
-            image = Image.open(self.icon_file)
-        except FileNotFoundError:
-            logger.warning("Icon file not found, generating fallback image")
-            image = self.create_icon(32, 32, "black", "white")
-        return image
-
-    @property
-    def menu(self):
-        """
-        Create the system tray menu
-        """
-        return Menu(
-            MenuItem("Open", self.open_app, default=True),
-            MenuItem("Exit", self.exit_app),
-        )
-
-    def get_resource_path(self, relative_path):
-        """
-        Get absolute path to resource, works for dev and for PyInstaller
-        Args:
-            relative_path (str): Relative path to the resource
-        Returns:
-            str: Absolute path to the resource
-        """
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            # pylint: disable=protected-access
-            base_path = os.path.join(sys._MEIPASS, "ssm_manager")
-        except AttributeError:
-            base_path = os.path.dirname(os.path.realpath(__file__))
-
-        return os.path.join(base_path, relative_path)
-
-    def create_icon(self, width, height, color1, color2):
-        """
-        Generates a simple fallback image
-        Args:
-            width (int): Image width
-            height (int): Image height
-            color1 (str): Background color
-            color2 (str): Foreground color
-        Returns:
-            Image: The generated image
-        """
-        image = Image.new("RGB", (width, height), color1)
-        dc = ImageDraw.Draw(image)
-        dc.rectangle((width // 2, 0, width, height // 2), fill=color2)
-        dc.rectangle((0, height // 2, width // 2, height), fill=color2)
-        return image
-
-    def exit_app(self, icon, item):
-        """
-        Exit the application
-        """
-        # pylint: disable=unused-argument
-        logger.info("Exiting application...")
-        self.server.stop()
-        self.icon.stop()
-
-    def open_app(self, *args):
-        """
-        Open the application in the default browser
-        """
-        # pylint: disable=unused-argument
-        logger.info("Opening application...")
-        open_browser(f"http://127.0.0.1:{self.server.port}/")
-
-    def run(self):
-        """
-        Run the system tray icon
-        """
-        self.server.start()
-        time.sleep(1)
-        self.icon = Icon(APP_NAME, self.image, APP_NAME, menu=self.menu)
-        self.open_app(None, None)
-        if not self.server.stopped():
-            self.icon.run()

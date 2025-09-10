@@ -60,7 +60,13 @@ class DependencyManager(BaseModel):
         """
         try:
             command = CLIVersionCommand(system=self.system)
-            version = subprocess.run(command.cmd, capture_output=True, check=True)
+            logger.info(f"Checking AWS CLI version with command: {command.cmd}")
+            version = subprocess.run(
+                command.cmd,
+                startupinfo=command.startupinfo,
+                capture_output=True,
+                check=True,
+            )
             if version.returncode == 0:
                 match = re.search(
                     r"aws-cli\/([0-9\.]+)", version.stdout.decode("utf-8")
@@ -111,7 +117,12 @@ class DependencyManager(BaseModel):
         """
         try:
             command = SSMVersionCommand(system=self.system)
-            ssm = subprocess.run(command.cmd, capture_output=True, check=True)
+            ssm = subprocess.run(
+                command.cmd,
+                startupinfo=command.startupinfo,
+                capture_output=True,
+                check=True,
+            )
             if ssm.returncode == 0:
                 return ssm.stdout.decode("utf-8").strip()
         except (subprocess.CalledProcessError, FileNotFoundError):

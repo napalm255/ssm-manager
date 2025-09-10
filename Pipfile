@@ -13,9 +13,10 @@ pywin32-ctypes = {version = "*", sys_platform = "== 'win32'"}
 pefile = {version = "*", sys_platform = "== 'win32'"}
 colorama = "*"
 cachelib = "*"
-pystray = "*"
 pydantic = "*"
 keyring = "*"
+pystray = "*"
+filelock = "*"
 
 [dev-packages]
 pylint = "*"
