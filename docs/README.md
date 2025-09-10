@@ -17,6 +17,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 <div align="center">
   <img src="images/logo.png" alt="Logo" width="200"/>
 </div>
+
 ![Screenshot](images/screenshot.jpg)
 
   - [Description](#description)
