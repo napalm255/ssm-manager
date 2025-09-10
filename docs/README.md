@@ -14,7 +14,9 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 
-![Logo](images/logo.png)
+<div align="center">
+  <img src="images/logo.png" alt="Logo" width="200"/>
+</div>
 ![Screenshot](images/screenshot.jpg)
 
   - [Description](#description)
