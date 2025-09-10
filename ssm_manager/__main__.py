@@ -46,6 +46,9 @@ def show_window(pid: int) -> None:
     """
     Displays a dialog box to manage the running application instance.
     """
+    window_width = 600
+    window_height = 100
+
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
     root.title(f"{app_name}")
@@ -84,13 +87,12 @@ def show_window(pid: int) -> None:
     cancel_btn.pack(side="left", padx=5)
 
     root.withdraw()  # Hide the main window initially
-    root.geometry("600x100")
+    root.geometry(f"{window_width}x{window_height}")
     root.update_idletasks()
 
-    root.geometry("600x100")
-    x = (root.winfo_screenwidth() // 2) - (600 // 2)
-    y = (root.winfo_screenheight() // 2) - (100 // 2)
-    root.geometry(f"600x100+{x}+{y}")
+    x = (root.winfo_screenwidth() // 2) - (window_width // 2)
+    y = (root.winfo_screenheight() // 2) - (window_height // 2)
+    root.geometry(f"{window_width}x{window_height}+{x}+{y}")
     root.deiconify()  # Show the main window again
 
     root.mainloop()
