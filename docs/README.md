@@ -1,6 +1,6 @@
 <div style="display: flex; align-items: center; gap: 10px;">
-  <span><img src="images/logo.png" alt="Logo" width="64"/></span>
-  <span style="line-height: 1;">SSM Manager</span>
+  <span style="vertical-align: middle;"><img src="images/logo.png" alt="Logo" width="64"/></span>
+  <span>SSM Manager</span>
 </div>
 
 <hr>
