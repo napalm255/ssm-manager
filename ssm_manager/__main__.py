@@ -56,6 +56,24 @@ def show_dialog(pid: int) -> None:
     dialog.geometry("600x100")
     dialog.resizable(False, False)
 
+    # Get screen dimensions
+    screen_width = dialog.winfo_screenwidth()
+    screen_height = dialog.winfo_screenheight()
+
+    # Wait for the window to update its size
+    dialog.update_idletasks()
+
+    # Get dialog dimensions
+    dialog_width = dialog.winfo_width()
+    dialog_height = dialog.winfo_height()
+
+    # Calculate position to center the dialog
+    x = (screen_width // 2) - (dialog_width // 2)
+    y = (screen_height // 2) - (dialog_height // 2)
+
+    # Set the position of the dialog
+    dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
+
     label = tk.Label(dialog, text=message, wraplength=400)
     label.pack(pady=10)
 
