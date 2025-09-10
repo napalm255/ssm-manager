@@ -44,15 +44,6 @@ main {
   max-height: calc(100vh - 170px);
 }
 
-/*
-[data-bs-theme="light"] .logo {
-  border-radius: 50%;
-  background: radial-gradient(circle, #888888, transparent 70%);
-}
-[data-bs-theme="dark"] .logo {
-  background: transparent;
-}
-*/
 .logo {
   background: transparent;
 }
