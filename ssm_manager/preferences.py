@@ -172,8 +172,6 @@ class PreferencesHandler:
             logging.getLogger("ssm_manager").setLevel(numeric_level)
             logging.getLogger("ssm_manager.preferences").setLevel(numeric_level)
             logging.getLogger("ssm_manager.manager").setLevel(numeric_level)
-
-            logger.info("Applied preferences successfully")
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 
