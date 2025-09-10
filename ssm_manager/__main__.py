@@ -99,10 +99,15 @@ def show_window(pid: int) -> None:
     cancel_btn.pack(side="left", padx=5)
 
     # Run the dialog
-    # root.withdraw()  # Hide the main window initially
-    center_window(root)
+    root.withdraw()  # Hide the main window initially
+    root.update_idletasks()
+    # center_window(root)
 
-    # root.deiconify()
+    x = (root.winfo_screenwidth() // 2) - root.winfo_reqwidth() // 2
+    y = (root.winfo_screenheight() // 2) - root.winfo_reqheight() // 2
+    root.geometry(f"+{x}+{y}")
+    root.deiconify()  # Show the main window again
+
     root.mainloop()
     exit_window(root)
 
