@@ -61,11 +61,10 @@ def show_window(pid: int) -> None:
     Displays a dialog box to manage the running application instance.
     """
     root = tk.Tk()
+    root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
     root.title(f"{app_name}")
     root.geometry("600x100")
-    root.protocol("WM_DELETE_WINDOW", lambda: exit_window(root))
-
-    center_window(root)
+    root.resizable(False, False)
 
     message = f"{app_name} is already running."
 
@@ -100,6 +99,10 @@ def show_window(pid: int) -> None:
     cancel_btn.pack(side="left", padx=5)
 
     # Run the dialog
+    # root.withdraw()  # Hide the main window initially
+    center_window(root)
+
+    # root.deiconify()
     root.mainloop()
     exit_window(root)
 
