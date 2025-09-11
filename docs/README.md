@@ -10,6 +10,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 [![Vue.js](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fvue.global.prod.js&search=vue%20v(%5Cd%2B.*)&replace=%241&logo=vue.js&label=vue&color=%234FC08D)](https://vuejs.org/)
 [![Flask](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/flask)](https://flask.palletsprojects.com/en/stable/)
 [![Boto](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/boto3)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+[![Pydantic](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/pydantic?logo=pydantic&logoColor=%23E92063&color=%23E92063)](https://pydantic.dev/)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
