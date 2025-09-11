@@ -9,7 +9,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 [![Bootstrap](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fbootstrap.bundle.min.js&search=Bootstrap%20v(%5Cd%2B.%3F%5Cd%2B.%3F%5Cd%2B)&replace=%241&logo=bootstrap&logoColor=%237952B3&label=bootstrap&color=%237952B3)](https://getbootstrap.com/)
 [![Vue.js](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fvue.global.prod.js&search=vue%20v(%5Cd%2B.*)&replace=%241&logo=vue.js&label=vue&color=%234FC08D)](https://vuejs.org/)
 [![Flask](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/flask?logo=flask&logoColor=%233BABC3&color=%233BABC3)](https://flask.palletsprojects.com/en/stable/)
-[![Boto](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/boto3)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+[![Boto](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/boto3?logoColor=%23FF9900&color=%23FF9900)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
 [![Pydantic](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/pydantic?logo=pydantic&logoColor=%23E92063&color=%23E92063)](https://pydantic.dev/)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
