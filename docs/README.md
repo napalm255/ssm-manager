@@ -2,8 +2,8 @@
 
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager/releases)
-[![GitHub](https://img.shields.io/github/license/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager?tab=MIT-1-ov-file)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager)](https://github.com/napalm255/ssm-manager/releases)
+[![GitHub](https://img.shields.io/github/license/napalm255/ssm-manager)](https://github.com/napalm255/ssm-manager?tab=MIT-1-ov-file)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Python](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2FPipfile&query=%24.requires.python_version&logo=python&label=python)](https://www.python.org/)
 [![Bootstrap](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fbootstrap.bundle.min.js&search=Bootstrap%20v(%5Cd%2B.%3F%5Cd%2B.%3F%5Cd%2B)&replace=%241&logo=bootstrap&logoColor=%237952B3&label=bootstrap&color=%237952B3)](https://getbootstrap.com/)
