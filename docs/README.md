@@ -2,9 +2,15 @@
 
 A desktop application for managing SSM session on AWS cloud with a user-friendly GUI interface.
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager/releases)
-[![GitHub](https://img.shields.io/github/license/napalm255/ssm-manager?style=flat-square)](https://github.com/napalm255/ssm-manager?tab=MIT-1-ov-file)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/napalm255/ssm-manager)](https://github.com/napalm255/ssm-manager/releases)
+[![GitHub](https://img.shields.io/github/license/napalm255/ssm-manager)](https://github.com/napalm255/ssm-manager?tab=MIT-1-ov-file)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Python](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2FPipfile&query=%24.requires.python_version&logo=python&label=python)](https://www.python.org/)
+[![Bootstrap](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fbootstrap.bundle.min.js&search=Bootstrap%20v(%5Cd%2B.%3F%5Cd%2B.%3F%5Cd%2B)&replace=%241&logo=bootstrap&logoColor=%237952B3&label=bootstrap&color=%237952B3)](https://getbootstrap.com/)
+[![Vue.js](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2Fssm_manager%2Fstatic%2Fjs%2Fvue.global.prod.js&search=vue%20v(%5Cd%2B.*)&replace=%241&logo=vue.js&label=vue&color=%234FC08D)](https://vuejs.org/)
+[![Flask](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/flask?logo=flask&logoColor=%233BABC3&color=%233BABC3)](https://flask.palletsprojects.com/en/stable/)
+[![Boto](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/boto3?logoColor=%23FF9900&color=%23FF9900)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+[![Pydantic](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/pydantic?logo=pydantic&logoColor=%23E92063&color=%23E92063)](https://pydantic.dev/)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=bugs)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=napalm255_ssm-manager&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=napalm255_ssm-manager)
@@ -75,6 +81,7 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
   - Session monitoring and management
   - Remote host connection through instances
   - Configure Windows Credentials upon connection
+  - Configure Hosts file entries upon connection
 
 ### AWS Configuration
  - Supports AWS SSO profiles
@@ -85,7 +92,7 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 - Active session termination
 
 ### Additional Features
-- Responsive layout using Bootstrap and Vue.js
+- Responsive layout using Bootstrap 5.3 and Vue.js 3
 - Logging system with configurable levels
 - Light and dark mode themes for the UI
 - Customizable preferences (e.g., port range, log level, regions)
@@ -95,25 +102,40 @@ It simplifies the process of connecting to EC2 instances through AWS Systems Man
 - Windows or Linux OS (Tested on Windows 11 and Fedora 40)
 - AWS CLI installed and configured [[instructions here](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)]
 - AWS SSM Plugin for AWS CLI installed [[instructions here](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)]
-- Valid AWS credentials configured (`aws configure [sso]`)
+- Valid AWS credentials
 
 ## Installation
 
 A pre-built version is currently only available for Windows and comes in either a self extracting zip or a zip file.
 
-### PowerShell Installation
+For Linux, you can run the application directly using Python or package it yourself using the provided instructions.
 
-A powershell script is provided to query github for the latest release and install the application.
+### PowerShell Installation (Recommended for Windows)
+
+A powershell script is provided to query github for the latest or provided release and install the application.
 
 A single line command can be used to download and install the latest version of SSM Manager:
 
 **Note:** This command requires PowerShell to be run as an administrator.
 
-The following command will download the latest version of the installer script and execute it, installing SSM Manager to `C:\Program Files (x86)\ssm_manager\ssm_manager.exe`:
+The following command will download the installer and execute the script.
+
+#### Default Installation
+
+Running the script with no parameters will download the latest release from GitHub and will install SSM Manager to the default directory of `C:\Program Files (x86)\ssm_manager\ssm_manager.exe`:
 
 ```powershell
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1"
 ```
+
+#### Installing a Specific Version
+
+If you want to install a specific version of SSM Manager, you can specify the `-version` parameter in the command. For example, to install version `vX.Y.Z`, you would use:
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1" -version "vX.Y.Z"
+```
+
 
 #### Custom Installation Directory
 
@@ -127,24 +149,30 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/
 
 1. Download the latest release from the releases page
 2. Run the self extracting zip, `ssm_manager.exe`.
-3. Ensure that AWS CLI and SSM Plugin are installed.
+3. Move the extracted folder to your desired location.
+4. Ensure that AWS CLI and SSM Plugin are installed.
    ```powershell
    aws --version
    session-manager-plugin --version
    ```
 5. Configure AWS CLI and log in to AWS. [**Instructions here**](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 6. Install the Session Manager plugin for AWS CLI. [**Instructions here**](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
-7. Launch **SSM Manager**.
+7. Launch the application by running `ssm_manager.exe` from the installation directory.
 
 ## Usage
 
-1. Launch the application
-2. Select your AWS profile and region
-3. Click the magnifier icon to view discover available instances
-4. Use the action buttons to establish connections:
+- Launch the application
+   - The application will start in the system tray and open your default web browser to the UI running at `http://127.0.0.1:5000`
+- Configure preferences if needed
+- Configure AWS sessions and/or profiles using the UI or AWS CLI
+- Navigate to the Instances page
+- In the top right select the desired profile and region
+- Click the magnifier icon to discover available instances
+- Use the action buttons to establish connections:
    - Shell: Direct terminal access
    - RDP: Remote desktop connection
    - Port Forward: Custom port forwarding
+- Monitor and manage active connections from the Active Connections pane on the Instances page
 
 ## Development
 
@@ -160,6 +188,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/
 - keyring
 
 ### Setup Development Environment
+
 ```powershell
 git clone https://github.com/napalm255/ssm-manager.git
 cd ssm-manager
