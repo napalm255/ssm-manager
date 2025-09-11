@@ -137,8 +137,8 @@ class DependencyManager(BaseModel):
         base = "https://s3.amazonaws.com/session-manager-downloads/plugin/latest"
         url = [
             {
-                "link": f"{base}/windows_64bit/session-manager-plugin.msi",
-                "extension": "msi",
+                "link": f"{base}/windows/SessionManagerPluginSetup.exe",
+                "extension": "exe",
             }
         ]
         if self.system == "Linux":
@@ -148,7 +148,7 @@ class DependencyManager(BaseModel):
                     "extension": "rpm",
                 },
                 {
-                    "link": f"{base}/linux_64bit/session-manager-plugin.deb",
+                    "link": f"{base}/ubuntu_64bit/session-manager-plugin.deb",
                     "extension": "deb",
                 },
             ]
