@@ -24,6 +24,8 @@
 param(
     [Parameter(Mandatory=$false)]
     [string]$destinationBaseDir = "C:\Program Files (x86)"
+    [Parameter(Mandatory=$false)]
+    [string]$version = "latest"
 )
 
 # =============================================================================
@@ -44,10 +46,13 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 # =============================================================================
 # Get the latest release information
 # =============================================================================
-Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Cyan
 try {
     # Use Invoke-RestMethod for easier JSON parsing from the GitHub API
-    $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$gitHubRepo/releases/latest" -ErrorAction Stop
+    if ($version -eq "latest") {
+        $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$gitHubRepo/releases/latest" -ErrorAction Stop
+    } else {
+        $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/$gitHubRepo/releases/tags/$version" -ErrorAction Stop
+    }
 
     # The API response contains the full download URL for the zip.
     # We look for an asset that is a zip file.
