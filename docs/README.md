@@ -7,7 +7,7 @@ A desktop application for managing SSM session on AWS cloud with a user-friendly
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Python](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapalm255%2Fssm-manager%2Frefs%2Fheads%2Fmain%2FPipfile&query=%24.requires.python_version&logo=python&label=python)](https://www.python.org/)
 [![Bootstrap](https://img.shields.io/badge/bootstrap-5.3-white?logo=bootstrap&logoColor=%237952B3&color=%237952B3)](https://getbootstrap.com/)
-[![Vue.js](https://img.shields.io/badge/vue-5.3-white?logo=vue.js&logoColor=%234FC08D&color=%234FC08D)](https://vuejs.org/)
+[![Vue.js](https://img.shields.io/badge/vue.js-3-white?logo=vue.js&logoColor=%234FC08D&color=%234FC08D)](https://vuejs.org/)
 [![Flask](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/flask)](https://flask.palletsprojects.com/en/stable/)
 [![Boto](https://img.shields.io/github/pipenv/locked/dependency-version/napalm255/ssm-manager/boto3)](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
 
