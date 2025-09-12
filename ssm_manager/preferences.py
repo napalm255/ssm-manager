@@ -22,6 +22,7 @@ class PreferencesHandler:
         "regions": [],
         "instances": [],
         "credentials": [],
+        "port_forwarding": {"mode": "local", "remote_port": 1433},
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -77,6 +78,9 @@ class PreferencesHandler:
             prefs["logging"] = new_preferences.get("logging", prefs["logging"])
             prefs["regions"] = new_preferences.get("regions", prefs["regions"])
             prefs["instances"] = new_preferences.get("instances", prefs["instances"])
+            prefs["port_forwarding"] = new_preferences.get(
+                "port_forwarding", prefs["port_forwarding"]
+            )
             prefs["credentials"] = [
                 {"username": cred.get("username")}
                 for cred in new_preferences.get("credentials", prefs["credentials"])

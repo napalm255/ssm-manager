@@ -65,6 +65,7 @@ const app = createApp({
     const prefCredentialsCount = computed(() => {
       return prefCredentials.value.length;
     });
+    const prefPortForwarding = ref({});
 
     const hosts = ref([]);
     const hostsCount = computed(() => {
@@ -273,14 +274,13 @@ const app = createApp({
 
       const portRange = preferences.value.port_range || { start: prefPortStart.value, end: prefPortEnd.value };
       const logging = preferences.value?.logging || { level: prefLogLevel.value };
-      const regions = preferences.value?.regions || [];
-      const credentials = preferences.value.credentials || [];
       prefPortStart.value = portRange.start;
       prefPortEnd.value = portRange.end;
       prefLogLevel.value = logging.level;
-      prefRegions.value = regions;
-      prefCredentials.value = credentials;
+      prefRegions.value = preferences.value?.regions || [];
+      prefCredentials.value = preferences.value.credentials || [];
       prefCredentialsToDelete.value = [];
+      prefPortForwarding.value = preferences.value?.port_forwarding || {};
     };
 
     const savePreferences = async () => {
@@ -301,6 +301,7 @@ const app = createApp({
         regions: prefRegions.value,
         credentials: prefCredentials.value,
         credentials_to_delete: prefCredentialsToDelete.value,
+        port_forwarding: prefPortForwarding.value
       };
 
       try {
@@ -434,15 +435,20 @@ const app = createApp({
       isPortForwardingStarting.value = true;
 
       try {
+        let mode = portForwardingModalProperties.value.mode;
+        let remoteHost = portForwardingModalProperties.value.remoteHost;
+        if (mode === 'local') {
+          remoteHost = '';
+        }
         const data = await apiFetch(`/api/custom-port/${portForwardingModalProperties.value.instanceId}`, {
           method: 'POST',
           body: JSON.stringify({
             profile: currentProfile.value,
             region: currentRegion.value,
             name: portForwardingModalProperties.value.instanceName,
-            mode: portForwardingModalProperties.value.mode,
+            mode: mode,
             remote_port: portForwardingModalProperties.value.remotePort,
-            remote_host: portForwardingModalProperties.value.remoteHost,
+            remote_host: remoteHost,
             username: portForwardingModalProperties.value.username
           })
         });
@@ -489,9 +495,10 @@ const app = createApp({
     // Modals
     // -----------------------------------------------
 
-    const showPortForwardingModal = async (instanceId, name) => {
+    const showPortForwardingModal = async (instanceId, name, mode='local') => {
       portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
-        keyboard: true
+        backdrop: 'static',
+        keyboard: false
       });
       document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
         portForwardingModalProperties.value = {};
@@ -500,9 +507,9 @@ const app = createApp({
       portForwardingModalProperties.value = {
         instanceId: instanceId,
         instanceName: name,
-        mode: 'local',
-        remotePort: 1433,
-        remoteHost: '',
+        mode: mode,
+        remotePort: prefPortForwarding.value.remote_port || 1433,
+        remoteHost: prefPortForwarding.value.remote_host || '',
         username: ''
       };
       portForwardingModal.value.show();
@@ -535,7 +542,8 @@ const app = createApp({
     const showPortMappingsModal = async (instanceId, name) => {
       const instanceName = name || instanceId;
       portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
-        keyboard: true
+        backdrop: 'static',
+        keyboard: false
       });
       document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
         portMappingsModalInstance.value = null;
@@ -571,7 +579,8 @@ const app = createApp({
     const addPortMapping = () => {
       portMappingsModalProperties.value.push({
         local_port: '',
-        remote_port: ''
+        remote_port: '',
+        remote_host: ''
       });
     };
 
@@ -581,7 +590,8 @@ const app = createApp({
 
     const showAddSessionModal = async (instanceId, name) => {
       addSessionModal.value = new bootstrap.Modal(document.getElementById('addSessionModal'), {
-        keyboard: true
+        backdrop: 'static',
+        keyboard: false
       });
       document.getElementById('addSessionModal').addEventListener('hidden.bs.modal', async () => {
         addSessionModalProperties.value = {};
@@ -625,7 +635,8 @@ const app = createApp({
 
     const showAddProfileModal = async (instanceId, name) => {
       addProfileModal.value = new bootstrap.Modal(document.getElementById('addProfileModal'), {
-        keyboard: true
+        backdrop: 'static',
+        keyboard: false
       });
       document.getElementById('addProfileModal').addEventListener('hidden.bs.modal', async () => {
         addProfileModalProperties.value = {};
@@ -671,7 +682,8 @@ const app = createApp({
 
     const showAddHostModal = async () => {
       addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
-        keyboard: true
+        backdrop: 'static',
+        keyboard: false
       });
       document.getElementById('addHostModal').addEventListener('hidden.bs.modal', async () => {
         addHostModalProperties.value = {};
@@ -826,7 +838,17 @@ const app = createApp({
       if (tooltip) {
         tooltip.hide();
       }
-    }
+    };
+
+    const blurModal = async (event) => {
+        // Get the currently focused element
+        const activeElement = document.activeElement;
+
+        // If an element is focused, remove its focus.
+        if (activeElement) {
+          activeElement.blur();
+        }
+    };
 
     // -----------------------------------------------
     // Check GitHub for updates
@@ -884,6 +906,9 @@ const app = createApp({
     onMounted(async () => {
       // Watch for hash changes
       window.addEventListener('hashchange', updateHash);
+
+      // Watch for modal hide events to remove focus
+      document.addEventListener('hide.bs.modal', blurModal);
 
       // Set the initial theme
       const lastTheme = localStorage.getItem('lastTheme');
@@ -962,7 +987,7 @@ const app = createApp({
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
       hideTooltip, tooltipTriggerList, tooltipList,
-      preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings,
+      preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwarding,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,

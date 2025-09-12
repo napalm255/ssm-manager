@@ -77,7 +77,7 @@ main {
 }
 
 .bi {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .h2 {
@@ -163,6 +163,10 @@ main {
   background-color: var(--color-port-forward);
 }
 
+.start-port-forward:focus {
+  background-color: var(--color-port-forward);
+}
+
 .start-port-forward:hover {
   background-color: var(--color-port-forward-hover);
   transform: scale(1.10);
@@ -181,10 +185,6 @@ main {
 .edit-port-mapping {
   background-color: var(--color-port-forward);
   color: #FFFFFF;
-}
-
-.edit-port-mapping .bi-pencil-square {
-  font-size: 1.3rem;
 }
 
 .edit-port-mapping:hover {
@@ -213,6 +213,14 @@ main {
 
 .accordion-button {
   user-select: text;
+}
+
+.btn-opts {
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  margin: 0;
 }
 
 .btn-disconnect {
