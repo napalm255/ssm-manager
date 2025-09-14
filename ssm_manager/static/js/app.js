@@ -507,7 +507,7 @@ const app = createApp({
       portForwardingModalProperties.value = {
         instanceId: instanceId,
         instanceName: name,
-        mode: mode,
+        mode: prefPortForwarding.value.mode || mode,
         remotePort: prefPortForwarding.value.remote_port || 1433,
         remoteHost: prefPortForwarding.value.remote_host || '',
         username: ''
