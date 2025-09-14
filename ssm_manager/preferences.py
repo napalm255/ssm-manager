@@ -179,6 +179,14 @@ class PreferencesHandler:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 
+    def get_used_ports(self):
+        """Get list of all used local ports"""
+        used_ports = []
+        for instance in self.preferences.get("instances", []):
+            for port in instance.get("ports", []):
+                used_ports.append(int(port.get("local_port")))
+        return used_ports
+
     def get_instance_properties(self, name, remote_port: int, remote_host=None):
         """Get properties for specific instance"""
         for instance in self.preferences.get("instances", []):
