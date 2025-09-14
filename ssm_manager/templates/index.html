@@ -645,10 +645,14 @@
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-link-45deg"></i>
               <div class="m-0">Sessions</div>
+              <i class="bi bi-info-circle text-muted" style="font-size: .825rem; cursor: help;" data-bs-toggle="tooltip"
+                        data-bs-placement="right"  data-bs-title="Sessions are used to group profiles to a common SSO start URL and region."></i>
             </div>
             <span>
               <span class="badge me-2" :class="sessionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="sessionsCount + ' sessions'"></span>
-              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddSessionModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
+              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddSessionModal">
+                <i class="bi bi-plus"></i>
+              </button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -686,10 +690,14 @@
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-person-fill"></i>
               <div class="m-0">Profiles</div>
+              <i class="bi bi-info-circle text-muted" style="font-size: .825rem; cursor: help;" data-bs-toggle="tooltip"
+                        data-bs-placement="right"  data-bs-title="Profiles define an AWS account and role to assume and can be linked to a session for SSO authentication. These profiles are used when connecting to instances."></i>
             </div>
             <span>
               <span class="badge me-2" :class="profilesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="profilesCount + ' profiles'"></span>
-              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddProfileModal"><i class="bi bi-plus" style="font-size:16px;"></i></button>
+              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddProfileModal">
+                <i class="bi bi-plus"></i>
+              </button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -843,44 +851,51 @@
           <div class="modal-body">
             <div class="mb-2">
               <small>
-                <div class="text-secondary pb-2">
+                <div class="pb-2">
                   Port mappings allow you to define static local ports for port forwarding to
                   remote ports on the instance.
                 </div>
-                <div class="text-secondary pb-2">
+                <div class="pb-2">
                   Optionally, you can specify a remote host to forward to a different host from the
                   instance. This can be useful for accessing services that are not running on the
                   instance itself, for example RDS.
                 </div>
-                <div class="text-secondary pb-2">
+                <div class="pb-2">
                   Local ports must be unique across all instances.
                 </div>
               </small>
             </div>
-            <div v-for="(mapping, index) in portMappingsModalProperties" :key="index"
-              class="row mt-2 mb-2 align-items-center border-top border-primary pt-2">
-              <div class="col-6 pb-2">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text" :id="'portMappingLocal' + index">Local</span>
-                  <input type="number" class="form-control" v-model="mapping.local_port" aria-label="Local" aria-describedby="'portMappingLocal' + index" max="65535">
+            <div v-if="portMappingsModalProperties.length === 0" class="text-center text-muted border-top pt-2">
+              <i class="bi bi-arrow-left-right fs-2"></i>
+              <p class="">No port mappings</p>
+            </div>
+            <div v-for="(mapping, index) in portMappingsModalProperties" :key="index" class="border-top border-primary pt-2">
+              <div class="row mt-2 mb-2 align-items-center">
+                <div class="col-5 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingLocal' + index">Local</span>
+                    <input type="number" class="form-control" v-model="mapping.local_port" aria-label="Local" aria-describedby="'portMappingLocal' + index" max="65535">
+                  </div>
+                </div>
+                <div class="col-5 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingRemote' + index">Remote</span>
+                    <input type="number" class="form-control" v-model="mapping.remote_port" aria-label="Remote" aria-describedby="'portMappingRemote' + index" max="65535">
+                  </div>
+                </div>
+                <div class="col-2 d-flex justify-content-end align-items-start">
+                  <button type="button" class="btn btn-sm btn-outline-danger" @click="removePortMapping(index)" :disabled="portMappings.length === 1">
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
               </div>
-              <div class="col-6 pb-2">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text" :id="'portMappingRemote' + index">Remote</span>
-                  <input type="number" class="form-control" v-model="mapping.remote_port" aria-label="Remote" aria-describedby="'portMappingRemote' + index" max="65535">
+              <div class="row mt-2 mb-2 align-items-center">
+                <div class="col-10 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingHost' + index">Remote Host</span>
+                    <input type="text" class="form-control" v-model="mapping.remote_host" placeholder="Optional" aria-label="Remote Host (Optional)" aria-describedby="'portMappingHost' + index" max="65535">
+                  </div>
                 </div>
-              </div>
-              <div class="col-10 pb-2">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text" :id="'portMappingHost' + index">Remote Host</span>
-                  <input type="text" class="form-control" v-model="mapping.remote_host" placeholder="Optional" aria-label="Remote Host (Optional)" aria-describedby="'portMappingHost' + index" max="65535">
-                </div>
-              </div>
-              <div class="col-auto">
-                <button type="button" class="btn btn-sm btn-outline-danger" @click="removePortMapping(index)" :disabled="portMappings.length === 1">
-                  <i class="bi bi-trash"></i>
-                </button>
               </div>
             </div>
             <div class="border-top pt-2 mt-2">
@@ -921,7 +936,12 @@
           <div class="modal-body">
             <div class="input-group mb-2" v-for="column in sessionsTableColumns">
               <span class="input-group-text" :id="'session_' + column.field + 'Label'" v-html="column.title"></span>
-              <input :id="'session_' + column.field" type="text" class="form-control" placeholder=""
+              <select v-if="column.field === 'sso_region'" :id="'session_' + column.field" class="form-select"
+                :aria-label="column.title" :aria-describedby="'session_' + column.field + 'Label'"
+                v-model="addSessionModalProperties[column.field]">
+                <option v-for="region in regionsAll" :value="region" v-html="region"></option>
+              </select>
+              <input v-if="column.field !== 'sso_region'" :id="'session_' + column.field" type="text" class="form-control" placeholder=""
                 :aria-label="column.title" :aria-describedby="'session_' + column.field + 'Label'"
                 v-model="addSessionModalProperties[column.field]">
             </div>
@@ -956,7 +976,14 @@
           <div class="modal-body">
             <div class="input-group mb-2" v-for="column in profilesTableColumns">
               <span class="input-group-text" :id="'profile_' + column.field + 'Label'" v-html="column.title"></span>
-              <input :id="'profile_' + column.field" type="text" class="form-control" placeholder=""
+              <select v-if="['sso_session', 'region'].includes(column.field)" :id="'profile_' + column.field" class="form-select"
+                :aria-label="column.title" :aria-describedby="'profile_' + column.field + 'Label'"
+                v-model="addProfileModalProperties[column.field]">
+                <option value=""></option>
+                <option v-if="column.field === 'sso_session'" v-for="session in sessions" :value="session.name" v-html="session.name"></option>
+                <option v-if="column.field === 'region'" v-for="region in regionsAll" :value="region" v-html="region"></option>
+              </select>
+              <input v-if="!['sso_session', 'region'].includes(column.field)" :id="'profile_' + column.field" type="text" class="form-control" placeholder=""
                 :aria-label="column.title" :aria-describedby="'profile_' + column.field + 'Label'"
                 v-model="addProfileModalProperties[column.field]">
             </div>

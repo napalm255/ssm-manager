@@ -498,7 +498,7 @@ const app = createApp({
     const showPortForwardingModal = async (instanceId, name, mode='local') => {
       portForwardingModal.value = new bootstrap.Modal(document.getElementById('portForwardingModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: true
       });
       document.getElementById('portForwardingModal').addEventListener('hidden.bs.modal', () => {
         portForwardingModalProperties.value = {};
@@ -543,7 +543,7 @@ const app = createApp({
       const instanceName = name || instanceId;
       portMappingsModal.value = new bootstrap.Modal(document.getElementById('portMappingsModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: true
       });
       document.getElementById('portMappingsModal').addEventListener('hidden.bs.modal', () => {
         portMappingsModalInstance.value = null;
@@ -591,7 +591,7 @@ const app = createApp({
     const showAddSessionModal = async (instanceId, name) => {
       addSessionModal.value = new bootstrap.Modal(document.getElementById('addSessionModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: true
       });
       document.getElementById('addSessionModal').addEventListener('hidden.bs.modal', async () => {
         addSessionModalProperties.value = {};
@@ -599,8 +599,8 @@ const app = createApp({
       addSessionModalProperties.value = {
         name: '',
         sso_start_url: '',
-        sso_region: '',
-        sso_registration_scopes: ''
+        sso_region: 'us-east-1',
+        sso_registration_scopes: 'sso:account:access'
       };
       addSessionModal.value.show();
     };
@@ -636,7 +636,7 @@ const app = createApp({
     const showAddProfileModal = async (instanceId, name) => {
       addProfileModal.value = new bootstrap.Modal(document.getElementById('addProfileModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: true
       });
       document.getElementById('addProfileModal').addEventListener('hidden.bs.modal', async () => {
         addProfileModalProperties.value = {};
@@ -683,7 +683,7 @@ const app = createApp({
     const showAddHostModal = async () => {
       addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: true
       });
       document.getElementById('addHostModal').addEventListener('hidden.bs.modal', async () => {
         addHostModalProperties.value = {};
