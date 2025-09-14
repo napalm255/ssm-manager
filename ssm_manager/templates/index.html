@@ -470,27 +470,24 @@
       </div>
       <div class="row page-body">
         <div class="col-lg-6">
-          <!-- Port Range card-->
+          <!-- Regions card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-ethernet"></i>
-                <div class="m-0">Ports</div>
+                <i class="bi bi-geo-alt-fill"></i>
+                <div class="m-0">Regions</div>
               </div>
-              <span class="badge" :class="prefPortCount > 0 ? 'bg-primary' : 'bg-danger'" v-html="prefPortCount + ' ports in range'"></span>
+              <span class="badge" :class="prefRegionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="prefRegionsCount + ' selected regions'"></span>
             </div>
             <div class="card-body">
-              <h5 class="mb-1">Dynamic Port Range</h5>
-              <p class="small text-muted">This range is used to dynamically and randomly allocate ports for host port forwarding when connecting to instances.</p>
-              <p class="small text-muted">Ports are checked for availability before being allocated, and if a port is already in use, the next available random port in the range will be used.</p>
+              <h5 class="mb-1">Visible Regions</h5>
+              <p class="small text-muted">Selecting regions will limit the regions that are visible in the application. This is useful if you only work with a specific set of regions and want to reduce clutter.</p>
+              <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
               <form>
-                <div class="mb-3">
-                  <label class="small mb-1" for="prefPortStart">Starting Port</label>
-                  <input class="form-control" id="prefPortStart" type="number" placeholder="60000" min="1024" v-model="prefPortStart">
-                </div>
-                <div class="mb-3">
-                  <label class="small mb-1" for="prefPortEnd">Ending Port</label>
-                  <input class="form-control" id="prefPortEnd" type="number" placeholder="65535" max="65535" v-model="prefPortEnd">
+                <div class="form-check">
+                  <select class="form-select" id="prefRegions" name="prefRegions" size="8" multiple v-model="prefRegions">
+                    <option v-for="region in regionsAll" :value="region" v-html="region"></option>
+                  </select>
                 </div>
               </form>
             </div>
@@ -525,24 +522,27 @@
               </form>
             </div>
           </div>
-          <!-- Regions card-->
+          <!-- Port Range card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-geo-alt-fill"></i>
-                <div class="m-0">Regions</div>
+                <i class="bi bi-ethernet"></i>
+                <div class="m-0">Ports</div>
               </div>
-              <span class="badge" :class="prefRegionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="prefRegionsCount + ' selected regions'"></span>
+              <span class="badge" :class="prefPortCount > 0 ? 'bg-primary' : 'bg-danger'" v-html="prefPortCount + ' ports in range'"></span>
             </div>
             <div class="card-body">
-              <h5 class="mb-1">Visible Regions</h5>
-              <p class="small text-muted">Selecting regions will limit the regions that are visible in the application. This is useful if you only work with a specific set of regions and want to reduce clutter.</p>
-              <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
+              <h5 class="mb-1">Dynamic Port Range</h5>
+              <p class="small text-muted">This range is used to dynamically and randomly allocate ports for host port forwarding when connecting to instances.</p>
+              <p class="small text-muted">Ports are checked for availability before being allocated, and if a port is already in use, the next available random port in the range will be used.</p>
               <form>
-                <div class="form-check">
-                  <select class="form-select" id="prefRegions" name="prefRegions" size="8" multiple v-model="prefRegions">
-                    <option v-for="region in regionsAll" :value="region" v-html="region"></option>
-                  </select>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefPortStart">Starting Port</label>
+                  <input class="form-control" id="prefPortStart" type="number" placeholder="60000" min="1024" v-model="prefPortStart">
+                </div>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefPortEnd">Ending Port</label>
+                  <input class="form-control" id="prefPortEnd" type="number" placeholder="65535" max="65535" v-model="prefPortEnd">
                 </div>
               </form>
             </div>
