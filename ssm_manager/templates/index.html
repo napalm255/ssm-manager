@@ -26,7 +26,7 @@
       </a>
       <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
         <li class="nav-item" v-for="navItem in navBar">
-          <a :href="navItem.hash" class="nav-link py-3 border-bottom rounded-0" :class="{ active: currentHash === navItem.hash }" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" :aria-label="navItem.name" :data-bs-original-title="navItem.name" @click="hideTooltip($event)">
+          <a :href="navItem.hash" class="nav-link py-3 border-bottom rounded-0" :class="{ active: currentHash === navItem.hash }" aria-current="page" :aria-label="navItem.name" data-bs-toggle="tooltip" data-bs-placement="right" :data-bs-original-title="navItem.name" @click="hideTooltip($event)">
             <i :class="navItem.icon"></i>
           </a>
         </li>
@@ -34,12 +34,12 @@
       <div class="border-top">
         <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
           <li class="nav-item">
-            <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="Theme" data-bs-original-title="Theme" @click="themeToggle()">
+            <a class="nav-link py-3 border-bottom rounded-0 text-secondary" aria-current="page" aria-label="Theme" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Theme" @click="themeToggle()">
               <i class="bi bi-circle-half"></i>
             </a>
           </li>
           <li class="nav-item">
-            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" rel="noopener noreferrer" aria-current="page" data-bs-toggle="tooltip" data-bs-placement="right" aria-label="GitHub (opens in a new window)" data-bs-original-title="GitHub" @click="hideTooltip($event)">
+            <a :href="githubUrl" class="nav-link py-3 border-bottom rounded-0 text-secondary" target="_blank" rel="noopener noreferrer" aria-current="page" aria-label="GitHub (opens in a new window)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="GitHub" @click="hideTooltip($event)">
               <i class="bi bi-github"></i>
             </a>
           </li>
@@ -296,7 +296,7 @@
                           </div>
                           <div class="col-10">
                             <div><b><span v-html="instance.name"></span></b></div>
-                            <small class="text-muted" v-html="instance.id"></small>
+                            <small class="text-muted" style="font-size: .825rem;" v-html="instance.id"></small>
                           </div>
                         </div>
                       </div>
@@ -315,6 +315,15 @@
                       <button class="btn btn-sm start-port-forward text-white me-2" title="Port Forwarding" @click="showPortForwardingModal(instance.id, instance.name)">
                         <i class="bi bi-arrow-left-right"></i>
                       </button>
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-opts" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu" style="font-size: .9rem;">
+                            <li><h6 class="dropdown-header">Instance Settings</h6></li>
+                            <li><a class="dropdown-item" href="#" @click="showPortMappingsModal(instance.id, instance.name)">Edit Port Mappings</a></li>
+                        </ul>
+                      </div>
                     </div>
                   </h2>
                   <!-- Instance Details -->
@@ -339,22 +348,17 @@
                       </div>
                       <div class="row border-top">
                         <div class="col-3 text-end fw-bold"><small>Port Mappings</small></div>
-                        <div class="col-6 text-start text-muted">
+                        <div class="col-9 text-start text-muted">
                           <div class="row" v-if="!portMappings[instance.name] || portMappings[instance.name].length === 0">
                             <div class="col-12 text-start"><small class="text-secondary">No port mappings configured</small></div>
                           </div>
                           <div class="row" v-for="port in portMappings[instance.name]" v-if="instance.name in portMappings">
-                            <div class="col-5 text-start"><span v-html="port.local_port"></span></div>
-                            <div class="col-1"><i class="bi bi-arrow-right-short"></i></div>
-                            <div class="col-5 text-start"><span v-html="port.remote_port"></span></div>
+                            <div class="col-3 text-start"><span v-text="port.local_port"></span></div>
+                            <div class="col-1 text-start"><i class="bi bi-arrow-right-short"></i></div>
+                            <div class="col-8 text-start text-truncate" :title="port.remote_host != '' ? port.remote_host + ':' + port.remote_port : port.remote_port">
+                              <span v-text="port.remote_host"></span><span v-if="port.remote_host != ''">:</span><span v-text="port.remote_port"></span>
+                            </div>
                           </div>
-                        </div>
-                        <div class="col-3 text-end">
-                          <button type="button" class="btn edit-port-mapping my-1"
-                                  style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;"
-                                  @click="showPortMappingsModal(instance.id, instance.name)">
-                            <i class="bi bi-pencil-square edit-port-mapping"></i>
-                          </button>
                         </div>
                       </div>
                       <div class="row border-top" v-for="column in instanceDetailsColumns">
@@ -459,6 +463,58 @@
       </div>
       <div class="row page-body">
         <div class="col-lg-6">
+          <!-- Regions card-->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill"></i>
+                <div class="m-0">Regions</div>
+              </div>
+              <span class="badge" :class="prefRegionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="prefRegionsCount + ' selected regions'"></span>
+            </div>
+            <div class="card-body">
+              <h5 class="mb-1">Visible Regions</h5>
+              <p class="small text-muted">Selecting regions will limit the regions that are visible in the application. This is useful if you only work with a specific set of regions and want to reduce clutter.</p>
+              <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
+              <form>
+                <div class="form-check">
+                  <select class="form-select" id="prefRegions" name="prefRegions" size="8" multiple v-model="prefRegions">
+                    <option v-for="region in regionsAll" :value="region" v-html="region"></option>
+                  </select>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Port Forwarding card-->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-arrow-left-right"></i>
+                <div class="m-0">Port Forwarding</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <h5 class="mb-1">Default Options</h5>
+              <p class="small text-muted"> These options will be used as defaults when initiating a port forwarding session. They can be overridden on a per-instance basis. </p>
+              <form>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefPortForwardingMode">Mode</label>
+                  <select class="form-select" id="portForwardingMode" v-model="prefPortForwarding.mode">
+                    <option value="local">Remote Port</option>
+                    <option value="other">Remote Host and Port</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefPortForwardingRemotePort">Remote Port</label>
+                  <input class="form-control" id="prefPortForwardingRemotePort" type="number" placeholder="1433" min="1024" v-model="prefPortForwarding.remote_port">
+                </div>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefPortForwardingRemoteHost">Remote Host</label>
+                  <input class="form-control" id="prefPortForwardingRemoteHost" type="text" v-model="prefPortForwarding.remote_host">
+                </div>
+              </form>
+            </div>
+          </div>
           <!-- Port Range card-->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -480,59 +536,6 @@
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortEnd">Ending Port</label>
                   <input class="form-control" id="prefPortEnd" type="number" placeholder="65535" max="65535" v-model="prefPortEnd">
-                </div>
-              </form>
-            </div>
-          </div>
-          <!-- Logging card-->
-          <div class="card mb-4 shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-journal-text"></i>
-                <div class="m-0">Logging</div>
-              </div>
-            </div>
-            <div class="card-body">
-              <h5 class="mb-1">Verbosity</h5>
-              <p class="small text-muted">This defines the level of detail that will be logged in the application.</p>
-              <form>
-                <div class="form-check">
-                  <input class="form-check-input" id="prefLogLevel1" type="radio" name="prefLogLevel" value="DEBUG" v-model="prefLogLevel">
-                  <label class="form-check-label" for="prefLogLevel1">Debug</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" id="prefLogLevel2" type="radio" name="prefLogLevel" value="INFO" v-model="prefLogLevel">
-                  <label class="form-check-label" for="prefLogLevel2">Info</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" id="prefLogLevel3" type="radio" name="prefLogLevel" value="WARNING" v-model="prefLogLevel">
-                  <label class="form-check-label" for="prefLogLevel3">Warning</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" id="prefLogLevel4" type="radio" name="prefLogLevel" value="ERROR" v-model="prefLogLevel">
-                  <label class="form-check-label" for="prefLogLevel4">Error</label>
-                </div>
-              </form>
-            </div>
-          </div>
-          <!-- Regions card-->
-          <div class="card mb-4 shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-geo-alt-fill"></i>
-                <div class="m-0">Regions</div>
-              </div>
-              <span class="badge" :class="prefRegionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="prefRegionsCount + ' selected regions'"></span>
-            </div>
-            <div class="card-body">
-              <h5 class="mb-1">Visible Regions</h5>
-              <p class="small text-muted">Selecting regions will limit the regions that are visible in the application. This is useful if you only work with a specific set of regions and want to reduce clutter.</p>
-              <p class="small text-muted">If no regions are selected, all regions will be visible.</p>
-              <form>
-                <div class="form-check">
-                  <select class="form-select" id="prefRegions" name="prefRegions" size="10" multiple v-model="prefRegions">
-                    <option v-for="region in regionsAll" :value="region" v-html="region"></option>
-                  </select>
                 </div>
               </form>
             </div>
@@ -588,6 +591,37 @@
               </div></form>
             </div>
           </div>
+          <!-- Logging card-->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text"></i>
+                <div class="m-0">Logging</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <h5 class="mb-1">Verbosity</h5>
+              <p class="small text-muted">This defines the level of detail that will be logged in the application.</p>
+              <form>
+                <div class="form-check">
+                  <input class="form-check-input" id="prefLogLevel1" type="radio" name="prefLogLevel" value="DEBUG" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel1">Debug</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="prefLogLevel2" type="radio" name="prefLogLevel" value="INFO" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel2">Info</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="prefLogLevel3" type="radio" name="prefLogLevel" value="WARNING" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel3">Warning</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" id="prefLogLevel4" type="radio" name="prefLogLevel" value="ERROR" v-model="prefLogLevel">
+                  <label class="form-check-label" for="prefLogLevel4">Error</label>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -611,10 +645,14 @@
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-link-45deg"></i>
               <div class="m-0">Sessions</div>
+              <i class="bi bi-info-circle text-muted" style="font-size: .825rem; cursor: help;" data-bs-toggle="tooltip"
+                        data-bs-placement="right"  data-bs-title="Sessions are used to group profiles to a common SSO start URL and region."></i>
             </div>
             <span>
               <span class="badge me-2" :class="sessionsCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="sessionsCount + ' sessions'"></span>
-              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddSessionModal"><i class="bi bi-plus" style="font-size:18px;"></i></button>
+              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddSessionModal">
+                <i class="bi bi-plus"></i>
+              </button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -652,10 +690,14 @@
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-person-fill"></i>
               <div class="m-0">Profiles</div>
+              <i class="bi bi-info-circle text-muted" style="font-size: .825rem; cursor: help;" data-bs-toggle="tooltip"
+                        data-bs-placement="right"  data-bs-title="Profiles define an AWS account and role to assume and can be linked to a session for SSO authentication. These profiles are used when connecting to instances."></i>
             </div>
             <span>
               <span class="badge me-2" :class="profilesCount > 0 ? 'bg-primary' : 'bg-secondary'" v-html="profilesCount + ' profiles'"></span>
-              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddProfileModal"><i class="bi bi-plus" style="font-size:16px;"></i></button>
+              <button type="button" class="btn btn-outline-success btn-sm" @click="showAddProfileModal">
+                <i class="bi bi-plus"></i>
+              </button>
             </span>
           </div>
           <div class="card-body overflow-auto m-0 px-0 pb-0 pt-1">
@@ -744,6 +786,7 @@
         </div>
       </div>
     </div>
+
 <!-- toast -->
 
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
@@ -807,35 +850,60 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="border-bottom pb-1">
+            <div class="mb-2">
               <small>
-                <span class="text-secondary">Port mappings allow you to define static local ports for port forwarding.</span>
-                <br>
-                <span class="text-secondary">Local ports must be unique across all instances.</span>
+                <div class="pb-2">
+                  Port mappings allow you to define static local ports for port forwarding to
+                  remote ports on the instance.
+                </div>
+                <div class="pb-2">
+                  Optionally, you can specify a remote host to forward to a different host from the
+                  instance. This can be useful for accessing services that are not running on the
+                  instance itself, for example RDS.
+                </div>
+                <div class="pb-2">
+                  Local ports must be unique across all instances.
+                </div>
               </small>
             </div>
-            <div v-for="(mapping, index) in portMappingsModalProperties" :key="index" class="row mt-2 mb-2 align-items-center">
-              <div class="col">
-                <div class="input-group">
-                  <span class="input-group-text" :id="'portMappingLocal' + index">Local</span>
-                  <input type="number" class="form-control" v-model="mapping.local_port" aria-label="Local" aria-describedby="'portMappingLocal' + index" max="65535">
+            <div v-if="portMappingsModalProperties.length === 0" class="text-center text-muted border-top pt-2">
+              <i class="bi bi-arrow-left-right fs-2"></i>
+              <p class="">No port mappings</p>
+            </div>
+            <div v-for="(mapping, index) in portMappingsModalProperties" :key="index" class="border-top border-primary pt-2">
+              <div class="row mt-2 mb-2 align-items-center">
+                <div class="col-5 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingLocal' + index">Local</span>
+                    <input type="number" class="form-control" v-model="mapping.local_port" aria-label="Local" aria-describedby="'portMappingLocal' + index" max="65535">
+                  </div>
+                </div>
+                <div class="col-5 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingRemote' + index">Remote</span>
+                    <input type="number" class="form-control" v-model="mapping.remote_port" aria-label="Remote" aria-describedby="'portMappingRemote' + index" max="65535">
+                  </div>
+                </div>
+                <div class="col-2 d-flex justify-content-end align-items-start">
+                  <button type="button" class="btn btn-sm btn-outline-danger" @click="removePortMapping(index)" :disabled="portMappings.length === 1">
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
               </div>
-              <div class="col">
-                <div class="input-group">
-                  <span class="input-group-text" :id="'portMappingRemote' + index">Remote</span>
-                  <input type="number" class="form-control" v-model="mapping.remote_port" aria-label="Remote" aria-describedby="'portMappingRemote' + index" max="65535">
+              <div class="row mt-2 mb-2 align-items-center">
+                <div class="col-10 pb-2">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text" :id="'portMappingHost' + index">Remote Host</span>
+                    <input type="text" class="form-control" v-model="mapping.remote_host" placeholder="Optional" aria-label="Remote Host (Optional)" aria-describedby="'portMappingHost' + index" max="65535">
+                  </div>
                 </div>
-              </div>
-              <div class="col-auto">
-                <button type="button" class="btn btn-sm btn-outline-danger" @click="removePortMapping(index)" :disabled="portMappings.length === 1">
-                  <i class="bi bi-trash"></i>
-                </button>
               </div>
             </div>
-            <button type="button" class="btn btn-primary w-100" @click="addPortMapping">
-              Add Mapping
-            </button>
+            <div class="border-top pt-2 mt-2">
+              <button type="button" class="btn btn-primary w-100" @click="addPortMapping">
+                Add Mapping
+              </button>
+            </div>
           </div>
           <div class="modal-footer">
             <span v-if="portMappingsModalDuplicatePort" class="text-danger me-4">
@@ -869,7 +937,12 @@
           <div class="modal-body">
             <div class="input-group mb-2" v-for="column in sessionsTableColumns">
               <span class="input-group-text" :id="'session_' + column.field + 'Label'" v-html="column.title"></span>
-              <input :id="'session_' + column.field" type="text" class="form-control" placeholder=""
+              <select v-if="column.field === 'sso_region'" :id="'session_' + column.field" class="form-select"
+                :aria-label="column.title" :aria-describedby="'session_' + column.field + 'Label'"
+                v-model="addSessionModalProperties[column.field]">
+                <option v-for="region in regionsAll" :value="region" v-html="region"></option>
+              </select>
+              <input v-if="column.field !== 'sso_region'" :id="'session_' + column.field" type="text" class="form-control" placeholder=""
                 :aria-label="column.title" :aria-describedby="'session_' + column.field + 'Label'"
                 v-model="addSessionModalProperties[column.field]">
             </div>
@@ -904,7 +977,14 @@
           <div class="modal-body">
             <div class="input-group mb-2" v-for="column in profilesTableColumns">
               <span class="input-group-text" :id="'profile_' + column.field + 'Label'" v-html="column.title"></span>
-              <input :id="'profile_' + column.field" type="text" class="form-control" placeholder=""
+              <select v-if="['sso_session', 'region'].includes(column.field)" :id="'profile_' + column.field" class="form-select"
+                :aria-label="column.title" :aria-describedby="'profile_' + column.field + 'Label'"
+                v-model="addProfileModalProperties[column.field]">
+                <option value=""></option>
+                <option v-if="column.field === 'sso_session'" v-for="session in sessions" :value="session.name" v-html="session.name"></option>
+                <option v-if="column.field === 'region'" v-for="region in regionsAll" :value="region" v-html="region"></option>
+              </select>
+              <input v-if="!['sso_session', 'region'].includes(column.field)" :id="'profile_' + column.field" type="text" class="form-control" placeholder=""
                 :aria-label="column.title" :aria-describedby="'profile_' + column.field + 'Label'"
                 v-model="addProfileModalProperties[column.field]">
             </div>

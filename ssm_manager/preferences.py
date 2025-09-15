@@ -22,6 +22,7 @@ class PreferencesHandler:
         "regions": [],
         "instances": [],
         "credentials": [],
+        "port_forwarding": {"mode": "local", "remote_port": 1433},
     }
 
     def __init__(self, config_file="preferences.json"):
@@ -77,6 +78,9 @@ class PreferencesHandler:
             prefs["logging"] = new_preferences.get("logging", prefs["logging"])
             prefs["regions"] = new_preferences.get("regions", prefs["regions"])
             prefs["instances"] = new_preferences.get("instances", prefs["instances"])
+            prefs["port_forwarding"] = new_preferences.get(
+                "port_forwarding", prefs["port_forwarding"]
+            )
             prefs["credentials"] = [
                 {"username": cred.get("username")}
                 for cred in new_preferences.get("credentials", prefs["credentials"])
@@ -95,8 +99,6 @@ class PreferencesHandler:
             if not self.delete_credentials(credentials_to_delete):
                 logger.warning("Failed to delete one or more credentials")
                 return False
-            print(f"Deleting credentials for: {credentials_to_delete}")
-            print(f"Saving credentials for: {prefs['credentials']}")
             if not self.save_credentials(
                 new_preferences.get("credentials", prefs["credentials"])
             ):
@@ -174,6 +176,14 @@ class PreferencesHandler:
             logging.getLogger("ssm_manager.manager").setLevel(numeric_level)
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
+
+    def get_used_ports(self):
+        """Get list of all used local ports"""
+        used_ports = []
+        for instance in self.preferences.get("instances", []):
+            for port in instance.get("ports", []):
+                used_ports.append(int(port.get("local_port")))
+        return used_ports
 
     def get_instance_properties(self, name, remote_port: int, remote_host=None):
         """Get properties for specific instance"""

@@ -580,6 +580,8 @@ class FreePort(BaseModel):
         max_attempts = 20
 
         used_ports = set()
+        if self.start != self.end:
+            used_ports.update(self.preferences.get_used_ports())
         for _ in range(max_attempts):
             port = randint(self.start, self.end)
 
