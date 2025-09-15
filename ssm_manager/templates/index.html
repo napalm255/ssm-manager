@@ -353,10 +353,10 @@
                             <div class="col-12 text-start"><small class="text-secondary">No port mappings configured</small></div>
                           </div>
                           <div class="row" v-for="port in portMappings[instance.name]" v-if="instance.name in portMappings">
-                            <div class="col-3 text-start"><span v-html="port.local_port"></span></div>
+                            <div class="col-3 text-start"><span v-text="port.local_port"></span></div>
                             <div class="col-1 text-start"><i class="bi bi-arrow-right-short"></i></div>
                             <div class="col-8 text-start text-truncate" :title="port.remote_host != '' ? port.remote_host + ':' + port.remote_port : port.remote_port">
-                              <span v-html="port.remote_host"></span><span v-if="port.remote_host != ''">:</span><span v-html="port.remote_port"></span>
+                              <span v-text="port.remote_host"></span><span v-if="port.remote_host != ''">:</span><span v-text="port.remote_port"></span>
                             </div>
                           </div>
                         </div>
