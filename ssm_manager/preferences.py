@@ -99,8 +99,6 @@ class PreferencesHandler:
             if not self.delete_credentials(credentials_to_delete):
                 logger.warning("Failed to delete one or more credentials")
                 return False
-            print(f"Deleting credentials for: {credentials_to_delete}")
-            print(f"Saving credentials for: {prefs['credentials']}")
             if not self.save_credentials(
                 new_preferences.get("credentials", prefs["credentials"])
             ):
