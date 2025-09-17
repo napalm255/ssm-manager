@@ -18,9 +18,6 @@ from ssm_manager.preferences import PreferencesHandler
 app_name = "SSM Manager"
 version = "0.0.0"
 
-# Define server port
-port = 5000
-
 # Define home directory and app data directory
 home_dir = os.path.expanduser("~")
 data_dir = "ssm_manager"
@@ -85,3 +82,6 @@ aws_manager = AWSManager()
 
 # Setup preferences
 preferences = PreferencesHandler(config_file=preferences_file)
+
+# Define server port
+port = preferences.preferences.get("server", {}).get("port", 5000)

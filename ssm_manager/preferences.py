@@ -17,6 +17,7 @@ class PreferencesHandler:
     # pylint: disable=line-too-long
 
     DEFAULT_PREFERENCES = {
+        "server": {"port": 5000},
         "port_range": {"start": 60000, "end": 65535},
         "logging": {"level": "INFO"},
         "regions": [],
@@ -39,6 +40,8 @@ class PreferencesHandler:
                 with open(self.config_file, "r", encoding="utf-8") as f:
                     loaded_prefs = json.load(f)
                     self.preferences = {**self.DEFAULT_PREFERENCES, **loaded_prefs}
+                if loaded_prefs != self.preferences:
+                    self.save_preferences(self.preferences)
             else:
                 self.save_preferences(self.DEFAULT_PREFERENCES)
         except Exception as e:  # pylint: disable=broad-except
@@ -64,7 +67,6 @@ class PreferencesHandler:
                 prefs["instances"].append(new_instance)
             prefs["instances"] = new_preferences.get("instances", prefs["instances"])
             if self.save_preferences(prefs):
-                logger.info("Instance preferences updated successfully")
                 return True
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error updating instance preferences: {str(e)}")
@@ -74,6 +76,7 @@ class PreferencesHandler:
         """Update preferences with new values"""
         try:
             prefs = self.preferences.copy()
+            prefs["server"] = new_preferences.get("server", prefs["server"])
             prefs["port_range"] = new_preferences.get("port_range", prefs["port_range"])
             prefs["logging"] = new_preferences.get("logging", prefs["logging"])
             prefs["regions"] = new_preferences.get("regions", prefs["regions"])
@@ -174,6 +177,9 @@ class PreferencesHandler:
             logging.getLogger("ssm_manager").setLevel(numeric_level)
             logging.getLogger("ssm_manager.preferences").setLevel(numeric_level)
             logging.getLogger("ssm_manager.manager").setLevel(numeric_level)
+            logging.getLogger("ssm_manager.config").setLevel(numeric_level)
+            logging.getLogger("ssm_manager.deps").setLevel(numeric_level)
+            logging.getLogger("ssm_manager.utils").setLevel(numeric_level)
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error applying preferences: {str(e)}")
 

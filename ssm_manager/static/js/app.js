@@ -50,6 +50,7 @@ const app = createApp({
     const regionsSelected = ref([]);
 
     const preferences = ref({});
+    const prefServerPort = ref(5000);
     const prefPortStart = ref(60000);
     const prefPortEnd = ref(65535);
     const prefLogLevel = ref('INFO');
@@ -66,6 +67,19 @@ const app = createApp({
       return prefCredentials.value.length;
     });
     const prefPortForwarding = ref({});
+    const preferencesUnsaved = computed(() => {
+      return (
+        preferences.value === {} ||
+        preferences.value?.server?.port !== prefServerPort.value ||
+        preferences.value?.port_range?.start !== prefPortStart.value ||
+        preferences.value?.port_range?.end !== prefPortEnd.value ||
+        preferences.value?.logging?.level !== prefLogLevel.value ||
+        preferences.value?.regions?.toString() !== prefRegions.value.toString() ||
+        preferences.value?.port_forwarding?.mode !== prefPortForwarding.value?.mode ||
+        preferences.value?.port_forwarding?.remote_port !== prefPortForwarding.value?.remote_port ||
+        preferences.value?.port_forwarding?.remote_host !== prefPortForwarding.value?.remote_host
+      );
+    });
 
     const hosts = ref([]);
     const hostsCount = computed(() => {
@@ -277,8 +291,9 @@ const app = createApp({
       prefPortStart.value = portRange.start;
       prefPortEnd.value = portRange.end;
       prefLogLevel.value = logging.level;
-      prefRegions.value = preferences.value?.regions || [];
-      prefCredentials.value = preferences.value.credentials || [];
+      prefServerPort.value = preferences.value?.server.port || prefServerPort.value;
+      prefRegions.value = preferences.value?.regions || prefRegions.value;
+      prefCredentials.value = preferences.value.credentials || prefCredentials.value;
       prefCredentialsToDelete.value = [];
       prefPortForwarding.value = preferences.value?.port_forwarding || {};
     };
@@ -291,6 +306,9 @@ const app = createApp({
       }
 
       const newPreferences = {
+        server: {
+          port: prefServerPort.value
+        },
         port_range: {
           start: prefPortStart.value,
           end: prefPortEnd.value
@@ -850,6 +868,48 @@ const app = createApp({
         }
     };
 
+    const areDictsEqual = (dict1, dict2) => {
+      const keys1 = Object.keys(dict1);
+      const keys2 = Object.keys(dict2);
+
+      if (keys1.length !== keys2.length) {
+        return false;
+      }
+
+      for (let key of keys1) {
+        if (!dict2.hasOwnProperty(key) || dict1[key] !== dict2[key]) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    const areArraysOfDictsEqual = (arr1, arr2) => {
+      if (arr1.length !== arr2.length) {
+        return false;
+      }
+
+      // A custom comparison function for sorting based on a key (e.g., 'name')
+      const compareDicts = (a, b) => {
+        // Convert a dictionary to a JSON string for consistent sorting.
+        // This is a simple but effective way to handle varying key orders.
+        return JSON.stringify(a) > JSON.stringify(b) ? 1 : -1;
+      };
+
+      const sortedArr1 = [...arr1].sort(compareDicts);
+      const sortedArr2 = [...arr2].sort(compareDicts);
+
+      // Compare each dictionary in the sorted arrays
+      for (let i = 0; i < sortedArr1.length; i++) {
+        if (!areDictsEqual(sortedArr1[i], sortedArr2[i])) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
     // -----------------------------------------------
     // Check GitHub for updates
     // -----------------------------------------------
@@ -969,6 +1029,8 @@ const app = createApp({
 
       // Query active connections every 2 seconds
       setInterval(getActiveConnections, 2500);
+      // TODO: REMOVE ME
+      console.log(preferences)
     });
 
     onUnmounted(async () => {
@@ -983,11 +1045,11 @@ const app = createApp({
     });
 
     return {
-      title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+      title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo, hideTooltip, tooltipTriggerList, tooltipList,
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
-      hideTooltip, tooltipTriggerList, tooltipList,
-      preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwarding,
+      preferences, getPreferences, savePreferences, preferencesUnsaved,
+      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwarding,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,
