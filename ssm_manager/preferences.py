@@ -23,7 +23,7 @@ class PreferencesHandler:
         "regions": [],
         "instances": [],
         "credentials": [],
-        "port_forwarding": {"mode": "local", "remote_port": 1433},
+        "port_forwarding": {"mode": "local", "remote_port": 1433, "remote_host": ""},
     }
 
     def __init__(self, config_file="preferences.json"):

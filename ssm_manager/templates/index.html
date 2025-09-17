@@ -449,6 +449,9 @@
     <div id="preferences" class="container-fluid page">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
         <h1 class="h2">Preferences</h1>
+        <div class="text-danger" v-if="preferencesUnsaved">
+          <small><i class="bi bi-exclamation-triangle-fill"></i> You have unsaved changes</small>
+        </div>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <!-- Buttons -->
@@ -499,18 +502,18 @@
               <form>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingMode">Mode</label>
-                  <select class="form-select" id="portForwardingMode" v-model="prefPortForwarding.mode">
+                  <select class="form-select" id="portForwardingMode" v-model="prefPortForwardingMode">
                     <option value="local">Remote Port</option>
                     <option value="other">Remote Host and Port</option>
                   </select>
                 </div>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingRemotePort">Remote Port</label>
-                  <input class="form-control" id="prefPortForwardingRemotePort" type="number" placeholder="1433" min="1024" v-model="prefPortForwarding.remote_port">
+                  <input class="form-control" id="prefPortForwardingRemotePort" type="number" placeholder="1433" min="1024" v-model="prefPortForwardingRemotePort">
                 </div>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingRemoteHost">Remote Host</label>
-                  <input class="form-control" id="prefPortForwardingRemoteHost" type="text" v-model="prefPortForwarding.remote_host">
+                  <input class="form-control" id="prefPortForwardingRemoteHost" type="text" v-model="prefPortForwardingRemoteHost">
                 </div>
               </form>
             </div>

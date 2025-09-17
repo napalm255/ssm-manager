@@ -66,7 +66,9 @@ const app = createApp({
     const prefCredentialsCount = computed(() => {
       return prefCredentials.value.length;
     });
-    const prefPortForwarding = ref({});
+    const prefPortForwardingMode = ref('local');
+    const prefPortForwardingRemotePort = ref(1433);
+    const prefPortForwardingRemoteHost = ref('');
     const preferencesUnsaved = computed(() => {
       return (
         preferences.value === {} ||
@@ -75,9 +77,9 @@ const app = createApp({
         preferences.value?.port_range?.end !== prefPortEnd.value ||
         preferences.value?.logging?.level !== prefLogLevel.value ||
         preferences.value?.regions?.toString() !== prefRegions.value.toString() ||
-        preferences.value?.port_forwarding?.mode !== prefPortForwarding.value?.mode ||
-        preferences.value?.port_forwarding?.remote_port !== prefPortForwarding.value?.remote_port ||
-        preferences.value?.port_forwarding?.remote_host !== prefPortForwarding.value?.remote_host
+        preferences.value?.port_forwarding?.mode !== prefPortForwardingMode.value ||
+        preferences.value?.port_forwarding?.remote_port !== prefPortForwardingRemotePort.value ||
+        preferences.value?.port_forwarding?.remote_host !== prefPortForwardingRemoteHost.value
       );
     });
 
@@ -295,7 +297,9 @@ const app = createApp({
       prefRegions.value = preferences.value?.regions || prefRegions.value;
       prefCredentials.value = preferences.value.credentials || prefCredentials.value;
       prefCredentialsToDelete.value = [];
-      prefPortForwarding.value = preferences.value?.port_forwarding || {};
+      prefPortForwardingMode.value = preferences.value?.port_forwarding?.mode || prefPortForwardingMode.value;
+      prefPortForwardingRemotePort.value = preferences.value?.port_forwarding?.remote_port || prefPortForwardingRemotePort.value;
+      prefPortForwardingRemoteHost.value = preferences.value?.port_forwarding?.remote_host || prefPortForwardingRemoteHost.value;
     };
 
     const savePreferences = async () => {
@@ -319,7 +323,11 @@ const app = createApp({
         regions: prefRegions.value,
         credentials: prefCredentials.value,
         credentials_to_delete: prefCredentialsToDelete.value,
-        port_forwarding: prefPortForwarding.value
+        port_forwarding: {
+          mode: prefPortForwardingMode.value,
+          remote_port: prefPortForwardingRemotePort.value,
+          remote_host: prefPortForwardingRemoteHost.value
+        }
       };
 
       try {
@@ -525,9 +533,9 @@ const app = createApp({
       portForwardingModalProperties.value = {
         instanceId: instanceId,
         instanceName: name,
-        mode: prefPortForwarding.value.mode || mode,
-        remotePort: prefPortForwarding.value.remote_port || 1433,
-        remoteHost: prefPortForwarding.value.remote_host || '',
+        mode: prefPortForwardingMode.value || mode,
+        remotePort: prefPortForwardingRemotePort.value || 1433,
+        remoteHost: prefPortForwardingRemoteHost.value || '',
         username: ''
       };
       portForwardingModal.value.show();
@@ -1049,7 +1057,7 @@ const app = createApp({
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
       preferences, getPreferences, savePreferences, preferencesUnsaved,
-      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwarding,
+      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,
