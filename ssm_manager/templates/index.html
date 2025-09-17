@@ -625,19 +625,17 @@
               </form>
             </div>
           </div>
-          <!-- Server Port card -->
+          <!-- Server card -->
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
               <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-ethernet"></i>
-                <div class="m-0">Ports</div>
+                <i class="bi bi-pc-display"></i>
+                <div class="m-0">Server</div>
               </div>
-              <span class="badge" :class="prefPortCount > 0 ? 'bg-primary' : 'bg-danger'" v-html="prefPortCount + ' ports in range'"></span>
             </div>
             <div class="card-body">
-              <h5 class="mb-1">Server Port</h5>
+              <h5 class="mb-1">Port</h5>
               <p class="small text-muted">This is the listening port for the local web server used to serve this web interface.</p>
-              <p class="small text-muted">Make sure this port is not in use by another application.</p>
               <form>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefServerPort">Server Port</label>
