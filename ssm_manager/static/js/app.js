@@ -73,9 +73,6 @@ const app = createApp({
       if (!preferences.value) {
         return false;
       }
-      console.log("Original:", preferences.value?.credentials?.map(cred => cred.username).sort());
-      console.log("Current:", prefCredentials.value.map(cred => cred.username).sort());
-      console.log("To Delete:", prefCredentialsToDelete.value.map(cred => cred.username).sort());
       return (
         preferences.value?.server?.port !== prefServerPort.value ||
         preferences.value?.port_range?.start !== prefPortStart.value ||
@@ -1005,8 +1002,6 @@ const app = createApp({
 
       // Query active connections every 2 seconds
       setInterval(getActiveConnections, 2500);
-      // TODO: REMOVE ME
-      console.log(preferences)
     });
 
     onUnmounted(async () => {
