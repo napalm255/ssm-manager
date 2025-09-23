@@ -175,7 +175,7 @@ const app = createApp({
     ]);
 
     const updateHash = async () => {
-      currentHash.value = window.location.hash;
+      currentHash.value = globalThis.location.hash;
       if (!currentHash.value) {
         currentHash.value = '#/start';
       }
@@ -196,7 +196,7 @@ const app = createApp({
       currentPage.style.display = 'block';
       localStorage.setItem('lastPage', page);
       currentHash.value = page;
-      window.location.hash = page;
+      globalThis.location.hash = page;
     };
 
     // -----------------------------------------------
@@ -293,7 +293,7 @@ const app = createApp({
     const getPreferences = async () => {
       preferences.value = await apiFetch("/api/preferences");
 
-      const portRange = JSON.parse(JSON.stringify(preferences.value.port_range)) || { start: prefPortStart.value, end: prefPortEnd.value };
+      const portRange = JSON.parse(JSON.stringify(preferences.value?.port_range)) || { start: prefPortStart.value, end: prefPortEnd.value };
       const logging = JSON.parse(JSON.stringify(preferences.value?.logging)) || { level: prefLogLevel.value };
       prefPortStart.value = portRange.start;
       prefPortEnd.value = portRange.end;
@@ -859,9 +859,9 @@ const app = createApp({
 
     const themeToggle = async () => {
       const body = document.body;
-      const currentTheme = body.getAttribute('data-bs-theme');
+      const currentTheme = body.dataset.bsTheme;
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      body.setAttribute('data-bs-theme', newTheme);
+      body.dataset.bsTheme = newTheme;
       localStorage.setItem('lastTheme', newTheme);
     };
 
@@ -938,7 +938,7 @@ const app = createApp({
 
     onMounted(async () => {
       // Watch for hash changes
-      window.addEventListener('hashchange', updateHash);
+      globalThis.addEventListener('hashchange', updateHash);
 
       // Watch for modal hide events to remove focus
       document.addEventListener('hide.bs.modal', blurModal);
@@ -946,7 +946,7 @@ const app = createApp({
       // Set the initial theme
       const lastTheme = localStorage.getItem('lastTheme');
       if (lastTheme) {
-        document.body.setAttribute('data-bs-theme', lastTheme);
+        document.body.dataset.bsTheme = lastTheme;
       }
 
       // Set the initial page
@@ -1012,7 +1012,7 @@ const app = createApp({
       clearInterval(intervalActiveConnections);
 
       // Clean up event listeners
-      window.removeEventListener('hashchange', updateHash);
+      globalThis.removeEventListener('hashchange', updateHash);
     });
 
     return {

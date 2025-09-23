@@ -643,7 +643,7 @@
                   <label class="small mb-1" for="prefServerPort">Server Port</label>
                   <input class="form-control" id="prefServerPort" type="number" placeholder="5000" min="1024" v-model="prefServerPort">
                   <div class="form-text">Default is 5000. Must be between 1024 and 65535.</div>
-                  <div class="form-text text-danger" style="" v-if="preferences.server && preferences.server.port != prefServerPort">
+                  <div class="form-text text-danger" v-if="preferences.server && preferences.server.port != prefServerPort">
                     <i class="bi bi-exclamation-triangle-fill pe-1"></i>
                     Changing the server port will require you to restart the application.
                   </div>
