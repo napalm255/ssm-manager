@@ -70,8 +70,13 @@ const app = createApp({
     const prefPortForwardingRemotePort = ref(1433);
     const prefPortForwardingRemoteHost = ref('');
     const preferencesUnsaved = computed(() => {
+      if (!preferences.value) {
+        return false;
+      }
+      console.log("Original:", preferences.value?.credentials?.map(cred => cred.username).sort());
+      console.log("Current:", prefCredentials.value.map(cred => cred.username).sort());
+      console.log("To Delete:", prefCredentialsToDelete.value.map(cred => cred.username).sort());
       return (
-        preferences.value === {} ||
         preferences.value?.server?.port !== prefServerPort.value ||
         preferences.value?.port_range?.start !== prefPortStart.value ||
         preferences.value?.port_range?.end !== prefPortEnd.value ||
@@ -79,7 +84,10 @@ const app = createApp({
         preferences.value?.regions?.toString() !== prefRegions.value.toString() ||
         preferences.value?.port_forwarding?.mode !== prefPortForwardingMode.value ||
         preferences.value?.port_forwarding?.remote_port !== prefPortForwardingRemotePort.value ||
-        preferences.value?.port_forwarding?.remote_host !== prefPortForwardingRemoteHost.value
+        preferences.value?.port_forwarding?.remote_host !== prefPortForwardingRemoteHost.value ||
+        prefCredentialsToDelete.value.length > 0 ||
+        prefCredentials.value.length !== (preferences.value?.credentials || []).length ||
+        prefCredentials.value.some(cred => cred.password && cred.password.length > 0)
       );
     });
 
@@ -288,18 +296,18 @@ const app = createApp({
     const getPreferences = async () => {
       preferences.value = await apiFetch("/api/preferences");
 
-      const portRange = preferences.value.port_range || { start: prefPortStart.value, end: prefPortEnd.value };
-      const logging = preferences.value?.logging || { level: prefLogLevel.value };
+      const portRange = JSON.parse(JSON.stringify(preferences.value.port_range)) || { start: prefPortStart.value, end: prefPortEnd.value };
+      const logging = JSON.parse(JSON.stringify(preferences.value?.logging)) || { level: prefLogLevel.value };
       prefPortStart.value = portRange.start;
       prefPortEnd.value = portRange.end;
       prefLogLevel.value = logging.level;
-      prefServerPort.value = preferences.value?.server.port || prefServerPort.value;
-      prefRegions.value = preferences.value?.regions || prefRegions.value;
-      prefCredentials.value = preferences.value.credentials || prefCredentials.value;
+      prefServerPort.value = JSON.parse(JSON.stringify(preferences.value?.server.port)) || prefServerPort.value;
+      prefRegions.value = JSON.parse(JSON.stringify(preferences.value?.regions)) || prefRegions.value;
+      prefCredentials.value = JSON.parse(JSON.stringify(preferences.value?.credentials)) || prefCredentials.value;
       prefCredentialsToDelete.value = [];
-      prefPortForwardingMode.value = preferences.value?.port_forwarding?.mode || prefPortForwardingMode.value;
-      prefPortForwardingRemotePort.value = preferences.value?.port_forwarding?.remote_port || prefPortForwardingRemotePort.value;
-      prefPortForwardingRemoteHost.value = preferences.value?.port_forwarding?.remote_host || prefPortForwardingRemoteHost.value;
+      prefPortForwardingMode.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.mode)) || prefPortForwardingMode.value;
+      prefPortForwardingRemotePort.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.remote_port)) || prefPortForwardingRemotePort.value;
+      prefPortForwardingRemoteHost.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.remote_host)) || prefPortForwardingRemoteHost.value;
     };
 
     const savePreferences = async () => {
@@ -367,7 +375,9 @@ const app = createApp({
     };
 
     const removeCredential = (index) => {
-      prefCredentialsToDelete.value.push(prefCredentials.value[index]);
+      if (preferences.value.credentials.some(c => c.username === prefCredentials.value[index].username)) {
+        prefCredentialsToDelete.value.push(prefCredentials.value[index]);
+      }
       prefCredentials.value.splice(index, 1);
     }
 
@@ -874,48 +884,6 @@ const app = createApp({
         if (activeElement) {
           activeElement.blur();
         }
-    };
-
-    const areDictsEqual = (dict1, dict2) => {
-      const keys1 = Object.keys(dict1);
-      const keys2 = Object.keys(dict2);
-
-      if (keys1.length !== keys2.length) {
-        return false;
-      }
-
-      for (let key of keys1) {
-        if (!dict2.hasOwnProperty(key) || dict1[key] !== dict2[key]) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
-    const areArraysOfDictsEqual = (arr1, arr2) => {
-      if (arr1.length !== arr2.length) {
-        return false;
-      }
-
-      // A custom comparison function for sorting based on a key (e.g., 'name')
-      const compareDicts = (a, b) => {
-        // Convert a dictionary to a JSON string for consistent sorting.
-        // This is a simple but effective way to handle varying key orders.
-        return JSON.stringify(a) > JSON.stringify(b) ? 1 : -1;
-      };
-
-      const sortedArr1 = [...arr1].sort(compareDicts);
-      const sortedArr2 = [...arr2].sort(compareDicts);
-
-      // Compare each dictionary in the sorted arrays
-      for (let i = 0; i < sortedArr1.length; i++) {
-        if (!areDictsEqual(sortedArr1[i], sortedArr2[i])) {
-          return false;
-        }
-      }
-
-      return true;
     };
 
     // -----------------------------------------------
