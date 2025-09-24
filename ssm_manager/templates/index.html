@@ -449,10 +449,14 @@
     <div id="preferences" class="container-fluid page">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
         <h1 class="h2">Preferences</h1>
+        <div class="text-danger" v-if="preferencesUnsaved">
+          <small><i class="bi bi-exclamation-triangle-fill"></i> You have unsaved changes</small>
+        </div>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <!-- Buttons -->
-            <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()" :disabled="isPreferencesSaving">
+            <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()"
+                                  :disabled="isPreferencesSaving || !preferencesUnsaved">
               <span v-if="isPreferencesSaving" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
               <output v-if="isPreferencesSaving" class="visually-hidden">Saving...</output>
               <span v-if="!isPreferencesSaving"><i class="bi bi-floppy-fill"></i></span>
@@ -499,18 +503,18 @@
               <form>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingMode">Mode</label>
-                  <select class="form-select" id="portForwardingMode" v-model="prefPortForwarding.mode">
+                  <select class="form-select" id="portForwardingMode" v-model="prefPortForwardingMode">
                     <option value="local">Remote Port</option>
                     <option value="other">Remote Host and Port</option>
                   </select>
                 </div>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingRemotePort">Remote Port</label>
-                  <input class="form-control" id="prefPortForwardingRemotePort" type="number" placeholder="1433" min="1024" v-model="prefPortForwarding.remote_port">
+                  <input class="form-control" id="prefPortForwardingRemotePort" type="number" placeholder="1433" min="1024" v-model="prefPortForwardingRemotePort">
                 </div>
                 <div class="mb-3">
                   <label class="small mb-1" for="prefPortForwardingRemoteHost">Remote Host</label>
-                  <input class="form-control" id="prefPortForwardingRemoteHost" type="text" v-model="prefPortForwarding.remote_host">
+                  <input class="form-control" id="prefPortForwardingRemoteHost" type="text" v-model="prefPortForwardingRemoteHost">
                 </div>
               </form>
             </div>
@@ -578,7 +582,8 @@
               </div>
               <form v-if="prefCredentialsCount > 0"><div v-for="(cred, index) in prefCredentials" :key="index" class="row mb-2 align-items-center">
                 <div class="col-5">
-                  <input type="text" class="form-control" v-model="cred.username" placeholder="domain\username" aria-label="Username" aria-describedby="'credUsername' + index" autocomplete="username">
+                  <input type="text" class="form-control" v-model="cred.username" placeholder="domain\username" aria-label="Username" aria-describedby="'credUsername' + index" autocomplete="username"
+                   :disabled="preferences.credentials.some((c, i) => c.username === cred.username && i === index)">
                 </div>
                 <div class="col-5">
                   <input type="password" class="form-control" v-model="cred.password" placeholder="new password" aria-label="Password" aria-describedby="'credPassword' + index" autocomplete="new-password">
@@ -618,6 +623,30 @@
                 <div class="form-check">
                   <input class="form-check-input" id="prefLogLevel4" type="radio" name="prefLogLevel" value="ERROR" v-model="prefLogLevel">
                   <label class="form-check-label" for="prefLogLevel4">Error</label>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- Server card -->
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-pc-display"></i>
+                <div class="m-0">Server</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <h5 class="mb-1">Port</h5>
+              <p class="small text-muted">This is the listening port for the local web server used to serve this web interface.</p>
+              <form>
+                <div class="mb-3">
+                  <label class="small mb-1" for="prefServerPort">Server Port</label>
+                  <input class="form-control" id="prefServerPort" type="number" placeholder="5000" min="1024" v-model="prefServerPort">
+                  <div class="form-text">Default is 5000. Must be between 1024 and 65535.</div>
+                  <div class="form-text text-danger" v-if="preferences.server && preferences.server.port != prefServerPort">
+                    <i class="bi bi-exclamation-triangle-fill pe-1"></i>
+                    Changing the server port will require you to restart the application.
+                  </div>
                 </div>
               </form>
             </div>

@@ -50,6 +50,7 @@ const app = createApp({
     const regionsSelected = ref([]);
 
     const preferences = ref({});
+    const prefServerPort = ref(5000);
     const prefPortStart = ref(60000);
     const prefPortEnd = ref(65535);
     const prefLogLevel = ref('INFO');
@@ -65,7 +66,27 @@ const app = createApp({
     const prefCredentialsCount = computed(() => {
       return prefCredentials.value.length;
     });
-    const prefPortForwarding = ref({});
+    const prefPortForwardingMode = ref('local');
+    const prefPortForwardingRemotePort = ref(1433);
+    const prefPortForwardingRemoteHost = ref('');
+    const preferencesUnsaved = computed(() => {
+      if (!preferences.value) {
+        return false;
+      }
+      return (
+        preferences.value?.server?.port !== prefServerPort.value ||
+        preferences.value?.port_range?.start !== prefPortStart.value ||
+        preferences.value?.port_range?.end !== prefPortEnd.value ||
+        preferences.value?.logging?.level !== prefLogLevel.value ||
+        preferences.value?.regions?.toString() !== prefRegions.value.toString() ||
+        preferences.value?.port_forwarding?.mode !== prefPortForwardingMode.value ||
+        preferences.value?.port_forwarding?.remote_port !== prefPortForwardingRemotePort.value ||
+        preferences.value?.port_forwarding?.remote_host !== prefPortForwardingRemoteHost.value ||
+        prefCredentialsToDelete.value.length > 0 ||
+        prefCredentials.value.length !== (preferences.value?.credentials || []).length ||
+        prefCredentials.value.some(cred => cred.password && cred.password.length > 0)
+      );
+    });
 
     const hosts = ref([]);
     const hostsCount = computed(() => {
@@ -154,7 +175,7 @@ const app = createApp({
     ]);
 
     const updateHash = async () => {
-      currentHash.value = window.location.hash;
+      currentHash.value = globalThis.location.hash;
       if (!currentHash.value) {
         currentHash.value = '#/start';
       }
@@ -170,12 +191,14 @@ const app = createApp({
         }
       }
       const pages = document.querySelectorAll('.page');
-      pages.forEach(p => p.style.display = 'none');
+      for (const p of pages) {
+        p.style.display = 'none';
+      }
       const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
       currentPage.style.display = 'block';
       localStorage.setItem('lastPage', page);
       currentHash.value = page;
-      window.location.hash = page;
+      globalThis.location.hash = page;
     };
 
     // -----------------------------------------------
@@ -272,15 +295,16 @@ const app = createApp({
     const getPreferences = async () => {
       preferences.value = await apiFetch("/api/preferences");
 
-      const portRange = preferences.value.port_range || { start: prefPortStart.value, end: prefPortEnd.value };
-      const logging = preferences.value?.logging || { level: prefLogLevel.value };
-      prefPortStart.value = portRange.start;
-      prefPortEnd.value = portRange.end;
-      prefLogLevel.value = logging.level;
-      prefRegions.value = preferences.value?.regions || [];
-      prefCredentials.value = preferences.value.credentials || [];
+      prefPortStart.value = preferences.value?.port_range?.start ?? prefPortStart.value;
+      prefPortEnd.value = preferences.value?.port_range?.end ?? prefPortEnd.value;
+      prefLogLevel.value = preferences.value?.logging?.level || prefLogLevel.value;
+      prefServerPort.value = preferences.value?.server.port ?? prefServerPort.value;
+      prefRegions.value = preferences.value?.regions ?[...preferences.value.regions] : prefRegions.value;
+      prefCredentials.value = preferences.value?.credentials ? [...preferences.value.credentials] : prefCredentials.value;
       prefCredentialsToDelete.value = [];
-      prefPortForwarding.value = preferences.value?.port_forwarding || {};
+      prefPortForwardingMode.value = preferences.value?.port_forwarding?.mode || prefPortForwardingMode.value;
+      prefPortForwardingRemotePort.value = preferences.value?.port_forwarding?.remote_port ?? prefPortForwardingRemotePort.value;
+      prefPortForwardingRemoteHost.value = preferences.value?.port_forwarding?.remote_host ?? prefPortForwardingRemoteHost.value;
     };
 
     const savePreferences = async () => {
@@ -291,6 +315,9 @@ const app = createApp({
       }
 
       const newPreferences = {
+        server: {
+          port: prefServerPort.value
+        },
         port_range: {
           start: prefPortStart.value,
           end: prefPortEnd.value
@@ -301,7 +328,11 @@ const app = createApp({
         regions: prefRegions.value,
         credentials: prefCredentials.value,
         credentials_to_delete: prefCredentialsToDelete.value,
-        port_forwarding: prefPortForwarding.value
+        port_forwarding: {
+          mode: prefPortForwardingMode.value,
+          remote_port: prefPortForwardingRemotePort.value,
+          remote_host: prefPortForwardingRemoteHost.value
+        }
       };
 
       try {
@@ -341,7 +372,9 @@ const app = createApp({
     };
 
     const removeCredential = (index) => {
-      prefCredentialsToDelete.value.push(prefCredentials.value[index]);
+      if (preferences.value.credentials.some(c => c.username === prefCredentials.value[index].username)) {
+        prefCredentialsToDelete.value.push(prefCredentials.value[index]);
+      }
       prefCredentials.value.splice(index, 1);
     }
 
@@ -507,9 +540,9 @@ const app = createApp({
       portForwardingModalProperties.value = {
         instanceId: instanceId,
         instanceName: name,
-        mode: prefPortForwarding.value.mode || mode,
-        remotePort: prefPortForwarding.value.remote_port || 1433,
-        remoteHost: prefPortForwarding.value.remote_host || '',
+        mode: prefPortForwardingMode.value || mode,
+        remotePort: prefPortForwardingRemotePort.value || 1433,
+        remoteHost: prefPortForwardingRemoteHost.value || '',
         username: ''
       };
       portForwardingModal.value.show();
@@ -826,9 +859,9 @@ const app = createApp({
 
     const themeToggle = async () => {
       const body = document.body;
-      const currentTheme = body.getAttribute('data-bs-theme');
+      const currentTheme = body.dataset.bsTheme;
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      body.setAttribute('data-bs-theme', newTheme);
+      body.dataset.bsTheme = newTheme;
       localStorage.setItem('lastTheme', newTheme);
     };
 
@@ -905,7 +938,7 @@ const app = createApp({
 
     onMounted(async () => {
       // Watch for hash changes
-      window.addEventListener('hashchange', updateHash);
+      globalThis.addEventListener('hashchange', updateHash);
 
       // Watch for modal hide events to remove focus
       document.addEventListener('hide.bs.modal', blurModal);
@@ -913,7 +946,7 @@ const app = createApp({
       // Set the initial theme
       const lastTheme = localStorage.getItem('lastTheme');
       if (lastTheme) {
-        document.body.setAttribute('data-bs-theme', lastTheme);
+        document.body.dataset.bsTheme = lastTheme;
       }
 
       // Set the initial page
@@ -936,8 +969,6 @@ const app = createApp({
 
       // Load data from the server
       await getVersion();
-      getDepVersions();
-      checkForUpdates();
       await getProfiles();
       await getRegionsSelected();
       await getPreferences();
@@ -945,6 +976,8 @@ const app = createApp({
       getActiveConnections();
       getSessions();
       getHosts();
+      getDepVersions();
+      checkForUpdates();
 
       // Restore instances if available and not expired
       const lastInstances = localStorage.getItem('lastInstances');
@@ -973,21 +1006,23 @@ const app = createApp({
 
     onUnmounted(async () => {
       // Dispose of tooltips
-      tooltipList.value.forEach(tooltip => tooltip.dispose());
+      for (const tooltip of tooltipList.value) {
+        tooltip.dispose();
+      }
 
       // Clear the interval for active connections
       clearInterval(intervalActiveConnections);
 
       // Clean up event listeners
-      window.removeEventListener('hashchange', updateHash);
+      globalThis.removeEventListener('hashchange', updateHash);
     });
 
     return {
-      title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo,
+      title, version, githubUrl, navBar, switchPage, currentHash, themeToggle, toast, copyToClipboard, timeAgo, hideTooltip, tooltipTriggerList, tooltipList,
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
-      hideTooltip, tooltipTriggerList, tooltipList,
-      preferences, getPreferences, savePreferences, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwarding,
+      preferences, getPreferences, savePreferences, preferencesUnsaved,
+      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,
