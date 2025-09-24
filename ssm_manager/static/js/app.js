@@ -293,18 +293,16 @@ const app = createApp({
     const getPreferences = async () => {
       preferences.value = await apiFetch("/api/preferences");
 
-      const portRange = JSON.parse(JSON.stringify(preferences.value?.port_range)) || { start: prefPortStart.value, end: prefPortEnd.value };
-      const logging = JSON.parse(JSON.stringify(preferences.value?.logging)) || { level: prefLogLevel.value };
-      prefPortStart.value = portRange.start;
-      prefPortEnd.value = portRange.end;
-      prefLogLevel.value = logging.level;
-      prefServerPort.value = JSON.parse(JSON.stringify(preferences.value?.server.port)) || prefServerPort.value;
-      prefRegions.value = JSON.parse(JSON.stringify(preferences.value?.regions)) || prefRegions.value;
-      prefCredentials.value = JSON.parse(JSON.stringify(preferences.value?.credentials)) || prefCredentials.value;
+      prefPortStart.value = preferences.value?.port_range?.start ?? prefPortStart.value;
+      prefPortEnd.value = preferences.value?.port_range?.end ?? prefPortEnd.value;
+      prefLogLevel.value = preferences.value?.logging?.level || prefLogLevel.value;
+      prefServerPort.value = preferences.value?.server.port ?? prefServerPort.value;
+      prefRegions.value = [...preferences.value?.regions] || prefRegions.value;
+      prefCredentials.value = {...preferences.value?.credentials} || prefCredentials.value;
       prefCredentialsToDelete.value = [];
-      prefPortForwardingMode.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.mode)) || prefPortForwardingMode.value;
-      prefPortForwardingRemotePort.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.remote_port)) || prefPortForwardingRemotePort.value;
-      prefPortForwardingRemoteHost.value = JSON.parse(JSON.stringify(preferences.value?.port_forwarding?.remote_host)) || prefPortForwardingRemoteHost.value;
+      prefPortForwardingMode.value = preferences.value?.port_forwarding?.mode || prefPortForwardingMode.value;
+      prefPortForwardingRemotePort.value = preferences.value?.port_forwarding?.remote_port ?? prefPortForwardingRemotePort.value;
+      prefPortForwardingRemoteHost.value = preferences.value?.port_forwarding?.remote_host ?? prefPortForwardingRemoteHost.value;
     };
 
     const savePreferences = async () => {
