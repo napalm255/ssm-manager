@@ -455,7 +455,7 @@
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <!-- Buttons -->
-            <button type="button" class="btn btn-sm btn-outline-success save-button" @click="savePreferences()"
+            <button type="button" class="btn btn-sm btn-outline-success" @click="savePreferences()"
                                   :disabled="isPreferencesSaving || !preferencesUnsaved">
               <span v-if="isPreferencesSaving" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
               <output v-if="isPreferencesSaving" class="visually-hidden">Saving...</output>
