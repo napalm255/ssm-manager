@@ -191,7 +191,9 @@ const app = createApp({
         }
       }
       const pages = document.querySelectorAll('.page');
-      pages.forEach(p => p.style.display = 'none');
+      for (page of pages) {
+        page.style.display = 'none';
+      }
       const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
       currentPage.style.display = 'block';
       localStorage.setItem('lastPage', page);
@@ -297,8 +299,8 @@ const app = createApp({
       prefPortEnd.value = preferences.value?.port_range?.end ?? prefPortEnd.value;
       prefLogLevel.value = preferences.value?.logging?.level || prefLogLevel.value;
       prefServerPort.value = preferences.value?.server.port ?? prefServerPort.value;
-      prefRegions.value = [...preferences.value?.regions] || prefRegions.value;
-      prefCredentials.value = {...preferences.value?.credentials} || prefCredentials.value;
+      prefRegions.value = preferences.value?.regions ?[...preferences.value?.regions] : prefRegions.value;
+      prefCredentials.value = preferences.value?.credentials ? [...preferences.value?.credentials] : prefCredentials.value;
       prefCredentialsToDelete.value = [];
       prefPortForwardingMode.value = preferences.value?.port_forwarding?.mode || prefPortForwardingMode.value;
       prefPortForwardingRemotePort.value = preferences.value?.port_forwarding?.remote_port ?? prefPortForwardingRemotePort.value;
@@ -1004,7 +1006,9 @@ const app = createApp({
 
     onUnmounted(async () => {
       // Dispose of tooltips
-      tooltipList.value.forEach(tooltip => tooltip.dispose());
+      for (const tooltip of tooltipList.value) {
+        tooltip.dispose();
+      }
 
       // Clear the interval for active connections
       clearInterval(intervalActiveConnections);

@@ -583,7 +583,7 @@
               <form v-if="prefCredentialsCount > 0"><div v-for="(cred, index) in prefCredentials" :key="index" class="row mb-2 align-items-center">
                 <div class="col-5">
                   <input type="text" class="form-control" v-model="cred.username" placeholder="domain\username" aria-label="Username" aria-describedby="'credUsername' + index" autocomplete="username"
-                   :disabled="preferences.credentials.some(c => c.username === cred.username && c !== cred)">
+                   :disabled="preferences.credentials.some((c, i) => c.username === cred.username && i === index)">
                 </div>
                 <div class="col-5">
                   <input type="password" class="form-control" v-model="cred.password" placeholder="new password" aria-label="Password" aria-describedby="'credPassword' + index" autocomplete="new-password">
