@@ -191,8 +191,8 @@ const app = createApp({
         }
       }
       const pages = document.querySelectorAll('.page');
-      for (page of pages) {
-        page.style.display = 'none';
+      for (const p of pages) {
+        p.style.display = 'none';
       }
       const currentPage = document.getElementById(page.replace('#/', '').toLowerCase());
       currentPage.style.display = 'block';
