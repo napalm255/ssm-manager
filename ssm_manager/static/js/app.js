@@ -969,8 +969,6 @@ const app = createApp({
 
       // Load data from the server
       await getVersion();
-      getDepVersions();
-      checkForUpdates();
       await getProfiles();
       await getRegionsSelected();
       await getPreferences();
@@ -978,6 +976,8 @@ const app = createApp({
       getActiveConnections();
       getSessions();
       getHosts();
+      getDepVersions();
+      checkForUpdates();
 
       // Restore instances if available and not expired
       const lastInstances = localStorage.getItem('lastInstances');
