@@ -237,3 +237,38 @@ class AWSManager:
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error getting instance details: {str(e)}")
             return None
+
+    def get_instances_by_name(self, instance_name: str):
+        """
+        Get EC2 instance details by its Name tag
+        Args:
+            instance_name (str): The Name tag of the EC2 instance
+        Returns:
+            dict: Instance details or None if not found
+        """
+        try:
+            filters = [
+                {"Name": "tag:Name", "Values": [instance_name]},
+                {
+                    "Name": "instance-state-name",
+                    "Values": [
+                        "pending",
+                        "running",
+                        "stopping",
+                        "stopped",
+                        "shutting-down",
+                    ],
+                },
+            ]
+            response = self.ec2_client.describe_instances(Filters=filters)
+
+            if not response["Reservations"]:
+                logger.warning(f"No instance found with Name: {instance_name}")
+                return None
+
+            instances = response["Reservations"][0]["Instances"]
+            return instances
+
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(f"Error getting instance by name: {str(e)}")
+            return None
