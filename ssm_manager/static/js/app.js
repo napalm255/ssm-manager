@@ -49,6 +49,11 @@ const app = createApp({
     const regionsAll = ref([]);
     const regionsSelected = ref([]);
 
+    const groups = ref([]);
+    const groupsCount = computed(() => {
+      return groups.value.length;
+    });
+
     const preferences = ref({});
     const prefServerPort = ref(5000);
     const prefPortStart = ref(60000);
@@ -124,6 +129,23 @@ const app = createApp({
       }
       return mappings;
     });
+    const portMappingsList = computed(() => {
+      const list = [];
+      for (const [instanceName, ports] of Object.entries(portMappings.value)) {
+        for (const portMapping of ports) {
+          list.push({
+            name: instanceName,
+            local_port: portMapping.local_port,
+            remote_port: portMapping.remote_port,
+            remote_host: portMapping.remote_host
+          });
+        }
+      }
+      return list;
+    });
+    const portMappingsCount = computed(() => {
+      return Object.keys(portMappingsList.value).length;
+    });
     const portMappingsModal = ref(null);
     const portMappingsModalInstance = ref(null);
     const portMappingsModalProperties = ref([]);
@@ -169,9 +191,10 @@ const app = createApp({
     const navBar = ref([
       {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
       {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
-      {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
+      {'name': 'Port Mappings', 'icon': 'bi bi-arrow-left-right', 'hash': '#/port-mappings'},
       {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'},
-      {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'}
+      {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'},
+      {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
     ]);
 
     const updateHash = async () => {
@@ -223,6 +246,13 @@ const app = createApp({
     const hostsTableColumns = ref([
       { title: 'IP Address', field: 'ip' },
       { title: 'Hostname', field: 'hostname' }
+    ]);
+
+    const portMappingsTableColumns = ref([
+      { title: 'Instance Name', field: 'name' },
+      { title: 'Local Port', field: 'local_port' },
+      { title: 'Remote Port', field: 'remote_port' },
+      { title: 'Remote Host', field: 'remote_host' }
     ]);
 
     const instanceDetailsColumns = ref([
@@ -501,7 +531,7 @@ const app = createApp({
         }
       } finally {
         await getActiveConnections();
-        portForwardingModal.value.hide();
+        portForwardingModal.value?.hide();
         isPortForwardingStarting.value = false;
       }
     };
@@ -753,6 +783,63 @@ const app = createApp({
       } finally {
         await getHosts();
         removeByValue(isHostsDeleting.value, hostname);
+      }
+    };
+
+    // -----------------------------------------------
+    // Instance Groups
+    // -----------------------------------------------
+
+    const instanceGroupConnect = async (groupName) => {
+      // Group value example:
+      // { name: 'dev',
+      //   instances: [
+      //     { profile: 'dev', region: 'us-east-1', name: 'instance01', action: 'port',
+      //     port_mode: 'local', local_port: 50001, remote_port: 1433 },
+      //     { profile: 'dev', region: 'us-east-1', name: 'instance02', action: 'port',
+      //     port_mode: 'local', local_port: 50002, remote_port: 1433 },
+      //   ]
+      // }
+      isConnecting.value = true;
+      groups.value = [];
+      try {
+        const group = groups.value.find(g => g.name === groupName);
+        for (const instance of group?.instances) {
+          try {
+            await apiFetch("/api/connect", {
+              method: 'POST',
+              body: JSON.stringify({
+                profile: instance.profile,
+                region: instance.region
+              })
+            });
+            const instances = await apiFetch(`/api/instances/${instance.name}`, {
+              method: 'GET',
+            });
+            for (const inst of instances) {
+              if (instance.action === 'shell') {
+                await startShell(inst.InstanceId, instance.name);
+              } else if (instance.action === 'rdp') {
+                await startRdp(inst.InstanceId, instance.name);
+              } else if (instance.action === 'port') {
+                portForwardingModalProperties.value = {
+                  instanceId: inst.InstanceId,
+                  instanceName: instance.name,
+                  mode: instance?.port_mode || prefPortForwardingMode.value,
+                  remotePort: instance?.remote_port || prefPortForwardingRemotePort.value,
+                  remoteHost: instance?.remote_host || prefPortForwardingRemoteHost.value,
+                  username: instance?.username || ''
+                };
+                await startPortForwarding();
+              }
+            }
+          } catch (error) {
+            console.error(`Error connecting to instance ${instance.name}:`, error);
+            toast(`Error connecting to instance ${instance.name}`, 'danger');
+          }
+        }
+      } finally {
+        isConnecting.value = false;
       }
     };
 
@@ -1022,7 +1109,8 @@ const app = createApp({
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
       preferences, getPreferences, savePreferences, preferencesUnsaved,
-      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
+      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
+      portMappings, portMappingsList, portMappingsCount, portMappingsTableColumns,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,
