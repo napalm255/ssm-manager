@@ -743,6 +743,23 @@ const app = createApp({
       }
     };
 
+    const saveAwsConfigOrder = async () => {
+      try {
+        const configOrder = {
+          'sessions': sessions.value.map(s => s.name),
+          'profiles': profiles.value.map(p => p.name)
+        };
+        await apiFetch("/api/config/aws/order", {
+          method: 'POST',
+          body: JSON.stringify(configOrder)
+        })
+        toast('Order saved successfully', 'success');
+      } finally {
+        await getSessions();
+        await getProfiles();
+      }
+    };
+
     const showAddHostModal = async () => {
       addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
         backdrop: 'static',
@@ -970,6 +987,14 @@ const app = createApp({
         }
     };
 
+    const draggableSort = async (event, array) => {
+      const itemEl = event.item;
+      const fromIndex = event.oldIndex;
+      const toIndex = event.newIndex;
+      const movedItem = array.splice(fromIndex, 1)[0];
+      array.splice(toIndex, 0, movedItem);
+    };
+
     // -----------------------------------------------
     // Check GitHub for updates
     // -----------------------------------------------
@@ -1056,12 +1081,12 @@ const app = createApp({
 
       // Load data from the server
       await getVersion();
+      await getSessions();
       await getProfiles();
       await getRegionsSelected();
       await getPreferences();
       await getRegionsAll();
       getActiveConnections();
-      getSessions();
       getHosts();
       getDepVersions();
       checkForUpdates();
@@ -1089,6 +1114,30 @@ const app = createApp({
 
       // Query active connections every 2 seconds
       setInterval(getActiveConnections, 2500);
+
+      // Initialize drag and drop for sessions
+      const sessionsTableBody = document.getElementById('sessions-table-body');
+      new Sortable(sessionsTableBody, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onUpdate: function (evt) {
+          draggableSort(evt, sessions.value);
+          saveAwsConfigOrder();
+        },
+      });
+
+      // Initialize drag and drop for profiles
+      const profilesTableBody = document.getElementById('profiles-table-body');
+      new Sortable(profilesTableBody, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onUpdate: function (evt) {
+          draggableSort(evt, profiles.value);
+          saveAwsConfigOrder();
+        },
+      });
     });
 
     onUnmounted(async () => {

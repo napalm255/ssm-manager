@@ -19,6 +19,7 @@ class AwsConfigManager:
         """
         Initializes the manager by finding the AWS config file path.
         """
+        self.config = configparser.ConfigParser()
         self._config_path = self._get_aws_config_path()
         self.session_prefix = "sso-session "
         self.profile_prefix = "profile "
@@ -47,21 +48,19 @@ class AwsConfigManager:
         Returns:
             str or None: The value if found, otherwise None.
         """
-        config = configparser.ConfigParser()
-
         # Check if the file exists before trying to read it
         if not self._config_path.is_file():
             logger.error(f"Error: AWS config file not found at {self._config_path}")
             return None
 
         try:
-            config.read(self._config_path)
-            if not config.has_section(section):
+            self.config.read(self._config_path)
+            if not self.config.has_section(section):
                 raise ValueError(f"Section '{section}' not found in config file")
-            if not config.has_option(section, key):
+            if not self.config.has_option(section, key):
                 raise ValueError(f"Key '{key}' not found in section '{section}'")
 
-            return config.get(section, key)
+            return self.config.get(section, key)
         except ValueError as e:
             logger.error(f"Error reading config value: {e}")
             return None
@@ -79,24 +78,22 @@ class AwsConfigManager:
             key (str): The key name.
             value (str): The value to write.
         """
-        config = configparser.ConfigParser()
-
         # Create the directory if it doesn't exist
         self._config_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Read existing config to not overwrite other settings
         if self._config_path.is_file():
-            config.read(self._config_path)
+            self.config.read(self._config_path)
 
         # Add or update the section and key
-        if not config.has_section(section):
-            config.add_section(section)
+        if not self.config.has_section(section):
+            self.config.add_section(section)
 
-        config.set(section, key, value)
+        self.config.set(section, key, value)
 
         try:
             with open(self._config_path, "w", encoding="utf-8") as configfile:
-                config.write(configfile)
+                self.config.write(configfile)
             logger.info(
                 f"Successfully wrote '{value}' to section '{section}', key '{key}'"
             )
@@ -115,14 +112,13 @@ class AwsConfigManager:
         sessions = []
         try:
             session_names = []
-            config = configparser.ConfigParser()
             if not self._config_path.is_file():
                 raise ValueError(
                     f"Error: AWS config file not found at {self._config_path}"
                 )
 
-            config.read(self._config_path)
-            for section in config.sections():
+            self.config.read(self._config_path)
+            for section in self.config.sections():
                 if section.startswith(self.session_prefix):
                     session_names.append(section[len(self.session_prefix) :])
 
@@ -130,12 +126,12 @@ class AwsConfigManager:
                 section_name = self.session_prefix + name
                 session = {"name": name}
                 for prop in ["sso_start_url", "sso_region", "sso_registration_scopes"]:
-                    if not config.has_option(section_name, prop):
+                    if not self.config.has_option(section_name, prop):
                         logger.warning(
                             f"Warning: '{prop}' not found in section '{section_name}'"
                         )
                         continue
-                    session[prop] = config.get(section_name, prop, fallback=None)
+                    session[prop] = self.config.get(section_name, prop, fallback=None)
                 sessions.append(session)
         except configparser.Error as e:
             logger.error(f"Error reading sessions: {e}")
@@ -169,19 +165,20 @@ class AwsConfigManager:
             name (str): The name of the session to delete.
         """
         try:
-            config = configparser.ConfigParser()
             if not self._config_path.is_file():
                 raise FileNotFoundError(
                     f"Error: AWS config file not found at {self._config_path}"
                 )
 
-            config.read(self._config_path)
+            self.config.read(self._config_path)
             section_name = self.session_prefix + name
-            assert config.has_section(section_name), f"Session '{name}' does not exist"
+            assert self.config.has_section(
+                section_name
+            ), f"Session '{name}' does not exist"
 
-            config.remove_section(section_name)
+            self.config.remove_section(section_name)
             with open(self._config_path, "w", encoding="utf-8") as configfile:
-                config.write(configfile)
+                self.config.write(configfile)
             logger.info(f"Successfully deleted session '{name}'")
         except configparser.Error as e:
             logger.error(f"Error deleting session: {e}")
@@ -224,23 +221,73 @@ class AwsConfigManager:
             name (str): The name of the profile to delete.
         """
         try:
-            config = configparser.ConfigParser()
             if not self._config_path.is_file():
                 raise FileNotFoundError(
                     f"Error: AWS config file not found at {self._config_path}"
                 )
 
-            config.read(self._config_path)
+            self.config.read(self._config_path)
             section_name = (
                 self.profile_prefix + name if name != "default" else "default"
             )
-            assert config.has_section(section_name), f"Profile '{name}' does not exist"
+            assert self.config.has_section(
+                section_name
+            ), f"Profile '{name}' does not exist"
 
-            config.remove_section(section_name)
+            self.config.remove_section(section_name)
             with open(self._config_path, "w", encoding="utf-8") as configfile:
-                config.write(configfile)
+                self.config.write(configfile)
             logger.info(f"Successfully deleted profile '{name}'")
         except configparser.Error as e:
             logger.error(f"Error deleting profile: {e}")
         except AssertionError as e:
             logger.warning(f"Error deleting profile {e}")
+
+    def save_order(self, sessions: list[str], profiles: list[str]):
+        """
+        Saves the order of sessions and profiles in the AWS config file.
+
+        Args:
+            sessions (list[str]): A list of session names in the desired order.
+            profiles (list[str]): A list of profile names in the desired order.
+        """
+        try:
+            if not self._config_path.is_file():
+                raise FileNotFoundError(
+                    f"Error: AWS config file not found at {self._config_path}"
+                )
+
+            self.config.read(self._config_path)
+            new_config = configparser.ConfigParser()
+
+            for name in sessions:
+                section_name = self.session_prefix + name
+                if self.config.has_section(section_name):
+                    new_config.add_section(section_name)
+                    for key, value in self.config.items(section_name):
+                        new_config.set(section_name, key, value)
+                else:
+                    logger.warning(
+                        f"Warning: Session '{name}' not found in config file"
+                    )
+
+            for name in profiles:
+                section_name = (
+                    self.profile_prefix + name if name != "default" else "default"
+                )
+                if self.config.has_section(section_name):
+                    new_config.add_section(section_name)
+                    for key, value in self.config.items(section_name):
+                        new_config.set(section_name, key, value)
+                else:
+                    logger.warning(
+                        f"Warning: Profile '{name}' not found in config file"
+                    )
+
+            with open(self._config_path, "w", encoding="utf-8") as configfile:
+                new_config.write(configfile)
+            logger.info("Successfully saved profile order")
+        except configparser.Error as e:
+            logger.error(f"Error saving profile order: {e}")
+        except FileNotFoundError as e:
+            logger.error(f"Error saving profile order: {e}")

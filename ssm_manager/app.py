@@ -174,6 +174,27 @@ def delete_config_session(session_name):
     return logger.success(f"Session deleted successfully: {session_name}")
 
 
+@app.route("/api/config/aws/order", methods=["POST"])
+def save_config_aws_order():
+    """
+    Endpoint to save the order of AWS configuration
+    Returns: JSON response with status
+    """
+    data = request.json
+    sessions = data.get("sessions", None)
+    profiles = data.get("profiles", None)
+
+    if not sessions:
+        return logger.failed("No session order provided.", 400)
+    if not profiles:
+        return logger.failed("No profile order provided.", 400)
+
+    config = AwsConfigManager()
+    config.save_order(sessions=sessions, profiles=profiles)
+
+    return logger.success("AWS config order saved successfully.")
+
+
 @app.route("/api/config/profile", methods=["POST"])
 def add_config_profile():
     """
