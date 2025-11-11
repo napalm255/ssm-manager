@@ -961,6 +961,13 @@ const app = createApp({
       toast('Copied to clipboard', 'success');
     };
 
+    const getSystemTheme = async () => {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      return 'light'; // Default to light if no dark preference or matchMedia isn't supported
+    };
+
     const themeToggle = async () => {
       const body = document.body;
       const currentTheme = body.dataset.bsTheme;
@@ -1059,6 +1066,11 @@ const app = createApp({
       const lastTheme = localStorage.getItem('lastTheme');
       if (lastTheme) {
         document.body.dataset.bsTheme = lastTheme;
+      } else {
+        const systemTheme = await getSystemTheme();
+        document.body.dataset.bsTheme = systemTheme;
+        localStorage.setItem('lastTheme', systemTheme);
+        toast(`Theme set to ${systemTheme} mode based on system preference`, 'info');
       }
 
       // Set the initial page
