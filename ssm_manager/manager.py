@@ -244,7 +244,7 @@ class AWSManager:
         Args:
             instance_name (str): The Name tag of the EC2 instance
         Returns:
-            dict: Instance details or None if not found
+            list: List of instances matching the Name tag or None if an error occurs
         """
         try:
             filters = [
