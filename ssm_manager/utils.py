@@ -704,9 +704,9 @@ def run_cmd(cmd, skip_pid_wait=False, pid_max_retries=10, pid_retry_delay=2):
             pid = get_pid(str(cmd.exec), str(cmd))
             retries += 1
 
-        if not pid:
-            logger.error(f"Failed to get PID after {int(retries)} retries: {str(cmd)}")
-            return None
+    if not skip_pid_wait and not pid:
+        logger.error(f"Failed to get PID for command: {str(cmd)}")
+        return None
 
     if cmd.wait:
         process.wait(timeout=cmd.timeout)
