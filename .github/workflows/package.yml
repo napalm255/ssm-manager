@@ -91,7 +91,7 @@ jobs:
             To install or upgrade ssm-manager in Windows, run the following PowerShell command:
 
             ```powershell
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/main/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1" -version "${{ github.ref_name }}"
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/napalm255/ssm-manager/refs/heads/develop/install.ps1" -OutFile "$env:TEMP\ssm-manager-install.ps1"; & "$env:TEMP\ssm-manager-install.ps1" -version "dev"
             ```
 
       - name: Create tagged release
