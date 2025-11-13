@@ -900,10 +900,10 @@ const app = createApp({
     };
 
     const getSystemTheme = async () => {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      if (this.matchMedia && this.matchMedia('(prefers-color-scheme: dark)').matches) {
         return 'dark';
       }
-      return 'light'; // Default to light if no dark preference or matchMedia isn't supported
+      return 'light';
     };
 
     const themeToggle = async () => {
