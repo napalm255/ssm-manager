@@ -933,7 +933,6 @@ const app = createApp({
     };
 
     const draggableSort = async (event, array) => {
-      const itemEl = event.item;
       const fromIndex = event.oldIndex;
       const toIndex = event.newIndex;
       const movedItem = array.splice(fromIndex, 1)[0];
@@ -1067,7 +1066,7 @@ const app = createApp({
 
       // Initialize drag and drop for sessions
       const sessionsTableBody = document.getElementById('sessions-table-body');
-      new Sortable(sessionsTableBody, {
+      const sessionsSortable = new Sortable(sessionsTableBody, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'sortable-ghost',
@@ -1079,7 +1078,7 @@ const app = createApp({
 
       // Initialize drag and drop for profiles
       const profilesTableBody = document.getElementById('profiles-table-body');
-      new Sortable(profilesTableBody, {
+      const profilesSortable = new Sortable(profilesTableBody, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'sortable-ghost',
