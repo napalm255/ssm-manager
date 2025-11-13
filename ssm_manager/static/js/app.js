@@ -1064,29 +1064,33 @@ const app = createApp({
       // Query active connections every 2 seconds
       setInterval(getActiveConnections, 2500);
 
-      // Initialize drag and drop for sessions
-      const sessionsTableBody = document.getElementById('sessions-table-body');
-      const _sessionsSortable = new Sortable(sessionsTableBody, {
-        animation: 150,
-        handle: '.drag-handle',
-        ghostClass: 'sortable-ghost',
-        onUpdate: function (evt) {
-          draggableSort(evt, sessions.value);
-          saveAwsConfigOrder();
-        },
-      });
+      try {
+        new Sortable(document.getElementById('sessions-table-body'), {
+          animation: 150,
+          handle: '.drag-handle',
+          ghostClass: 'sortable-ghost',
+          onUpdate: function (evt) {
+            draggableSort(evt, sessions.value);
+            saveAwsConfigOrder();
+          },
+        });
+      } catch (e) {
+        console.error('Error initializing sortable for sessions:', e);
+      }
 
-      // Initialize drag and drop for profiles
-      const profilesTableBody = document.getElementById('profiles-table-body');
-      const _profilesSortable = new Sortable(profilesTableBody, {
-        animation: 150,
-        handle: '.drag-handle',
-        ghostClass: 'sortable-ghost',
-        onUpdate: function (evt) {
-          draggableSort(evt, profiles.value);
-          saveAwsConfigOrder();
-        },
-      });
+      try {
+        new Sortable(document.getElementById('profiles-table-body'), {
+          animation: 150,
+          handle: '.drag-handle',
+          ghostClass: 'sortable-ghost',
+          onUpdate: function (evt) {
+            draggableSort(evt, profiles.value);
+            saveAwsConfigOrder();
+          },
+        });
+      } catch (e) {
+        console.error('Error initializing sortable for profiles:', e);
+      }
     });
 
     onUnmounted(async () => {
