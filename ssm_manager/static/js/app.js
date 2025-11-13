@@ -808,15 +808,6 @@ const app = createApp({
     // -----------------------------------------------
 
     const instanceGroupConnect = async (groupName) => {
-      // Group value example:
-      // { name: 'dev',
-      //   instances: [
-      //     { profile: 'dev', region: 'us-east-1', name: 'instance01', action: 'port',
-      //     port_mode: 'local', local_port: 50001, remote_port: 1433 },
-      //     { profile: 'dev', region: 'us-east-1', name: 'instance02', action: 'port',
-      //     port_mode: 'local', local_port: 50002, remote_port: 1433 },
-      //   ]
-      // }
       isConnecting.value = true;
       groups.value = [];
       try {
