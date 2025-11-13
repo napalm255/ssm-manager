@@ -900,7 +900,7 @@ const app = createApp({
     };
 
     const getSystemTheme = async () => {
-      if (this.matchMedia && this.matchMedia('(prefers-color-scheme: dark)').matches) {
+      if (this?.matchMedia('(prefers-color-scheme: dark)').matches) {
         return 'dark';
       }
       return 'light';
