@@ -56,7 +56,10 @@ try {
 
     # The API response contains the full download URL for the zip.
     # We look for an asset that is a zip file.
-    $zipAsset = $releaseInfo.assets | Where-Object { $_.name -like "*.zip" }
+    $zipAsset = $releaseInfo.assets |
+      Where-Object { $_.name -like "*.zip" } |
+      Sort-Object -Property updated_at -Descending |
+      Select-Object -First 1
 
     if ($null -eq $zipAsset) {
         throw "Could not find a zip file in the latest release assets."
