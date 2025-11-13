@@ -1066,7 +1066,7 @@ const app = createApp({
 
       // Initialize drag and drop for sessions
       const sessionsTableBody = document.getElementById('sessions-table-body');
-      const sessionsSortable = new Sortable(sessionsTableBody, {
+      const _sessionsSortable = new Sortable(sessionsTableBody, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'sortable-ghost',
@@ -1078,7 +1078,7 @@ const app = createApp({
 
       // Initialize drag and drop for profiles
       const profilesTableBody = document.getElementById('profiles-table-body');
-      const profilesSortable = new Sortable(profilesTableBody, {
+      const _profilesSortable = new Sortable(profilesTableBody, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'sortable-ghost',
