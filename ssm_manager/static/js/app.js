@@ -49,11 +49,6 @@ const app = createApp({
     const regionsAll = ref([]);
     const regionsSelected = ref([]);
 
-    const groups = ref([]);
-    const groupsCount = computed(() => {
-      return groups.value.length;
-    });
-
     const preferences = ref({});
     const prefServerPort = ref(5000);
     const prefPortStart = ref(60000);
@@ -800,54 +795,6 @@ const app = createApp({
       } finally {
         await getHosts();
         removeByValue(isHostsDeleting.value, hostname);
-      }
-    };
-
-    // -----------------------------------------------
-    // Instance Groups
-    // -----------------------------------------------
-
-    const instanceGroupConnect = async (groupName) => {
-      isConnecting.value = true;
-      groups.value = [];
-      try {
-        const group = groups.value.find(g => g.name === groupName);
-        for (const instance of group?.instances) {
-          try {
-            await apiFetch("/api/connect", {
-              method: 'POST',
-              body: JSON.stringify({
-                profile: instance.profile,
-                region: instance.region
-              })
-            });
-            const instances = await apiFetch(`/api/instances/${instance.name}`, {
-              method: 'GET',
-            });
-            for (const inst of instances) {
-              if (instance.action === 'shell') {
-                await startShell(inst.InstanceId, instance.name);
-              } else if (instance.action === 'rdp') {
-                await startRdp(inst.InstanceId, instance.name);
-              } else if (instance.action === 'port') {
-                portForwardingModalProperties.value = {
-                  instanceId: inst.InstanceId,
-                  instanceName: instance.name,
-                  mode: instance?.port_mode || prefPortForwardingMode.value,
-                  remotePort: instance?.remote_port || prefPortForwardingRemotePort.value,
-                  remoteHost: instance?.remote_host || prefPortForwardingRemoteHost.value,
-                  username: instance?.username || ''
-                };
-                await startPortForwarding();
-              }
-            }
-          } catch (error) {
-            console.error(`Error connecting to instance ${instance.name}:`, error);
-            toast(`Error connecting to instance ${instance.name}`, 'danger');
-          }
-        }
-      } finally {
-        isConnecting.value = false;
       }
     };
 
