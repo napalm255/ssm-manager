@@ -258,36 +258,32 @@ class AwsConfigManager:
                 )
 
             self.config.read(self._config_path)
+
+            def add(config, section_name):
+                config.add_section(section_name)
+                for key, value in self.config.items(section_name):
+                    config.set(section_name, key, value)
+
+            def order(config, section, prefix):
+                for name in section:
+                    section_name = prefix + name
+                    if prefix == self.profile_prefix and name == "default":
+                        section_name = "default"
+                    if not self.config.has_section(section_name):
+                        logger.warning(
+                            f"Section '{section_name}' not found in config file"
+                        )
+                        continue
+                    add(config, section_name)
+
             new_config = configparser.ConfigParser()
-
-            for name in sessions:
-                section_name = self.session_prefix + name
-                if not self.config.has_section(section_name):
-                    logger.warning(
-                        f"Warning: Session '{name}' not found in config file"
-                    )
-                new_config.add_section(section_name)
-                for key, value in self.config.items(section_name):
-                    new_config.set(section_name, key, value)
-
-            for name in profiles:
-                section_name = (
-                    self.profile_prefix + name if name != "default" else "default"
-                )
-                if not self.config.has_section(section_name):
-                    logger.warning(
-                        f"Warning: Profile '{name}' not found in config file"
-                    )
-                new_config.add_section(section_name)
-                for key, value in self.config.items(section_name):
-                    new_config.set(section_name, key, value)
+            order(new_config, sessions, self.session_prefix)
+            order(new_config, profiles, self.profile_prefix)
 
             ordered_sections = set(new_config.sections())
             for section in self.config.sections():
                 if section not in ordered_sections:
-                    new_config.add_section(section)
-                    for key, value in self.config.items(section):
-                        new_config.set(section, key, value)
+                    add(new_config, section)
 
             with open(self._config_path, "w", encoding="utf-8") as configfile:
                 new_config.write(configfile)
