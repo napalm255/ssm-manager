@@ -262,32 +262,28 @@ class AwsConfigManager:
 
             for name in sessions:
                 section_name = self.session_prefix + name
-                if self.config.has_section(section_name):
-                    new_config.add_section(section_name)
-                    for key, value in self.config.items(section_name):
-                        new_config.set(section_name, key, value)
-                else:
+                if not self.config.has_section(section_name):
                     logger.warning(
                         f"Warning: Session '{name}' not found in config file"
                     )
+                new_config.add_section(section_name)
+                for key, value in self.config.items(section_name):
+                    new_config.set(section_name, key, value)
 
             for name in profiles:
                 section_name = (
                     self.profile_prefix + name if name != "default" else "default"
                 )
-                if self.config.has_section(section_name):
-                    new_config.add_section(section_name)
-                    for key, value in self.config.items(section_name):
-                        new_config.set(section_name, key, value)
-                else:
+                if not self.config.has_section(section_name):
                     logger.warning(
                         f"Warning: Profile '{name}' not found in config file"
                     )
+                new_config.add_section(section_name)
+                for key, value in self.config.items(section_name):
+                    new_config.set(section_name, key, value)
 
             with open(self._config_path, "w", encoding="utf-8") as configfile:
                 new_config.write(configfile)
             logger.info("Successfully saved profile order")
-        except configparser.Error as e:
-            logger.error(f"Error saving profile order: {e}")
-        except FileNotFoundError as e:
+        except (configparser.Error, FileNotFoundError) as e:
             logger.error(f"Error saving profile order: {e}")
