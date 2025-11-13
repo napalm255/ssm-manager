@@ -282,6 +282,13 @@ class AwsConfigManager:
                 for key, value in self.config.items(section_name):
                     new_config.set(section_name, key, value)
 
+            ordered_sections = set(new_config.sections())
+            for section in self.config.sections():
+                if section not in ordered_sections:
+                    new_config.add_section(section)
+                    for key, value in self.config.items(section):
+                        new_config.set(section, key, value)
+
             with open(self._config_path, "w", encoding="utf-8") as configfile:
                 new_config.write(configfile)
             logger.info("Successfully saved profile order")
