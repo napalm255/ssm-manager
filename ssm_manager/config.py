@@ -252,11 +252,6 @@ class AwsConfigManager:
             profiles (list[str]): A list of profile names in the desired order.
         """
         try:
-            if not self._config_path.is_file():
-                raise FileNotFoundError(
-                    f"Error: AWS config file not found at {self._config_path}"
-                )
-
             self.config.read(self._config_path)
 
             def add(config, section_name):
@@ -269,11 +264,6 @@ class AwsConfigManager:
                     section_name = prefix + name
                     if prefix == self.profile_prefix and name == "default":
                         section_name = "default"
-                    if not self.config.has_section(section_name):
-                        logger.warning(
-                            f"Section '{section_name}' not found in config file"
-                        )
-                        continue
                     add(config, section_name)
 
             new_config = configparser.ConfigParser()
@@ -288,5 +278,7 @@ class AwsConfigManager:
             with open(self._config_path, "w", encoding="utf-8") as configfile:
                 new_config.write(configfile)
             logger.info("Successfully saved profile order")
-        except (configparser.Error, FileNotFoundError) as e:
+        except configparser.Error as e:
             logger.error(f"Error saving profile order: {e}")
+        except FileNotFoundError as e:
+            logger.error(f"Error: AWS config file not found at {self._config_path}")
