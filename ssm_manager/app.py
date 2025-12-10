@@ -174,6 +174,27 @@ def delete_config_session(session_name):
     return logger.success(f"Session deleted successfully: {session_name}")
 
 
+@app.route("/api/config/aws/order", methods=["POST"])
+def save_config_aws_order():
+    """
+    Endpoint to save the order of AWS configuration
+    Returns: JSON response with status
+    """
+    data = request.json
+    sessions = data.get("sessions", None)
+    profiles = data.get("profiles", None)
+
+    if not sessions:
+        return logger.failed("No session order provided.", 400)
+    if not profiles:
+        return logger.failed("No profile order provided.", 400)
+
+    config = AwsConfigManager()
+    config.save_order(sessions=sessions, profiles=profiles)
+
+    return logger.success("AWS config order saved successfully.")
+
+
 @app.route("/api/config/profile", methods=["POST"])
 def add_config_profile():
     """
@@ -463,6 +484,7 @@ def connect():
     profile = AWSProfile(name=data.get("profile"), region=data.get("region"))
 
     result = aws_manager.set_profile_and_region(profile.name, profile.region)
+
     max_retries = 2
     retries = 0
     delay = 1
@@ -494,6 +516,25 @@ def get_instances():
     instances = aws_manager.list_ssm_instances()
     logger.info(f"Instances: {len(instances)} found.")
     return jsonify(instances)
+
+
+@app.route("/api/instances/<instance_name>")
+def get_instances_by_name(instance_name):
+    """
+    Endpoint to get a list of instances by instance name
+    Args:
+        instance_name (str): Name of the EC2 instance
+    Returns: JSON response with instance ID
+    """
+    try:
+        instances = aws_manager.get_instances_by_name(instance_name)
+        if not instances:
+            return logger.failed(f"Instance not found: {instance_name}", 404)
+
+        logger.info(f"Instances found with name '{instance_name}': {len(instances)}")
+        return jsonify(instances)
+    except Exception:  # pylint: disable=broad-except
+        return logger.failed("Error getting instance ID", 500)
 
 
 @app.route("/api/shell/<instance_id>", methods=["POST"])

@@ -124,6 +124,23 @@ const app = createApp({
       }
       return mappings;
     });
+    const portMappingsList = computed(() => {
+      const list = [];
+      for (const [instanceName, ports] of Object.entries(portMappings.value)) {
+        for (const portMapping of ports) {
+          list.push({
+            name: instanceName,
+            local_port: portMapping.local_port,
+            remote_port: portMapping.remote_port,
+            remote_host: portMapping.remote_host
+          });
+        }
+      }
+      return list;
+    });
+    const portMappingsCount = computed(() => {
+      return Object.keys(portMappingsList.value).length;
+    });
     const portMappingsModal = ref(null);
     const portMappingsModalInstance = ref(null);
     const portMappingsModalProperties = ref([]);
@@ -169,9 +186,10 @@ const app = createApp({
     const navBar = ref([
       {'name': 'Home', 'icon': 'bi bi-house-door-fill', 'hash': '#/home'},
       {'name': 'Instances', 'icon': 'bi bi-hdd-rack-fill', 'hash': '#/instances'},
-      {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
+      {'name': 'Port Mappings', 'icon': 'bi bi-arrow-left-right', 'hash': '#/port-mappings'},
       {'name': 'Profiles', 'icon': 'bi bi-person-lines-fill', 'hash': '#/profiles'},
-      {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'}
+      {'name': 'Hosts File', 'icon': 'bi bi-file-earmark-text', 'hash': '#/hosts'},
+      {'name': 'Preferences', 'icon': 'bi bi-gear-fill', 'hash': '#/preferences'},
     ]);
 
     const updateHash = async () => {
@@ -223,6 +241,13 @@ const app = createApp({
     const hostsTableColumns = ref([
       { title: 'IP Address', field: 'ip' },
       { title: 'Hostname', field: 'hostname' }
+    ]);
+
+    const portMappingsTableColumns = ref([
+      { title: 'Instance Name', field: 'name' },
+      { title: 'Local Port', field: 'local_port' },
+      { title: 'Remote Port', field: 'remote_port' },
+      { title: 'Remote Host', field: 'remote_host' }
     ]);
 
     const instanceDetailsColumns = ref([
@@ -501,7 +526,7 @@ const app = createApp({
         }
       } finally {
         await getActiveConnections();
-        portForwardingModal.value.hide();
+        portForwardingModal.value?.hide();
         isPortForwardingStarting.value = false;
       }
     };
@@ -713,6 +738,23 @@ const app = createApp({
       }
     };
 
+    const saveAwsConfigOrder = async () => {
+      try {
+        const configOrder = {
+          'sessions': sessions.value.map(s => s.name),
+          'profiles': profiles.value.map(p => p.name)
+        };
+        await apiFetch("/api/config/aws/order", {
+          method: 'POST',
+          body: JSON.stringify(configOrder)
+        })
+        toast('Order saved successfully', 'success');
+      } finally {
+        await getSessions();
+        await getProfiles();
+      }
+    };
+
     const showAddHostModal = async () => {
       addHostModal.value = new bootstrap.Modal(document.getElementById('addHostModal'), {
         backdrop: 'static',
@@ -857,6 +899,13 @@ const app = createApp({
       toast('Copied to clipboard', 'success');
     };
 
+    const getSystemTheme = async () => {
+      if (this?.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      return 'light';
+    };
+
     const themeToggle = async () => {
       const body = document.body;
       const currentTheme = body.dataset.bsTheme;
@@ -881,6 +930,13 @@ const app = createApp({
         if (activeElement) {
           activeElement.blur();
         }
+    };
+
+    const draggableSort = async (event, array) => {
+      const fromIndex = event.oldIndex;
+      const toIndex = event.newIndex;
+      const movedItem = array.splice(fromIndex, 1)[0];
+      array.splice(toIndex, 0, movedItem);
     };
 
     // -----------------------------------------------
@@ -947,6 +1003,11 @@ const app = createApp({
       const lastTheme = localStorage.getItem('lastTheme');
       if (lastTheme) {
         document.body.dataset.bsTheme = lastTheme;
+      } else {
+        const systemTheme = await getSystemTheme();
+        document.body.dataset.bsTheme = systemTheme;
+        localStorage.setItem('lastTheme', systemTheme);
+        toast(`Theme set to ${systemTheme} mode based on system preference`, 'info');
       }
 
       // Set the initial page
@@ -969,12 +1030,12 @@ const app = createApp({
 
       // Load data from the server
       await getVersion();
+      await getSessions();
       await getProfiles();
       await getRegionsSelected();
       await getPreferences();
       await getRegionsAll();
       getActiveConnections();
-      getSessions();
       getHosts();
       getDepVersions();
       checkForUpdates();
@@ -1002,6 +1063,34 @@ const app = createApp({
 
       // Query active connections every 2 seconds
       setInterval(getActiveConnections, 2500);
+
+      try {
+        new Sortable(document.getElementById('sessions-table-body'), {
+          animation: 150,
+          handle: '.drag-handle',
+          ghostClass: 'sortable-ghost',
+          onUpdate: function (evt) {
+            draggableSort(evt, sessions.value);
+            saveAwsConfigOrder();
+          },
+        });
+      } catch (e) {
+        console.error('Error initializing sortable for sessions:', e);
+      }
+
+      try {
+        new Sortable(document.getElementById('profiles-table-body'), {
+          animation: 150,
+          handle: '.drag-handle',
+          ghostClass: 'sortable-ghost',
+          onUpdate: function (evt) {
+            draggableSort(evt, profiles.value);
+            saveAwsConfigOrder();
+          },
+        });
+      } catch (e) {
+        console.error('Error initializing sortable for profiles:', e);
+      }
     });
 
     onUnmounted(async () => {
@@ -1022,7 +1111,8 @@ const app = createApp({
       depAwsCli, depAwsCliInstalled, depAwsCliInstalling, depAwsCliLatest, depAwsCliUpdateAvailable, depAwsCliUrls,
       depSessionManagerPlugin, depSessionManagerPluginInstalled, depSessionManagerPluginInstalling, depSessionManagerPluginLatest, depSessionManagerPluginUpdateAvailable, depSessionManagerPluginUrls,
       preferences, getPreferences, savePreferences, preferencesUnsaved,
-      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, portMappings, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
+      prefServerPort, prefPortStart, prefPortEnd, prefPortCount, prefLogLevel, prefRegions, prefRegionsCount, prefCredentials, prefCredentialsCount, prefPortForwardingMode, prefPortForwardingRemotePort, prefPortForwardingRemoteHost,
+      portMappings, portMappingsList, portMappingsCount, portMappingsTableColumns,
       regionsSelected, regionsAll, currentProfile, currentRegion, currentAccountId,
       isWindows, isLinux, isConnecting, isPreferencesSaving, isSessionAdding, isSessionDeleting, isProfileAdding, isProfileDeleting, isHostsAdding, isHostsDeleting,
       isShellStarting, isRdpStarting, isPortForwardingStarting,
